@@ -590,7 +590,8 @@ export default function SuperAdminDashboard() {
     
     setIsResetting(true);
     try {
-      const response = await fetch('http://localhost:8083/api/reset-password', {
+      const apiBase = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8083' : '';
+      const response = await fetch(`${apiBase}/api/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
