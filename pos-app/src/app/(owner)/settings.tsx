@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
 import { Text, Card, Button, Switch, useTheme, SegmentedButtons, TextInput } from 'react-native-paper';
-import { auth, isFirebaseConfigured } from '../../lib/firebase';
+import { auth, isFirebaseConfigured, db } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { doc, updateDoc } from '../../lib/firestore_adapter';
 
 export default function AdminSettingsScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
@@ -48,7 +49,7 @@ export default function AdminSettingsScreen() {
   });
   const [emailNotifs, setEmailNotifs] = useState(true);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.localStorage.setItem('storeName', storeName);
       window.localStorage.setItem('storeAddress', address);
@@ -58,6 +59,24 @@ export default function AdminSettingsScreen() {
       
       // Dispatch custom event to notify other components (e.g. sidebar)
       window.dispatchEvent(new Event('storeNameUpdated'));
+    }
+
+    if (isFirebaseConfigured && auth.currentUser) {
+      try {
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
+        await updateDoc(userDocRef, {
+          store_name: storeName,
+          store_address: address,
+          gst_number: gstNumber,
+          is_gst_registered: businessType === 'GST',
+          shop_mode: shopMode
+        });
+      } catch (err) {
+        console.error("Error updating user profile in Firestore:", err);
+      }
+    }
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.alert('Shop settings have been saved and applied.');
     } else {
       Alert.alert('Saved Successfully', 'Shop settings have been saved and applied.');
