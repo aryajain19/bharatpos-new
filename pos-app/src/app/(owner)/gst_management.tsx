@@ -187,34 +187,7 @@ export default function GSTManagementScreen() {
           ))}
         </View>
 
-        <Card style={[styles.card, { marginTop: 20 }]} elevation={1}>
-          <Card.Content>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Icon name="clock-outline" size={18} color="#5E35B1" />
-              <Text variant="titleMedium" style={styles.sectionTitle}>Filing Status</Text>
-            </View>
-            {[
-              { return: 'GSTR-1', period: 'May 2026', status: 'Filed', statusColor: '#2E7D32', date: '11/06/2026' },
-              { return: 'GSTR-3B', period: 'May 2026', status: 'Filed', statusColor: '#2E7D32', date: '20/06/2026' },
-              { return: 'GSTR-1', period: 'Jun 2026', status: 'Pending', statusColor: '#E65100', date: 'Due: 11/07/2026' },
-              { return: 'GSTR-3B', period: 'Jun 2026', status: 'Pending', statusColor: '#E65100', date: 'Due: 20/07/2026' },
-            ].map((item, i) => (
-              <View key={i}>
-                <View style={styles.filingRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: '600', fontSize: 14 }}>{item.return}</Text>
-                    <Text style={{ color: appTheme.colors.onSurface, fontSize: 12 }}>{item.period}</Text>
-                  </View>
-                  <View style={[styles.statusBadge, { backgroundColor: item.statusColor + '18' }]}>
-                    <Text style={{ color: item.statusColor, fontWeight: '600', fontSize: 12 }}>{item.status}</Text>
-                  </View>
-                  <Text style={{ color: appTheme.colors.onSurface, fontSize: 12, width: 110, textAlign: 'right' }}>{item.date}</Text>
-                </View>
-                {i < 3 && <Divider style={{ marginVertical: 6 }} />}
-              </View>
-            ))}
-          </Card.Content>
-        </Card>
+
       </View>
     </View>
   );
