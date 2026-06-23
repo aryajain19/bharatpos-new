@@ -90,7 +90,7 @@ export default function VendorManagementScreen() {
     }
 
     // New worker default permissions based on Small Vendor vs other plans
-    const isSmallVendor = subscriptionPlan === 'free_trial' || subscriptionPlan === 'paid_1_year';
+    const isSmallVendor = false;
     const newPermissions = isSmallVendor ? {
       pos_access: true,
       stock_management: false,
@@ -145,10 +145,6 @@ export default function VendorManagementScreen() {
   };
 
   const openPermissionsModal = (vendor: any) => {
-    if (subscriptionPlan === 'free_trial' || subscriptionPlan === 'paid_1_year') {
-      Alert.alert('Permissions Locked', 'Workers are restricted to Billing-Only permissions on the Small Vendor Plan.');
-      return;
-    }
     setEditingVendor(vendor);
     if (vendor.permissions) {
       setPermissions(vendor.permissions);
@@ -296,7 +292,7 @@ export default function VendorManagementScreen() {
                 </DataTable.Header>
 
                 {vendors.map((vendor) => {
-                  const isSmallPlan = subscriptionPlan === 'free_trial' || subscriptionPlan === 'paid_1_year';
+                  const isSmallPlan = false;
                   
                   const handleMockDelete = () => {
                     setVendors(vendors.filter((v: any) => v.id !== vendor.id));

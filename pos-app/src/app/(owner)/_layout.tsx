@@ -187,7 +187,7 @@ export default function OwnerLayout() {
     }
   }, [pathname]);
 
-  const isLaptopLocked = shopMode === 'Mobile Only' && Platform.OS === 'web' && screenWidth > 850;
+  const isLaptopLocked = false;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(Dimensions.get('window').width > 800);
   const sidebarAnim = useRef(new Animated.Value(Dimensions.get('window').width > 800 ? 260 : 0)).current;
