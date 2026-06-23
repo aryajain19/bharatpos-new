@@ -15,7 +15,7 @@ const VOUCHER_COLORS: Record<string, { bg: string; text: string }> = {
   Journal:  { bg: '#F3E5F5', text: '#6A1B9A' },
 };
 
-// ─── Mock Transactions ────────────────────────────────────────────────
+// ─── Transaction Schema ───────────────────────────────────────────────
 interface Transaction {
   id: string;
   dateTime: string;

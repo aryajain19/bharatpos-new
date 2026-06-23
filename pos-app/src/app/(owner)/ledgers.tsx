@@ -22,7 +22,7 @@ interface AccountGroup {
   ledgers: Ledger[];
 }
 
-// ─── Mock Chart of Accounts ──────────────────────────────────────────
+// ─── Standard Chart of Accounts ───────────────────────────────────────
 const ACCOUNT_GROUPS: AccountGroup[] = [
   {
     key: 'assets',

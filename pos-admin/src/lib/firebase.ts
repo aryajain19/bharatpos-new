@@ -27,3 +27,32 @@ const secondaryAuth = getAuth(secondaryApp);
 export const isFirebaseConfigured = firebaseConfig.apiKey !== undefined && firebaseConfig.apiKey !== "mock-api-key";
 
 export { app, auth, secondaryAuth };
+
+// Alert.alert Web Polyfill
+import { Alert, Platform } from 'react-native';
+if (Platform.OS === 'web') {
+  Alert.alert = (title, message, buttons) => {
+    let msg = title || '';
+    if (message) msg += (msg ? '\n\n' : '') + message;
+    
+    if (buttons && buttons.length > 0) {
+      const hasCancel = buttons.some(b => b.style === 'cancel');
+      if (hasCancel) {
+        const confirmed = window.confirm(msg);
+        const button = buttons.find(b => confirmed ? b.style !== 'cancel' : b.style === 'cancel') || buttons[0];
+        if (button && typeof button.onPress === 'function') {
+          button.onPress();
+        }
+      } else {
+        window.alert(msg);
+        const firstButton = buttons[0];
+        if (firstButton && typeof firstButton.onPress === 'function') {
+          firstButton.onPress();
+        }
+      }
+    } else {
+      window.alert(msg);
+    }
+  };
+}
+

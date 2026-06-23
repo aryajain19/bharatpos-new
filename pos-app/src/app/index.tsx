@@ -630,7 +630,7 @@ export default function Index() {
           
           <Divider style={{ backgroundColor: appTheme.colors.surface, width: '100%', marginVertical: 20 }} />
           
-          <Text style={styles.footerCopy}>© 2026 SmartPOS. All rights reserved. Made with ️ for Indian Businesses.</Text>
+          <Text style={styles.footerCopy}>© 2026 SmartPOS. All rights reserved. Designed for Indian Businesses.</Text>
         </View>
 
       </ScrollView>

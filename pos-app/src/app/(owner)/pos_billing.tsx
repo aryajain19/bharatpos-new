@@ -95,9 +95,25 @@ export default function POSBillingScreen() {
     return p ? p.stock_qty : 0;
   };
   // Dynamic GST vs Non-GST shop configurations
-  const [isGstRegistered, setIsGstRegistered] = useState(true);
-  const [storeName, setStoreName] = useState('Sharma Fashion Store');
-  const [gstNum, setGstNum] = useState('08AAPCS1081A1Z5');
+  const [isGstRegistered, setIsGstRegistered] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const gstVal = window.localStorage.getItem('isGstRegistered');
+      return gstVal !== 'false';
+    }
+    return true;
+  });
+  const [storeName, setStoreName] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('storeName') || 'BharatPOS';
+    }
+    return 'BharatPOS';
+  });
+  const [gstNum, setGstNum] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('gstNumber') || '';
+    }
+    return '';
+  });
 
   // Checkout & sharing states
   const [showCheckout, setShowCheckout] = useState(false);
@@ -242,7 +258,7 @@ export default function POSBillingScreen() {
     if (sendInvoice) {
       setShowReceipt(true);
     } else {
-      Alert.alert(' Payment Successful', `Sale completed successfully.\nBill No: ${activeBillNo}`);
+      Alert.alert('Payment Successful', `Sale completed successfully.\nBill No: ${activeBillNo}`);
       clearCart();
       setCustName('');
       setCustPhone('');
@@ -258,12 +274,12 @@ export default function POSBillingScreen() {
 
   const handlePrint = () => {
     if (cart.length === 0) return;
-    Alert.alert('️ Thermal Printer', 'Bill sent to local thermal printer.');
+    Alert.alert('Thermal Printer', 'Bill sent to local thermal printer.');
   };
 
   const handleSave = () => {
     if (cart.length === 0) return;
-    Alert.alert(' Bill Saved', 'Bill saved as draft. You can resume later.');
+    Alert.alert('Bill Saved', 'Bill saved as draft. You can resume later.');
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);

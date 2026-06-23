@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated } from 'react-native';
-import { Text, Divider, useTheme, IconButton, Avatar, Surface, Badge, Button, TextInput } from 'react-native-paper';
+import { Text, Divider, useTheme, IconButton, Avatar, Surface, Badge, Button, TextInput, ActivityIndicator } from 'react-native-paper';
 import { Slot, router, usePathname } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth, isFirebaseConfigured, db } from '../../lib/firebase';
@@ -103,14 +103,15 @@ export default function OwnerLayout() {
   const theme = useTheme();
   const { dateStr, timeStr } = useLiveClock();
   
-  const { user, isTrialExpired } = useAuth();
-  let userName = user?.displayName || user?.email?.split('@')[0] || 'Rajesh Kumar';
+  const { user, isTrialExpired, loading } = useAuth();
+  let userName = user?.displayName || user?.email?.split('@')[0] || 'Store Owner';
   // Capitalize first letter if it's from email
   if (userName.length > 0 && user?.email && userName === user.email.split('@')[0]) {
     userName = userName.charAt(0).toUpperCase() + userName.slice(1);
   }
-  const initial = userName.charAt(0).toUpperCase();
+  const initial = (user?.email?.[0] || userName.charAt(0)).toUpperCase();
   
+  const [storeName, setStoreName] = useState('BharatPOS');
   const [shopMode, setShopMode] = useState('Mobile Only');
   const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
   const [isGstRegistered, setIsGstRegistered] = useState(true);
@@ -179,11 +180,24 @@ export default function OwnerLayout() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const gstReg = window.localStorage.getItem('isGstRegistered');
-      if (gstReg !== null) {
-        setIsGstRegistered(gstReg !== 'false');
+    const updateFromStorage = () => {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const gstReg = window.localStorage.getItem('isGstRegistered');
+        if (gstReg !== null) {
+          setIsGstRegistered(gstReg !== 'false');
+        }
+        const storedName = window.localStorage.getItem('storeName');
+        setStoreName(storedName || 'BharatPOS');
       }
+    };
+
+    updateFromStorage();
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.addEventListener('storeNameUpdated', updateFromStorage);
+      return () => {
+        window.removeEventListener('storeNameUpdated', updateFromStorage);
+      };
     }
   }, [pathname]);
 
@@ -217,6 +231,15 @@ export default function OwnerLayout() {
       setIsSidebarOpen(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+        <ActivityIndicator size="large" color="#10B981" />
+        <Text style={{ marginTop: 12, color: '#64748B', fontWeight: '600' }}>Loading BharatPOS...</Text>
+      </View>
+    );
+  }
 
   if (isTrialExpired) {
     return (
@@ -307,7 +330,7 @@ export default function OwnerLayout() {
             <Icon name="store" size={22} color="#fff" />
           </View>
           <View style={styles.logoTextContainer}>
-            <Text style={[styles.logoText, { color: '#1E293B' }]}>BharatPOS</Text>
+            <Text style={[styles.logoText, { color: '#1E293B' }]} numberOfLines={1}>{storeName}</Text>
             <Text style={[styles.logoSubtext, { color: '#64748B' }]}>Owner Panel</Text>
           </View>
         </View>

@@ -433,7 +433,7 @@ export default function AdminDashboard() {
   };
 
   const user = auth.currentUser;
-  let userName = user?.displayName || user?.email?.split('@')[0] || 'Rajesh';
+  let userName = user?.displayName || user?.email?.split('@')[0] || 'Store Owner';
   if (userName.length > 0 && user?.email && userName === user.email.split('@')[0]) {
     userName = userName.charAt(0).toUpperCase() + userName.slice(1);
   }

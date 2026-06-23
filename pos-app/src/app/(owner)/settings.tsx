@@ -13,35 +13,40 @@ export default function AdminSettingsScreen() {
 
   const theme = useTheme();
 
-  const [storeName, setStoreName] = useState('Sharma Fashion Store');
-  const [address, setAddress] = useState('Main Market, Block C, Jaipur');
-  const [gstNumber, setGstNumber] = useState('08AAPCS1081A1Z5');
-  const [businessType, setBusinessType] = useState('GST'); // 'GST' or 'NON-GST'
-  const [shopMode, setShopMode] = useState('Mobile Only'); // 'Mobile Only' | 'Laptop + Mobile' | 'Large Shop'
-  const [emailNotifs, setEmailNotifs] = useState(true);
-
-  useEffect(() => {
+  const [storeName, setStoreName] = useState(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const storedName = window.localStorage.getItem('storeName');
-      if (storedName) setStoreName(storedName);
-      
-      const storedAddress = window.localStorage.getItem('storeAddress');
-      if (storedAddress) setAddress(storedAddress);
-
-      const storedGstNum = window.localStorage.getItem('gstNumber');
-      if (storedGstNum) setGstNumber(storedGstNum);
-
+      return window.localStorage.getItem('storeName') || '';
+    }
+    return '';
+  });
+  const [address, setAddress] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('storeAddress') || '';
+    }
+    return '';
+  });
+  const [gstNumber, setGstNumber] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('gstNumber') || '';
+    }
+    return '';
+  });
+  const [businessType, setBusinessType] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const storedType = window.localStorage.getItem('isGstRegistered');
       if (storedType !== null) {
-        setBusinessType(storedType === 'false' ? 'NON-GST' : 'GST');
-      }
-
-      const storedMode = window.localStorage.getItem('shopMode');
-      if (storedMode !== null) {
-        setShopMode(storedMode);
+        return storedType === 'false' ? 'NON-GST' : 'GST';
       }
     }
-  }, []);
+    return 'GST';
+  });
+  const [shopMode, setShopMode] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('shopMode') || 'Mobile Only';
+    }
+    return 'Mobile Only';
+  });
+  const [emailNotifs, setEmailNotifs] = useState(true);
 
   const handleSave = () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -50,8 +55,13 @@ export default function AdminSettingsScreen() {
       window.localStorage.setItem('gstNumber', gstNumber);
       window.localStorage.setItem('isGstRegistered', String(businessType === 'GST'));
       window.localStorage.setItem('shopMode', shopMode);
+      
+      // Dispatch custom event to notify other components (e.g. sidebar)
+      window.dispatchEvent(new Event('storeNameUpdated'));
+      window.alert('Shop settings have been saved and applied.');
+    } else {
+      Alert.alert('Saved Successfully', 'Shop settings have been saved and applied.');
     }
-    Alert.alert('Saved Successfully', 'Shop settings have been saved and applied.');
   };
 
   const handleLogout = async () => {
@@ -136,7 +146,7 @@ export default function AdminSettingsScreen() {
               style={styles.segmentedBtn}
             />
 
-            <Button mode="contained" onPress={handleSave} style={styles.saveBtn}>
+            <Button mode="contained" onPress={handleSave} buttonColor="#10B981" style={styles.saveBtn}>
               Save Shop Profile
             </Button>
           </Card.Content>
@@ -170,8 +180,8 @@ export default function AdminSettingsScreen() {
             <Button
               mode="outlined"
               icon="logout"
+              textColor="#EF4444"
               onPress={handleLogout}
-             
               style={styles.logoutBtn}
             >
               Logout Account
@@ -184,22 +194,22 @@ export default function AdminSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24 },
+  container: { flex: 1, paddingHorizontal: 24, backgroundColor: '#F8FAFC' },
   header: { paddingVertical: 24 },
-  title: { fontWeight: '800', },
-  contentRow: { flexDirection: 'row', gap: 20, flexWrap: 'wrap', marginBottom: 40 },
-  card: { flex: 1, minWidth: 320, backgroundColor: 'white', borderRadius: 16, borderWidth: 1, },
-  cardContent: { padding: 20 },
-  sectionHeaderRow: { marginBottom: 16 },
-  iconTitleBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sectionTitle: { fontWeight: '700', fontSize: 15, },
+  title: { fontWeight: '800', color: '#1E293B' },
+  contentRow: { flexDirection: 'row', gap: 24, flexWrap: 'wrap', marginBottom: 40 },
+  card: { flex: 1, minWidth: 320, backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
+  cardContent: { padding: 24 },
+  sectionHeaderRow: { marginBottom: 20 },
+  iconTitleBox: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sectionTitle: { fontWeight: '700', fontSize: 16, color: '#1E293B' },
   input: { marginBottom: 16, backgroundColor: 'white' },
-  label: { fontSize: 12, fontWeight: '600', marginBottom: 8, marginTop: 4 },
-  segmentedBtn: { marginBottom: 16 },
-  saveBtn: { borderRadius: 10, marginTop: 8, paddingVertical: 4 },
+  label: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 8, marginTop: 4 },
+  segmentedBtn: { marginBottom: 20 },
+  saveBtn: { borderRadius: 10, marginTop: 12, paddingVertical: 4 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 8 },
-  switchLabel: { fontSize: 13, fontWeight: '700', },
-  switchDesc: { fontSize: 11, marginTop: 3, lineHeight: 16, marginBottom: 14 },
-  divider: { height: 1, marginVertical: 20 },
-  logoutBtn: { borderRadius: 10, marginTop: 8 },
+  switchLabel: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
+  switchDesc: { fontSize: 12, color: '#64748B', marginTop: 3, lineHeight: 18, marginBottom: 14 },
+  divider: { height: 1, backgroundColor: '#E2E8F0', marginVertical: 24 },
+  logoutBtn: { borderRadius: 10, marginTop: 8, borderColor: '#EF4444' },
 });

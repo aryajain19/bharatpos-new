@@ -54,6 +54,13 @@ export default function ProfileScreen() {
     )).start();
   }, []);
 
+  const [storeName, setStoreName] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('storeName') || 'BharatPOS';
+    }
+    return 'BharatPOS';
+  });
+
   const userName = user?.email?.split('@')[0] || 'Ramesh';
   const userInitial = (user?.email?.[0] || 'R').toUpperCase();
   const userEmail = user?.email || 'ramesh@store.com';
@@ -132,7 +139,7 @@ export default function ProfileScreen() {
             <View style={styles.storeInfoRow}>
               <View style={styles.storeInfoItem}>
                 <Text style={styles.storeInfoLabel}>Store Name</Text>
-                <Text style={styles.storeInfoValue}>Sharma General Store</Text>
+                <Text style={styles.storeInfoValue}>{storeName}</Text>
               </View>
               <View style={styles.storeInfoItem}>
                 <Text style={styles.storeInfoLabel}>Role</Text>

@@ -15,15 +15,22 @@ export default function BillPreviewScreen() {
   const phone = typeof custPhone === 'string' ? custPhone : '';
   const name = typeof custName === 'string' ? custName : '';
 
-  const invoiceId = Math.floor(10000 + Math.random() * 90000);
-  const shareMsg = `Thank you for shopping at Sharma Fashion.\nInvoice Amount: ₹${parseFloat(totalAmount.replace(/,/g, '')).toFixed(0)}\nDownload Bill: secure-link.com/invoice/${invoiceId}`;
+  const [storeName, setStoreName] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('storeName') || 'BharatPOS';
+    }
+    return 'BharatPOS';
+  });
+
+  const invoiceId = React.useMemo(() => Math.floor(10000 + Math.random() * 90000), []);
+  const shareMsg = `Thank you for shopping at ${storeName}.\nInvoice Amount: ₹${parseFloat(totalAmount.replace(/,/g, '')).toFixed(0)}\nDownload Bill: secure-link.com/invoice/${invoiceId}`;
 
   const handlePrint = async () => {
     try {
       const htmlString = `
         <html>
           <body style="font-family: monospace; padding: 20px;">
-            <h2 style="text-align: center;">Smart POS</h2>
+            <h2 style="text-align: center;">${storeName}</h2>
             <hr />
             <p><strong>Total Paid:</strong> ₹${totalAmount}</p>
             <p><strong>Method:</strong> UPI</p>
