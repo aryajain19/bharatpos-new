@@ -88,23 +88,82 @@ export default function AdminDashboard() {
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
 
-  const [todaySales, setTodaySales] = useState(0);
-  const [yesterdaySales, setYesterdaySales] = useState(0);
-  const [monthlySales, setMonthlySales] = useState(0);
-  const [totalProfit, setTotalProfit] = useState(0);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [lowStockAlertCount, setLowStockAlertCount] = useState(0);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [topSellingProducts, setTopSellingProducts] = useState<any[]>([]);
-  const [chartLabels, setChartLabels] = useState<string[]>([]);
-  const [chartData, setChartData] = useState<number[]>([]);
+  const [todaySales, setTodaySales] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return parseFloat(window.localStorage.getItem('cachedTodaySales') || '0');
+    }
+    return 0;
+  });
+  const [yesterdaySales, setYesterdaySales] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return parseFloat(window.localStorage.getItem('cachedYesterdaySales') || '0');
+    }
+    return 0;
+  });
+  const [monthlySales, setMonthlySales] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return parseFloat(window.localStorage.getItem('cachedMonthlySales') || '0');
+    }
+    return 0;
+  });
+  const [totalProfit, setTotalProfit] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return parseFloat(window.localStorage.getItem('cachedTotalProfit') || '0');
+    }
+    return 0;
+  });
+  const [totalOrders, setTotalOrders] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return parseFloat(window.localStorage.getItem('cachedTotalOrders') || '0');
+    }
+    return 0;
+  });
+  const [lowStockAlertCount, setLowStockAlertCount] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return parseFloat(window.localStorage.getItem('cachedLowStock') || '0');
+    }
+    return 0;
+  });
+  const [recentActivity, setRecentActivity] = useState<any[]>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const val = window.localStorage.getItem('cachedRecentActivity');
+      return val ? JSON.parse(val) : [];
+    }
+    return [];
+  });
+  const [topSellingProducts, setTopSellingProducts] = useState<any[]>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const val = window.localStorage.getItem('cachedTopSelling');
+      return val ? JSON.parse(val) : [];
+    }
+    return [];
+  });
+  const [chartLabels, setChartLabels] = useState<string[]>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const val = window.localStorage.getItem('cachedChartLabels');
+      return val ? JSON.parse(val) : [];
+    }
+    return [];
+  });
+  const [chartData, setChartData] = useState<number[]>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const val = window.localStorage.getItem('cachedChartData');
+      return val ? JSON.parse(val) : [];
+    }
+    return [];
+  });
   const [workersList, setWorkersList] = useState<any[]>([]);
   const [shopSyncCode, setShopSyncCode] = useState('');
   
   const [shopMode, setShopMode] = useState('Mobile Only');
   const [isGstRegistered, setIsGstRegistered] = useState(true);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return !window.localStorage.getItem('cachedTodaySales');
+    }
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -217,7 +276,21 @@ export default function AdminDashboard() {
 
     // Sort Recent Activity
     activities.sort((a, b) => b.date - a.date);
-    setRecentActivity(activities.slice(0, 5));
+    const recentActList = activities.slice(0, 5);
+    setRecentActivity(recentActList);
+
+    // Cache metrics in localStorage
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.localStorage.setItem('cachedTodaySales', String(tSales));
+      window.localStorage.setItem('cachedYesterdaySales', String(ySales));
+      window.localStorage.setItem('cachedMonthlySales', String(mSales));
+      window.localStorage.setItem('cachedTotalProfit', String(Math.round(profit)));
+      window.localStorage.setItem('cachedTotalOrders', String(tOrders));
+      window.localStorage.setItem('cachedRecentActivity', JSON.stringify(recentActList));
+      window.localStorage.setItem('cachedTopSelling', JSON.stringify(topProdList));
+      window.localStorage.setItem('cachedChartLabels', JSON.stringify(labels));
+      window.localStorage.setItem('cachedChartData', JSON.stringify(dataPoints));
+    }
   };
 
   const fetchMetrics = async () => {
@@ -265,6 +338,9 @@ export default function AdminDashboard() {
         if ((doc.data().stock_qty || 0) < 5) lowStock++;
       });
       setLowStockAlertCount(lowStock);
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.localStorage.setItem('cachedLowStock', String(lowStock));
+      }
 
       // Fetch Sales (constrained range)
       const now = new Date();

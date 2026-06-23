@@ -32,12 +32,54 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<'admin' | 'owner' | 'vendor' | null>(null);
-  const [permissions, setPermissions] = useState<Permissions | null>(null);
-  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
-  const [isTrialExpired, setIsTrialExpired] = useState(false);
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  const [role, setRole] = useState<'admin' | 'owner' | 'vendor' | null>(() => {
+    if (typeof window !== 'undefined') {
+      return (window.localStorage.getItem('cachedUserRole') as any) || null;
+    }
+    return null;
+  });
+  
+  const [permissions, setPermissions] = useState<Permissions | null>(() => {
+    if (typeof window !== 'undefined') {
+      const p = window.localStorage.getItem('cachedPermissions');
+      try {
+        return p ? JSON.parse(p) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+  
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('cachedUserPlan') || null;
+    }
+    return null;
+  });
+  
+  const [isTrialExpired, setIsTrialExpired] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('cachedIsTrialExpired') === 'true';
+    }
+    return false;
+  });
+  
+  const [tenantId, setTenantId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('cachedTenantId') || null;
+    }
+    return null;
+  });
+  
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Stale-While-Revalidate: if user data is cached, start immediately without showing loader
+      return !window.localStorage.getItem('cachedUserRole');
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -54,6 +96,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setPermissions(null);
         setSubscriptionPlan(null);
         setTenantId(null);
+        setIsTrialExpired(false);
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem('cachedUserRole');
+          window.localStorage.removeItem('cachedUserPlan');
+          window.localStorage.removeItem('cachedTenantId');
+          window.localStorage.removeItem('cachedPermissions');
+          window.localStorage.removeItem('cachedIsTrialExpired');
+        }
         setLoading(false);
       }
     });
@@ -88,6 +138,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         setIsTrialExpired(expired);
         setPermissions(userPermissions);
+
+        // Cache details in localStorage for instantaneous subsequent reloads
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('cachedUserRole', data.role || '');
+          window.localStorage.setItem('cachedUserPlan', data.subscription_plan || '');
+          window.localStorage.setItem('cachedTenantId', data.tenant_id || uid);
+          window.localStorage.setItem('cachedPermissions', JSON.stringify(userPermissions || {}));
+          window.localStorage.setItem('cachedIsTrialExpired', String(expired));
+        }
       } else {
         console.warn("User doc missing in Firestore, using default owner profile.");
         setRole('owner');
