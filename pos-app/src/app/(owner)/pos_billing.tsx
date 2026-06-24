@@ -7,6 +7,7 @@ import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment } from '../../lib/firestore_adapter';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
+import { useLocalSearchParams, router } from 'expo-router';
 
 // ── Category colors ────────────────────────────────────────────────────
 const categoryColors: Record<string, string> = {
@@ -35,9 +36,31 @@ export default function POSBillingScreen() {
   
   const [products, setProducts] = useState<any[]>([]);
   
+  const params = useLocalSearchParams();
+  const scanBarcodeParam = params.scanBarcode;
+  
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  // Handle incoming deep link barcode scans on mount / parameter changes
+  useEffect(() => {
+    if (products.length > 0 && scanBarcodeParam) {
+      const barcodeStr = Array.isArray(scanBarcodeParam) ? scanBarcodeParam[0] : scanBarcodeParam;
+      if (barcodeStr) {
+        const cleanBarcode = barcodeStr.trim().replace(/[\r\n]/g, '');
+        const matchingProduct = products.find(p => p.barcode === cleanBarcode);
+        if (matchingProduct) {
+          handleAddProduct(matchingProduct);
+          // Clear query parameters
+          router.setParams({ scanBarcode: undefined });
+        } else {
+          Alert.alert('Not Found', `Product with barcode: ${cleanBarcode} not found in inventory.`);
+          router.setParams({ scanBarcode: undefined });
+        }
+      }
+    }
+  }, [scanBarcodeParam, products]);
 
   const fetchProducts = async () => {
     if (isFirebaseConfigured) {
@@ -158,8 +181,8 @@ export default function POSBillingScreen() {
     ? (subtotal - discount + gstBreakdown.totalGst)
     : (subtotal - discount);
 
-  const handleSearchSubmit = async () => {
-    if (!search.trim()) return;
+  const handleSearchSubmitWithText = async (barcodeText: string) => {
+    if (!barcodeText.trim()) return;
     
     if (!isFirebaseConfigured) {
       Alert.alert('Configuration Error', 'Firebase must be configured to fetch products.');
@@ -167,27 +190,48 @@ export default function POSBillingScreen() {
     }
 
     try {
+      // 1. If scanned text is a deep link URL, parse the barcode out of it
+      let barcode = barcodeText;
+      if (barcodeText.includes('scanBarcode=')) {
+        const match = barcodeText.match(/[?&]scanBarcode=([^&]+)/);
+        if (match) {
+          barcode = match[1];
+        }
+      }
+      
+      const cleanBarcode = barcode.trim().replace(/[\r\n]/g, '');
+      if (!cleanBarcode) return;
+
       const tenantId = auth.currentUser?.uid || 'anonymous';
       const q = query(
         collection(db, 'products'), 
         where('tenant_id', '==', tenantId), 
-        where('barcode', '==', search)
+        where('barcode', '==', cleanBarcode)
       );
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
-        const data = snapshot.docs[0].data();
+        const docSnap = snapshot.docs[0];
+        const data = docSnap.data();
         addToCart({
-          id: snapshot.docs[0].id, name: data.name,
-          price: data.selling_price, qty: 1,
-          gst_pct: isGstRegistered ? data.gst_pct : 0, image_url: data.image_url,
+          id: docSnap.id, 
+          name: data.name,
+          price: data.selling_price || data.price, 
+          qty: 1,
+          gst_pct: isGstRegistered ? data.gst_pct : 0, 
+          image_url: data.image_url,
         });
         setSearch('');
+        setShowSuggestions(false);
       } else {
-        Alert.alert('Not Found', 'Product not found.');
+        Alert.alert('Not Found', `Product not found with barcode: ${cleanBarcode}`);
       }
     } catch (error) {
       console.error("Error searching product:", error);
     }
+  };
+
+  const handleSearchSubmit = async () => {
+    await handleSearchSubmitWithText(search);
   };
 
   const handlePay = () => {
@@ -322,7 +366,14 @@ export default function POSBillingScreen() {
                 mode="flat"
                 placeholder="Scan barcode or type product name..."
                 value={search}
-                onChangeText={(text: any) => { setSearch(text); setShowSuggestions(true); }}
+                onChangeText={(text: any) => { 
+                  const cleaned = text.replace(/[\r\n]/g, '');
+                  setSearch(cleaned); 
+                  setShowSuggestions(true); 
+                  if (text.includes('\n') || text.includes('\r')) {
+                    handleSearchSubmitWithText(cleaned);
+                  }
+                }}
                 onSubmitEditing={handleSearchSubmit}
                 onFocus={() => setShowSuggestions(true)}
                 style={styles.searchInput}
