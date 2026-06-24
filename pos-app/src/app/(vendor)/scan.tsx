@@ -30,7 +30,22 @@ export default function ScanScreen() {
     
     if (isFirebaseConfigured) {
       try {
-        const q = query(collection(db, 'products'), where('barcode', '==', data));
+        // 1. If scanned text is a deep link URL, parse the barcode out of it
+        let barcode = data;
+        if (data && typeof data === 'string' && data.includes('scanBarcode=')) {
+          const match = data.match(/[?&]scanBarcode=([^&]+)/);
+          if (match) {
+            barcode = match[1];
+          }
+        }
+        
+        const cleanBarcode = barcode.trim().replace(/[\r\n]/g, '');
+        if (!cleanBarcode) {
+          Alert.alert('Invalid Scan', 'Scanned barcode data is empty.');
+          return;
+        }
+
+        const q = query(collection(db, 'products'), where('barcode', '==', cleanBarcode));
         const snapshot = await getDocs(q);
         
         if (!snapshot.empty) {
@@ -38,15 +53,15 @@ export default function ScanScreen() {
           addToCart({
             id: snapshot.docs[0].id,
             name: productData.name,
-            price: productData.selling_price,
+            price: productData.selling_price || productData.price,
             qty: 1,
-            gst_pct: productData.gst_pct,
+            gst_pct: productData.gst_pct || 0,
             image_url: productData.image_url,
           });
           router.replace('/(vendor)/cart');
           return;
         } else {
-          Alert.alert('Not Found', `No product found with barcode: ${data}`);
+          Alert.alert('Not Found', `No product found with barcode: ${cleanBarcode}`);
         }
       } catch (error: any) {
         console.error("Scan error", error);
