@@ -1,7 +1,7 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
-import { Text, Card, Button, useTheme, TextInput, DataTable, IconButton, Checkbox, Portal, Dialog, Searchbar, HelperText } from 'react-native-paper';
+import { Text, Card, Button, useTheme, TextInput, DataTable, IconButton, Checkbox, Portal, Dialog, Searchbar, HelperText, SegmentedButtons } from 'react-native-paper';
 import { useAuth } from '../../providers/AuthProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Svg, { Rect } from 'react-native-svg';
@@ -10,6 +10,7 @@ import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, getDocs, query, where, doc, updateDoc, addDoc, getDoc } from '../../lib/firestore_adapter';
 import { useNavigation } from 'expo-router';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
+import { toQR } from 'toqr';
 
 // Code 128 Lookup Table for Barcode Generation
 const CODE128_WIDTHS = [
@@ -89,11 +90,60 @@ function VectorBarcode({ value, width = 1.3, height = 60 }: { value: string; wid
   );
 }
 
+// Vector QR Code Render component
+function VectorQRCode({ value, size = 60 }: { value: string; size?: number }) {
+  try {
+    const matrix = toQR(value);
+    const n = Math.sqrt(matrix.length);
+    const cellSize = size / n;
+    const rects: React.ReactNode[] = [];
+    
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (matrix[r * n + c] === 1) {
+          rects.push(
+            <Rect
+              key={`qr-${r}-${c}`}
+              x={c * cellSize}
+              y={r * cellSize}
+              width={cellSize}
+              height={cellSize}
+              fill="black"
+            />
+          );
+        }
+      }
+    }
+    
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', marginVertical: 2 }}>
+        <Svg width={size} height={size}>
+          {rects}
+        </Svg>
+      </View>
+    );
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    return null;
+  }
+}
+
+const getScanUrl = (barcode: string) => {
+  const defaultOrigin = 'https://bharatpos-new.vercel.app';
+  let origin = defaultOrigin;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    origin = window.location.origin;
+  }
+  return `${origin}/pos_billing?scanBarcode=${barcode}`;
+};
+
 export default function BarcodeGeneratorScreen() {
   const { isDarkMode } = useAppTheme();
   const appTheme = useTheme();
   const { permissions, role } = useAuth();
   const navigation = useNavigation();
+  
+  const [codeType, setCodeType] = useState<'barcode' | 'qrcode'>('barcode');
   
   // Real inventory lists
   const [products, setProducts] = useState<any[]>([]);
@@ -474,7 +524,8 @@ export default function BarcodeGeneratorScreen() {
       showSKU,
       showMRP,
       showBarcode,
-      showShopName
+      showShopName,
+      codeType
     };
     const updated = [...savedTemplates, newTemplate];
     setSavedTemplates(updated);
@@ -496,6 +547,7 @@ export default function BarcodeGeneratorScreen() {
     setShowMRP(tpl.showMRP);
     setShowBarcode(tpl.showBarcode);
     setShowShopName(tpl.showShopName !== undefined ? tpl.showShopName : false);
+    setCodeType(tpl.codeType || 'barcode');
     alert(`Loaded template style "${tpl.name}"`);
   };
 
@@ -595,6 +647,7 @@ export default function BarcodeGeneratorScreen() {
     const shopNameFontSize = config.perPage > 50 ? '6px' : (config.perPage > 30 ? '7px' : '9px');
     const barcodeHeight = config.perPage > 50 ? '16px' : (config.perPage > 30 ? '24px' : '34px');
     const labelPadding = config.perPage > 50 ? '2px' : (config.perPage > 30 ? '4px' : '6px');
+    const qrSize = config.perPage > 50 ? 32 : (config.perPage > 30 ? 44 : 60);
 
     let htmlContent = `
       <html>
@@ -674,8 +727,8 @@ export default function BarcodeGeneratorScreen() {
             .barcode-container {
               display: flex;
               justify-content: center;
-              align-items: flex-end;
-              height: ${barcodeHeight};
+              align-items: center;
+              height: ${codeType === 'qrcode' ? `${qrSize}px` : barcodeHeight};
               width: 100%;
               margin: 2px 0;
             }
@@ -729,6 +782,32 @@ export default function BarcodeGeneratorScreen() {
       return html;
     };
 
+    const getQRCodeHTML = (val: string, sizePx: number) => {
+      try {
+        const matrix = toQR(val);
+        const n = Math.sqrt(matrix.length);
+        const cellSize = sizePx / n;
+        let rects = '';
+        for (let r = 0; r < n; r++) {
+          for (let c = 0; c < n; c++) {
+            if (matrix[r * n + c] === 1) {
+              rects += `<rect x="${c * cellSize}" y="${r * cellSize}" width="${cellSize}" height="${cellSize}" fill="black" />`;
+            }
+          }
+        }
+        return `
+          <div class="barcode-container">
+            <svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}">
+              ${rects}
+            </svg>
+          </div>
+        `;
+      } catch (e) {
+        console.error("QR HTML generation error", e);
+        return '<div>Error QR</div>';
+      }
+    };
+
     for (let pageIdx = 0; pageIdx < pagesCount; pageIdx++) {
       htmlContent += `<div class="page"><div class="grid">`;
       
@@ -736,7 +815,9 @@ export default function BarcodeGeneratorScreen() {
         const itemIdx = pageIdx * perPage + i;
         if (itemIdx < itemsToPrint.length) {
           const item = itemsToPrint[itemIdx];
-          const barsHTML = getBarcodeBarsHTML(item.barcode);
+          const barsHTML = codeType === 'qrcode'
+            ? getQRCodeHTML(getScanUrl(item.barcode), qrSize)
+            : getBarcodeBarsHTML(item.barcode);
           htmlContent += `
             <div class="label">
               ${showShopName ? `<div class="shop-name">${shopName}</div>` : ''}
@@ -895,6 +976,20 @@ export default function BarcodeGeneratorScreen() {
                   />
                 </View>
               )}
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, marginBottom: 6 }}>
+                <Icon name="qrcode-scan" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                <Text style={styles.labelTitle}>Code Format Type</Text>
+              </View>
+              <SegmentedButtons
+                value={codeType}
+                onValueChange={(val: any) => setCodeType(val)}
+                buttons={[
+                  { value: 'barcode', label: '1D Barcode' },
+                  { value: 'qrcode', label: '2D QR Code' }
+                ]}
+                style={{ marginBottom: 12 }}
+              />
 
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, marginBottom: 6 }}>
                 <Icon name="tag-multiple" size={16} color="#64748B" style={{ marginRight: 6 }} />
@@ -1188,7 +1283,14 @@ export default function BarcodeGeneratorScreen() {
                                 {showCategory && <Text style={styles.previewLabelCategory} numberOfLines={1}>{cleanAndMapCategory(item.category || '').cleanName}</Text>}
                                 {showBarcode && (
                                   <View style={styles.previewBarcodeContainer}>
-                                    <VectorBarcode value={item.barcode} height={gridConfig.perPage > 50 ? 12 : 24} width={0.7} />
+                                    {codeType === 'qrcode' ? (
+                                      <VectorQRCode 
+                                        value={getScanUrl(item.barcode)} 
+                                        size={gridConfig.perPage > 50 ? 32 : (gridConfig.perPage > 30 ? 44 : 60)} 
+                                      />
+                                    ) : (
+                                      <VectorBarcode value={item.barcode} height={gridConfig.perPage > 50 ? 12 : 24} width={0.7} />
+                                    )}
                                   </View>
                                 )}
                                 {showSKU && <Text style={styles.previewLabelSKU}>{item.barcode}</Text>}
