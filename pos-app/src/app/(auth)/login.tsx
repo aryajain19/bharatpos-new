@@ -17,7 +17,6 @@ export default function LoginScreen() {
 
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
-  const [isPasswordMode, setIsPasswordMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isSecure, setIsSecure] = useState(true);
@@ -101,93 +100,51 @@ export default function LoginScreen() {
       <Text style={styles.welcomeSubtitle}>Sign in to access your business terminal</Text>
 
       {/* Main Form Fields */}
-      {!isPasswordMode ? (
-        <View style={styles.fieldsContainer}>
-          <Text style={styles.inputLabel}>Mobile Number</Text>
-          {/* Custom Unified +91 Row to prevent overlapping label bugs in web */}
-          <View style={styles.mobileRow}>
-            <View style={styles.countryCodeBox}>
-              <Text style={styles.countryCodeText}>+91</Text>
-            </View>
-            <TextInput
-              value={mobile}
-              onChangeText={setMobile}
-              keyboardType="phone-pad"
-              autoCapitalize="none"
-              placeholder="Enter 10-digit number"
-              style={styles.mobileInput}
-              mode="outlined"
-              outlineColor="#E2E8F0"
-              activeOutlineColor="#10B981"
-              dense
-            />
-          </View>
+      <View style={styles.fieldsContainer}>
+        <Text style={styles.inputLabel}>Email or Mobile Number</Text>
+        <TextInput
+          value={mobile}
+          onChangeText={setMobile}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          placeholder="e.g. owner@pos.com"
+          style={styles.input}
+          mode="outlined"
+          outlineColor="#E2E8F0"
+          activeOutlineColor="#10B981"
+          left={<TextInput.Icon icon="account-outline" color="#718096" />}
+          dense
+        />
 
-          <Button
-            mode="contained"
-            onPress={handleLogin}
-            style={styles.primaryButton}
-            contentStyle={styles.buttonPadding}
-            labelStyle={styles.buttonLabel}
-          >
-            Send OTP
-          </Button>
+        <Text style={styles.inputLabel}>Password</Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={isSecure}
+          placeholder="Enter password"
+          style={styles.input}
+          mode="outlined"
+          outlineColor="#E2E8F0"
+          activeOutlineColor="#10B981"
+          left={<TextInput.Icon icon="lock-outline" color="#718096" />}
+          right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#718096" onPress={() => setIsSecure(!isSecure)} />}
+          dense
+        />
 
-          <TouchableOpacity style={styles.toggleModeLink} onPress={() => setIsPasswordMode(true)}>
-            <Text style={styles.toggleModeText}>Or Login with Password</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.fieldsContainer}>
-          <Text style={styles.inputLabel}>Email or Mobile Number</Text>
-          <TextInput
-            value={mobile}
-            onChangeText={setMobile}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholder="e.g. owner@pos.com"
-            style={styles.input}
-            mode="outlined"
-            outlineColor="#E2E8F0"
-            activeOutlineColor="#10B981"
-            left={<TextInput.Icon icon="account-outline" color="#718096" />}
-            dense
-          />
+        {errorMsg ? <Text style={{ color: '#E53E3E', marginBottom: 12, fontSize: 14 }}>{errorMsg}</Text> : null}
 
-          <Text style={styles.inputLabel}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={isSecure}
-            placeholder="Enter password"
-            style={styles.input}
-            mode="outlined"
-            outlineColor="#E2E8F0"
-            activeOutlineColor="#10B981"
-            left={<TextInput.Icon icon="lock-outline" color="#718096" />}
-            right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#718096" onPress={() => setIsSecure(!isSecure)} />}
-            dense
-          />
-
-          {errorMsg ? <Text style={{ color: '#E53E3E', marginBottom: 12, fontSize: 14 }}>{errorMsg}</Text> : null}
-
-          <Button
-            mode="contained"
-            onPress={handleLogin}
-            loading={loading}
-            disabled={loading}
-            style={styles.primaryButton}
-            contentStyle={styles.buttonPadding}
-            labelStyle={styles.buttonLabel}
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </Button>
-
-          <TouchableOpacity style={styles.toggleModeLink} onPress={() => setIsPasswordMode(false)}>
-            <Text style={styles.toggleModeText}>Or Login with OTP</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        <Button
+          mode="contained"
+          onPress={handleLogin}
+          loading={loading}
+          disabled={loading}
+          style={styles.primaryButton}
+          contentStyle={styles.buttonPadding}
+          labelStyle={styles.buttonLabel}
+        >
+          {loading ? 'Signing In...' : 'Sign In'}
+        </Button>
+      </View>
 
 
 
