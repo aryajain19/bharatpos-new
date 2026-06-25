@@ -230,14 +230,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         console.warn("User doc missing in Firestore, using default owner profile.");
         setRole('owner');
-        setSubscriptionPlan('Standard Monthly');
+        setSubscriptionPlan('Premium Yearly');
         setTenantId(uid);
       }
     } catch (error) {
       console.warn("Error fetching Firebase user data:", error);
       // Fallback if firestore throws an error or times out
       setRole('owner');
-      setSubscriptionPlan('Standard Monthly');
+      setSubscriptionPlan('Premium Yearly');
       setTenantId(uid);
     } finally {
       setLoading(false);

@@ -397,7 +397,7 @@ export default function SuperAdminDashboard() {
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formPassword, setFormPassword] = useState('');
-  const [formPlan, setFormPlan] = useState('Standard Monthly');
+  const [formPlan, setFormPlan] = useState('Free Trial');
   const [isCreating, setIsCreating] = useState(false);
   
   // Edit Form Fields
@@ -405,7 +405,7 @@ export default function SuperAdminDashboard() {
   const [editFormStore, setEditFormStore] = useState('');
   const [editFormEmail, setEditFormEmail] = useState('');
   const [editFormPhone, setEditFormPhone] = useState('');
-  const [editFormPlan, setEditFormPlan] = useState('Standard');
+  const [editFormPlan, setEditFormPlan] = useState('Premium');
   const [editFormNewPassword, setEditFormNewPassword] = useState('');
   const [isResetting, setIsResetting] = useState(false);
 
@@ -532,7 +532,8 @@ export default function SuperAdminDashboard() {
     setEditFormStore(c.store);
     setEditFormEmail(c.email);
     setEditFormPhone(c.phone);
-    setEditFormPlan(c.plan || 'Standard');
+    const planVal = (c.plan === 'Free Trial' || c.plan === 'Trial') ? 'Trial' : 'Premium';
+    setEditFormPlan(planVal);
     setShowEditCustomer(true);
   };
 
@@ -1928,7 +1929,6 @@ export default function SuperAdminDashboard() {
               onValueChange={setFormPlan}
               buttons={[
                 { value: 'Free Trial', label: 'Trial' },
-                { value: 'Standard Monthly', label: 'Standard' },
                 { value: 'Premium Yearly', label: 'Premium' }
               ]}
               style={{ marginTop: 10 }}
@@ -1960,7 +1960,6 @@ export default function SuperAdminDashboard() {
                 onValueChange={setEditFormPlan}
                 buttons={[
                   { value: 'Trial', label: 'Trial' },
-                  { value: 'Standard', label: 'Standard' },
                   { value: 'Premium', label: 'Premium' },
                 ]}
                 style={{ marginBottom: 12 }}
