@@ -64,7 +64,7 @@ export default function Index() {
   const [mobileNumber, setMobileNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [businessType, setBusinessType] = useState('Grocery');
+  const [businessType, setBusinessType] = useState('');
   const [gstType, setGstType] = useState('GST'); // 'GST' or 'NON-GST'
   const [operationMode, setOperationMode] = useState('Mobile Only'); // 'Mobile Only' | 'Laptop + Mobile' | 'Large Shop'
 
@@ -102,6 +102,7 @@ export default function Index() {
         storeName: shopName,
         isGstRegistered: gstType === 'GST',
         shopMode: operationMode,
+        businessCategory: businessType,
         fullName,
         mobileNumber,
         email,
@@ -117,6 +118,7 @@ export default function Index() {
         window.localStorage.setItem('storeName', shopName);
         window.localStorage.setItem('isGstRegistered', String(gstType === 'GST'));
         window.localStorage.setItem('shopMode', operationMode);
+        window.localStorage.setItem('businessCategory', businessType);
       }
       
       alert(`Thank you, ${fullName}! Your 30-Day Free Trial for "${shopName}" is now active. Redirecting to your dashboard...`);
@@ -130,6 +132,7 @@ export default function Index() {
             window.localStorage.setItem('storeName', shopName);
             window.localStorage.setItem('isGstRegistered', String(gstType === 'GST'));
             window.localStorage.setItem('shopMode', operationMode);
+            window.localStorage.setItem('businessCategory', businessType);
           }
           alert(`Welcome back, ${fullName}! Logging you in...`);
           setShowSignupModal(false);
@@ -654,17 +657,14 @@ export default function Index() {
               <TextInput label="Email Address" value={email} onChangeText={setEmail} mode="outlined" style={styles.formInput} keyboardType="email-address" activeOutlineColor="#10B981" />
               <TextInput label="Password" value={password} onChangeText={setPassword} secureTextEntry mode="outlined" style={styles.formInput} activeOutlineColor="#10B981" />
               
-              <Text style={{ marginTop: 8, fontWeight: 'bold', color: appTheme.colors.onSurface, fontSize: 13 }}>Business Category</Text>
-              <SegmentedButtons
-                value={businessType}
-                onValueChange={setBusinessType}
-                buttons={[
-                  { value: 'Grocery', label: 'Grocery' },
-                  { value: 'Garments', label: 'Garments' },
-                  { value: 'Electronics', label: 'Electronics' },
-                  { value: 'Other', label: 'Retail' }
-                ]}
-                style={{ marginTop: 8, marginBottom: 12 }}
+              <TextInput 
+                label="Business Category" 
+                value={businessType} 
+                onChangeText={setBusinessType} 
+                mode="outlined" 
+                style={styles.formInput} 
+                placeholder="e.g. Grocery, Garments, Electronics" 
+                activeOutlineColor="#10B981" 
               />
 
               <Text style={{ fontWeight: 'bold', color: appTheme.colors.onSurface, fontSize: 13 }}>Tax Setup</Text>
