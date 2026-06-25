@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 
 import { Text, useTheme, IconButton, RadioButton, TextInput } from 'react-native-paper';
 import { useCart } from '../../providers/CartProvider';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
-import { collection, addDoc } from '../../lib/firestore_adapter';
+import { collection, addDoc, doc, updateDoc, increment } from '../../lib/firestore_adapter';
 import { useAuth } from '../../providers/AuthProvider';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
@@ -12,7 +12,7 @@ export default function PaymentScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
-  const { cart, getTotal, clearCart } = useCart();
+  const { cart, getSubtotal, getGST, clearCart } = useCart();
   const { user, tenantId } = useAuth();
   
   const [paymentMethod, setPaymentMethod] = useState('Cash');
@@ -22,6 +22,7 @@ export default function PaymentScreen() {
   const [isGstRegistered, setIsGstRegistered] = useState(true);
   const [custPhone, setCustPhone] = useState('');
   const [custName, setCustName] = useState('');
+  const [custGstin, setCustGstin] = useState('');
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -30,9 +31,9 @@ export default function PaymentScreen() {
     }
   }, []);
 
-  const subtotal = getTotal();
+  const subtotal = getSubtotal();
   const discount = subtotal * 0.05;
-  const gstAmount = isGstRegistered ? (subtotal - discount) * 0.12 : 0;
+  const gstAmount = isGstRegistered ? getGST() : 0;
   const total = subtotal - discount + gstAmount;
   const change = receivedAmount ? Math.max(0, parseFloat(receivedAmount) - total) : 0;
 
@@ -40,12 +41,19 @@ export default function PaymentScreen() {
     if (cart.length === 0) return;
     setLoading(true);
 
+    const billNo = 'BILL-' + Date.now().toString().slice(-6);
+    const itemsJson = JSON.stringify(cart.map(item => ({
+      name: item.name,
+      price: item.price,
+      qty: item.qty,
+      gst_pct: item.gst_pct !== undefined ? item.gst_pct : 5
+    })));
+
     if (isFirebaseConfigured && user) {
       try {
         const dateObj = new Date();
         const dateStr = dateObj.toISOString().split('T')[0];
         const timeStr = dateObj.toTimeString().split(' ')[0].substring(0, 5);
-        const billNo = 'BILL-' + Date.now().toString().slice(-6);
 
         const saleRef = await addDoc(collection(db, 'sales'), {
           tenant_id: tenantId || 'anonymous',
@@ -53,6 +61,7 @@ export default function PaymentScreen() {
           bill_no: billNo,
           customer_name: custName || 'Walk-in Customer',
           customer_phone: custPhone || '',
+          customer_gstin: custGstin || '',
           total_amount: total,
           payment_method: paymentMethod,
           created_at: dateObj.toISOString(),
@@ -64,7 +73,8 @@ export default function PaymentScreen() {
             name: item.name,
             price: item.price,
             qty: item.qty,
-            gst_pct: item.gst_pct || 0
+            gst_pct: item.gst_pct || 0,
+            hsn: (item as any).hsn || ''
           }))
         });
 
@@ -95,23 +105,32 @@ export default function PaymentScreen() {
         });
       } catch (error) {
         console.error("Error inserting sale to Firebase:", error);
+        Alert.alert("Error", "Failed to save sale. Please try again.");
+        setLoading(false);
+        return;
       }
     }
 
-    cart.forEach(item => {
+    await Promise.all(cart.map(async (item) => {
+      // Deduct in Firestore
+      if (isFirebaseConfigured) {
+        try {
+          const productRef = doc(db, 'products', item.id);
+          await updateDoc(productRef, {
+            stock_qty: increment(-item.qty)
+          });
+        } catch (error) {
+          console.error("Failed to update Firestore stock for item", item.id, error);
+        }
+      }
+
+      // Deduct in localStorage (web-only backup/mock catalog support)
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const currentStockStr = window.localStorage.getItem(`stock_${item.id}`);
-        let defaultStock = 15;
-        if (item.id === 'p1') defaultStock = 150;
-        else if (item.id === 'p2') defaultStock = 60;
-        else if (item.id === 'p3') defaultStock = 40;
-        else if (item.id === 'p4') defaultStock = 75;
-        else if (item.id === 'p5') defaultStock = 90;
-        
-        const currentStock = currentStockStr ? parseInt(currentStockStr) : defaultStock;
+        const currentStock = currentStockStr ? parseInt(currentStockStr) : 15;
         window.localStorage.setItem(`stock_${item.id}`, String(Math.max(0, currentStock - item.qty)));
       }
-    });
+    }));
 
     const totalAmountString = total.toFixed(2);
     setLoading(false);
@@ -121,7 +140,20 @@ export default function PaymentScreen() {
       params: { 
         total: totalAmountString,
         custPhone: custPhone,
-        custName: custName
+        custName: custName,
+        custGstin: custGstin,
+        billNo: billNo,
+        subtotal: subtotal.toFixed(2),
+        discount: discount.toFixed(2),
+        gstAmount: gstAmount.toFixed(2),
+        itemsJson: JSON.stringify(cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          gst_pct: item.gst_pct,
+          hsn: (item as any).hsn || ''
+        })))
       }
     } as any);
   };
@@ -193,6 +225,15 @@ export default function PaymentScreen() {
             onChangeText={setCustName}
             style={styles.input}
             placeholder="Enter customer name"
+            outlineStyle={{ borderRadius: 8, borderColor: appTheme.colors.outline }}
+          />
+          <TextInput
+            label="Customer GSTIN (Optional)"
+            mode="outlined"
+            value={custGstin}
+            onChangeText={setCustGstin}
+            style={styles.input}
+            placeholder="Enter customer GSTIN"
             outlineStyle={{ borderRadius: 8, borderColor: appTheme.colors.outline }}
           />
         </View>

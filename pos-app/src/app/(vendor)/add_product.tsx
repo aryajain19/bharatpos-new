@@ -21,9 +21,26 @@ export default function AddProductVendorScreen() {
   const [loading, setLoading] = useState(false);
   const theme = useTheme();
 
+  // Generate unique EAN-13 barcode with merchant prefix to prevent cross-merchant collisions
   const generateBarcode = () => {
-    const timestamp = Date.now().toString().slice(-9);
-    setBarcode('890' + timestamp);
+    const tenantId = auth.currentUser?.uid || '0000';
+    let hash = 0;
+    for (let i = 0; i < tenantId.length; i++) {
+      hash = (hash + tenantId.charCodeAt(i)) % 10000;
+    }
+    const storePrefix = hash.toString().padStart(4, '0');
+    const randomDigits = Math.floor(10000 + Math.random() * 90000).toString(); // 5 digits
+    const prefix = '890'; // India prefix
+    const base = prefix + storePrefix + randomDigits; // 12 digits
+    
+    // Calculate EAN-13 check digit
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+      sum += parseInt(base.charAt(i)) * (i % 2 === 0 ? 1 : 3);
+    }
+    const checkDigit = (10 - (sum % 10)) % 10;
+    
+    setBarcode(base + checkDigit);
   };
 
   const handleSave = async () => {

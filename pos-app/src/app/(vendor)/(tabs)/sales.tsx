@@ -14,20 +14,7 @@ type DateFilter = 'today' | 'week' | 'month';
 const PAYMENT_MODES = ['Cash', 'UPI', 'Card', 'Cash', 'UPI', 'Cash', 'UPI', 'Card', 'UPI', 'Cash', 'UPI', 'Cash'];
 
 // --- Demo sales data ---
-const DEMO_SALES = [
-  { id: 's1', bill_no: 'INV-002451', total_amount: 1245.00, items_count: 8, payment_mode: 'UPI', customer: 'Walk-in Customer', created_at: new Date(Date.now() - 15 * 60000).toISOString() },
-  { id: 's2', bill_no: 'INV-002450', total_amount: 560.50, items_count: 4, payment_mode: 'Cash', customer: 'Ravi Kumar', created_at: new Date(Date.now() - 45 * 60000).toISOString() },
-  { id: 's3', bill_no: 'INV-002449', total_amount: 890.00, items_count: 6, payment_mode: 'Card', customer: 'Priya Sharma', created_at: new Date(Date.now() - 90 * 60000).toISOString() },
-  { id: 's4', bill_no: 'INV-002448', total_amount: 2150.75, items_count: 12, payment_mode: 'UPI', customer: 'Walk-in Customer', created_at: new Date(Date.now() - 150 * 60000).toISOString() },
-  { id: 's5', bill_no: 'INV-002447', total_amount: 340.00, items_count: 3, payment_mode: 'Cash', customer: 'Anita Verma', created_at: new Date(Date.now() - 3 * 3600000).toISOString() },
-  { id: 's6', bill_no: 'INV-002446', total_amount: 1780.00, items_count: 9, payment_mode: 'UPI', customer: 'Suresh Patel', created_at: new Date(Date.now() - 4 * 3600000).toISOString() },
-  { id: 's7', bill_no: 'INV-002445', total_amount: 420.50, items_count: 5, payment_mode: 'Cash', customer: 'Walk-in Customer', created_at: new Date(Date.now() - 5.5 * 3600000).toISOString() },
-  { id: 's8', bill_no: 'INV-002444', total_amount: 3200.00, items_count: 15, payment_mode: 'Card', customer: 'Deepak Gupta', created_at: new Date(Date.now() - 7 * 3600000).toISOString() },
-  { id: 's9', bill_no: 'INV-002443', total_amount: 675.25, items_count: 4, payment_mode: 'UPI', customer: 'Meera Nair', created_at: new Date(Date.now() - 24 * 3600000).toISOString() },
-  { id: 's10', bill_no: 'INV-002442', total_amount: 150.00, items_count: 2, payment_mode: 'Cash', customer: 'Walk-in Customer', created_at: new Date(Date.now() - 25 * 3600000).toISOString() },
-  { id: 's11', bill_no: 'INV-002441', total_amount: 4500.00, items_count: 20, payment_mode: 'UPI', customer: 'Rahul Joshi', created_at: new Date(Date.now() - 48 * 3600000).toISOString() },
-  { id: 's12', bill_no: 'INV-002440', total_amount: 280.00, items_count: 3, payment_mode: 'Cash', customer: 'Walk-in Customer', created_at: new Date(Date.now() - 72 * 3600000).toISOString() },
-];
+const DEMO_SALES: any[] = [];
 
 export default function SalesHistoryScreen() {
   const appTheme = useTheme();

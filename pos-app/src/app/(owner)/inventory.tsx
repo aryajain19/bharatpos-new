@@ -64,20 +64,12 @@ export default function InventoryManagementScreen() {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const updatedProducts = baseProducts.map((p: any) => {
-        const localStock = window.localStorage.getItem(`stock_${p.id}`);
-        if (localStock !== null) {
-          return { ...p, stock_qty: parseInt(localStock, 10) };
-        } else {
-          window.localStorage.setItem(`stock_${p.id}`, String(p.stock_qty));
-          return p;
-        }
+      baseProducts.forEach((p: any) => {
+        window.localStorage.setItem(`stock_${p.id}`, String(p.stock_qty));
       });
-      updatedProducts.sort((a, b) => a.stock_qty - b.stock_qty);
-      setProducts(updatedProducts);
-    } else {
-      setProducts(baseProducts);
     }
+    baseProducts.sort((a, b) => a.stock_qty - b.stock_qty);
+    setProducts(baseProducts);
   };
 
   const totalProducts = products.length;

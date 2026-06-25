@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
-import { Text, Card, Button, Switch, useTheme, SegmentedButtons, TextInput } from 'react-native-paper';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, ScrollView, Alert, Platform, Share } from 'react-native';
+import { Text, Card, Button, Switch, useTheme, SegmentedButtons, TextInput, Portal, Dialog } from 'react-native-paper';
 import { auth, isFirebaseConfigured, db } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { doc, updateDoc } from '../../lib/firestore_adapter';
+import { doc, updateDoc, collection, getDocs, query, where, setDoc } from '../../lib/firestore_adapter';
+import { useAuth } from '../../providers/AuthProvider';
 
 export default function AdminSettingsScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
@@ -48,6 +49,151 @@ export default function AdminSettingsScreen() {
     return 'Mobile Only';
   });
   const [emailNotifs, setEmailNotifs] = useState(true);
+  
+  const { tenantId } = useAuth();
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const [restoreText, setRestoreText] = useState('');
+  const fileInputRef = useRef<any>(null);
+
+  const handleCreateBackup = async () => {
+    if (!isFirebaseConfigured) {
+      Alert.alert('Demo Mode', 'Database operations are disabled in demo mode.');
+      return;
+    }
+    setBackupLoading(true);
+    try {
+      const resolvedTenant = tenantId || auth.currentUser?.uid || 'anonymous';
+      
+      // Fetch products
+      const prodSnap = await getDocs(query(collection(db, 'products'), where('tenant_id', '==', resolvedTenant)));
+      const products = prodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Fetch sales
+      const salesSnap = await getDocs(query(collection(db, 'sales'), where('tenant_id', '==', resolvedTenant)));
+      const sales = salesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Fetch transactions
+      const transSnap = await getDocs(query(collection(db, 'transactions'), where('tenant_id', '==', resolvedTenant)));
+      const transactions = transSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      const backupData = {
+        backup_version: "1.0",
+        timestamp: new Date().toISOString(),
+        tenant_id: resolvedTenant,
+        products,
+        sales,
+        transactions
+      };
+
+      const jsonString = JSON.stringify(backupData, null, 2);
+
+      if (Platform.OS === 'web') {
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bharatpos_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        Alert.alert('Success', 'Backup JSON file downloaded successfully.');
+      } else {
+        await Share.share({
+          message: jsonString,
+          title: 'BharatPOS Backup'
+        });
+      }
+    } catch (err: any) {
+      console.error("Backup failed:", err);
+      Alert.alert('Backup Failed', err.message || 'An error occurred during backup.');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleRestoreBackup = async (jsonText: string) => {
+    if (!isFirebaseConfigured) {
+      Alert.alert('Demo Mode', 'Database operations are disabled.');
+      return;
+    }
+    setRestoreLoading(true);
+    try {
+      const data = JSON.parse(jsonText);
+      if (!data.products || !data.sales || !data.transactions) {
+        throw new Error("Invalid backup format. Backup must contain products, sales, and transactions.");
+      }
+
+      const resolvedTenant = tenantId || auth.currentUser?.uid || 'anonymous';
+      
+      // Restore products
+      for (const p of data.products) {
+        const pId = p.id;
+        const pData = { ...p };
+        delete pData.id;
+        pData.tenant_id = resolvedTenant;
+        await setDoc(doc(db, 'products', pId), pData);
+      }
+
+      // Restore sales
+      for (const s of data.sales) {
+        const sId = s.id;
+        const sData = { ...s };
+        delete sData.id;
+        sData.tenant_id = resolvedTenant;
+        await setDoc(doc(db, 'sales', sId), sData);
+      }
+
+      // Restore transactions
+      for (const t of data.transactions) {
+        const tId = t.id;
+        const tData = { ...t };
+        delete tData.id;
+        tData.tenant_id = resolvedTenant;
+        await setDoc(doc(db, 'transactions', tId), tData);
+      }
+
+      Alert.alert('Restore Success', `Successfully restored:\n- ${data.products.length} Products\n- ${data.sales.length} Sales\n- ${data.transactions.length} Transactions.\nApp configuration updated.`);
+      setShowRestoreDialog(false);
+      setRestoreText('');
+      router.replace('/(owner)' as any);
+    } catch (err: any) {
+      console.error("Restore failed:", err);
+      Alert.alert('Restore Failed', err.message || 'Failed to parse or write restore data.');
+    } finally {
+      setRestoreLoading(false);
+    }
+  };
+
+  const triggerFileSelect = () => {
+    if (Platform.OS === 'web') {
+      fileInputRef.current?.click();
+    } else {
+      setShowRestoreDialog(true);
+    }
+  };
+
+  const handleFileChange = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result;
+      if (typeof text === 'string') {
+        Alert.alert(
+          'Confirm Restore',
+          'Warning: Restoring this backup will merge or overwrite your current store data. Are you sure you want to proceed?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Proceed', onPress: () => handleRestoreBackup(text) }
+          ]
+        );
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const handleSave = async () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -207,7 +353,104 @@ export default function AdminSettingsScreen() {
             </Button>
           </Card.Content>
         </Card>
+
+        {/* Backup & Recovery Card */}
+        <Card style={styles.card} elevation={0}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.iconTitleBox}>
+                <Icon name="database-sync-outline" size={20} color="#10B981" />
+                <Text style={styles.sectionTitle}>Database Backup & Recovery</Text>
+              </View>
+            </View>
+
+            <Text style={styles.switchDesc}>
+              Export your inventory database, sales reports, and ledger transactions into a portable JSON file to secure store backups.
+            </Text>
+
+            <Button
+              mode="contained"
+              icon="cloud-download-outline"
+              loading={backupLoading}
+              disabled={backupLoading}
+              onPress={handleCreateBackup}
+              buttonColor="#10B981"
+              style={{ borderRadius: 10, marginBottom: 16 }}
+            >
+              Export JSON Backup
+            </Button>
+
+            <View style={{ height: 1, backgroundColor: '#E2E8F0', marginVertical: 12 }} />
+
+            <Text style={styles.switchDesc}>
+              Restore products, stock balances, sales logs, and accounting transactions from a previously exported backup file.
+            </Text>
+
+            {Platform.OS === 'web' && (
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+                accept=".json"
+              />
+            )}
+
+            <Button
+              mode="outlined"
+              icon="cloud-upload-outline"
+              loading={restoreLoading}
+              disabled={restoreLoading}
+              onPress={triggerFileSelect}
+              textColor="#10B981"
+              style={{ borderRadius: 10, borderColor: '#10B981', marginTop: 4 }}
+            >
+              {Platform.OS === 'web' ? 'Upload & Restore File' : 'Restore from Text Paste'}
+            </Button>
+          </Card.Content>
+        </Card>
       </View>
+
+      <Portal>
+        <Dialog visible={showRestoreDialog} onDismiss={() => setShowRestoreDialog(false)} style={{ maxWidth: 500, alignSelf: 'center', width: '90%' }}>
+          <Dialog.Title>Restore from JSON text</Dialog.Title>
+          <Dialog.Content>
+            <Text style={{ marginBottom: 12, fontSize: 13, color: '#64748B' }}>
+              Paste the raw JSON backup text below to restore your store's products and transactions database.
+            </Text>
+            <TextInput
+              mode="outlined"
+              multiline
+              numberOfLines={8}
+              value={restoreText}
+              onChangeText={setRestoreText}
+              placeholder='{"backup_version": "1.0", ...}'
+              style={{ backgroundColor: 'white', fontSize: 12 }}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowRestoreDialog(false)}>Cancel</Button>
+            <Button 
+              mode="contained" 
+              buttonColor="#10B981"
+              loading={restoreLoading}
+              disabled={restoreLoading || !restoreText.trim()}
+              onPress={() => {
+                Alert.alert(
+                  'Confirm Restore',
+                  'Restoring this backup will merge or overwrite current products and sales. Continue?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Proceed', onPress: () => handleRestoreBackup(restoreText) }
+                  ]
+                );
+              }}
+            >
+              Restore Data
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }

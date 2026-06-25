@@ -62,6 +62,7 @@ export default function ProductDetailsScreen() {
         price: product.selling_price,
         qty: 1,
         gst_pct: product.gst_pct,
+        hsn: product.hsn || '',
         image_url: product.image_url,
       });
       router.push('/(vendor)/cart');

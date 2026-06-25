@@ -1,6 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, ActivityIndicator, Alert, Share } from 'react-native';
 import { Text, Card, useTheme, Surface, TextInput, Portal, Modal, Button, Divider } from 'react-native-paper';
 import { PieChart } from 'react-native-chart-kit';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -14,6 +14,7 @@ export default function ReportsAnalyticsScreen() {
 
   const [isGstRegistered, setIsGstRegistered] = useState(true);
   const [shopMode, setShopMode] = useState('Mobile Only');
+  const [storeName, setStoreName] = useState('My Store');
   const [netProfit, setNetProfit] = useState(0);
   const [paymentStats, setPaymentStats] = useState({ upi: 0, cash: 0, card: 0 });
   const [paymentAmts, setPaymentAmts] = useState({ upi: 0, cash: 0, card: 0 });
@@ -31,6 +32,9 @@ export default function ReportsAnalyticsScreen() {
 
       const mode = window.localStorage.getItem('shopMode');
       if (mode) setShopMode(mode);
+
+      const name = window.localStorage.getItem('storeName');
+      if (name) setStoreName(name);
     }
     fetchReportData();
   }, []);
@@ -109,6 +113,7 @@ export default function ReportsAnalyticsScreen() {
     { id: '3', name: 'Monthly Sales Report', desc: 'Detailed transaction logs and billing details for the active month.', icon: 'calendar-month', color: appTheme.colors.onSurface, filename: 'Monthly_Sales_Report.pdf' },
     { id: '4', name: 'Profit / Loss Summary', desc: 'Cost of goods sold vs sales collections to track net profits.', icon: 'scale-balance', color: appTheme.colors.onSurface, filename: 'Profit_Loss_Statement.pdf', advancedOnly: true },
     { id: '5', name: 'GST Returns Audit (GSTR-1)', desc: 'Total tax collections breakdown for filing returns.', icon: 'bank', color: appTheme.colors.onSurface, filename: 'GST_Tax_Report.pdf', gstOnly: true },
+    { id: '6', name: 'Tally Prime XML Export', desc: "Export this month's sales vouchers in Tally XML format for direct import.", icon: 'xml', color: '#E056FD', filename: 'tally_import.xml', isTally: true }
   ];
 
   const filteredReports = reportsList.filter(rep => {
@@ -123,6 +128,157 @@ export default function ReportsAnalyticsScreen() {
     { name: 'Cash', population: paymentStats.cash, color: '#3B82F6', legendFontColor: '#64748B', legendFontSize: 12 },
     { name: 'Card', population: paymentStats.card, color: '#F59E0B', legendFontColor: '#64748B', legendFontSize: 12 },
   ];
+
+  const handleTallyExport = async () => {
+    const { isFirebaseConfigured, db, auth } = await import('../../lib/firebase');
+    const { collection, getDocs, query, where } = await import('../../lib/firestore_adapter');
+    if (!isFirebaseConfigured) {
+      Alert.alert('Demo Mode', 'Tally export is not supported in demo mode.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const tenantId = auth.currentUser?.uid || 'anonymous';
+      const now = new Date();
+      const firstOfMonthObj = new Date(now.getFullYear(), now.getMonth(), 1);
+      const firstOfMonthISO = firstOfMonthObj.toISOString();
+      const firstOfMonth = firstOfMonthObj.getTime();
+
+      const q = query(
+        collection(db, 'sales'),
+        where('tenant_id', '==', tenantId),
+        where('created_at', '>=', firstOfMonthISO)
+      );
+      const snapshot = await getDocs(q);
+      
+      const sales: any[] = [];
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const date = new Date(data.created_at || new Date()).getTime();
+        if (date >= firstOfMonth) {
+          sales.push(data);
+        }
+      });
+
+      if (sales.length === 0) {
+        Alert.alert('No Data', 'No transactions found for this month to export.');
+        return;
+      }
+
+      sales.sort((a, b) => new Date(a.created_at || new Date()).getTime() - new Date(b.created_at || new Date()).getTime());
+
+      let vouchersXml = '';
+      sales.forEach((s) => {
+        const dateObj = new Date(s.created_at || new Date());
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const tallyDate = `${yyyy}${mm}${dd}`;
+        
+        const billNo = s.bill_no || 'INV-0000';
+        const totalAmt = parseFloat(s.total_amount || 0);
+        const gstCollectedAmt = parseFloat(s.gst_collected || 0);
+        const discountAmt = parseFloat(s.discount || 0);
+        const subtotalAmt = parseFloat(s.subtotal || 0);
+        const taxableAmt = subtotalAmt - discountAmt;
+        
+        const payMethod = (s.payment_method || 'Cash').toUpperCase();
+        const debitLedger = (payMethod.includes('UPI') || payMethod.includes('CARD')) ? 'Bank Account' : 'Cash';
+        
+        let voucher = `        <TALLYMESSAGE xmlns:UDF="TallyUDF">
+          <VOUCHER VCHTYPE="Sales" ACTION="Create" OBJVIEW="Invoice">
+            <DATE>${tallyDate}</DATE>
+            <VOUCHERNUMBER>${billNo}</VOUCHERNUMBER>
+            <PARTYLEDGERNAME>${debitLedger}</PARTYLEDGERNAME>
+            <PERSISTEDVIEW>Invoice</PERSISTEDVIEW>
+            <EFFECTIVEDATE>${tallyDate}</EFFECTIVEDATE>
+            <ISINVOICE>Yes</ISINVOICE>
+            <ALLLEDGERENTRIES.LIST>
+              <LEDGERNAME>${debitLedger}</LEDGERNAME>
+              <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
+              <AMOUNT>-${totalAmt.toFixed(2)}</AMOUNT>
+            </ALLLEDGERENTRIES.LIST>
+            <ALLLEDGERENTRIES.LIST>
+              <LEDGERNAME>Sales Account</LEDGERNAME>
+              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>
+              <AMOUNT>${taxableAmt.toFixed(2)}</AMOUNT>
+            </ALLLEDGERENTRIES.LIST>\n`;
+            
+        if (gstCollectedAmt > 0) {
+          const halfGst = (gstCollectedAmt / 2).toFixed(2);
+          voucher += `            <ALLLEDGERENTRIES.LIST>
+              <LEDGERNAME>CGST</LEDGERNAME>
+              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>
+              <AMOUNT>${halfGst}</AMOUNT>
+            </ALLLEDGERENTRIES.LIST>
+            <ALLLEDGERENTRIES.LIST>
+              <LEDGERNAME>SGST</LEDGERNAME>
+              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>
+              <AMOUNT>${halfGst}</AMOUNT>
+            </ALLLEDGERENTRIES.LIST>\n`;
+        }
+        
+        voucher += `          </VOUCHER>
+        </TALLYMESSAGE>\n`;
+        
+        vouchersXml += voucher;
+      });
+
+      const cleanStoreName = storeName.replace(/[&<>'"]/g, (c) => {
+        switch (c) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+          default: return c;
+        }
+      });
+
+      const fullXml = `<?xml version="1.0"?>
+<ENVELOPE>
+  <HEADER>
+    <TALLYREQUEST>Import Data</TALLYREQUEST>
+  </HEADER>
+  <BODY>
+    <IMPORTDATA>
+      <REQUESTDESC>
+        <REPORTNAME>Vouchers</REPORTNAME>
+        <STATICVARIABLES>
+          <SVCURRENTCOMPANY>${cleanStoreName}</SVCURRENTCOMPANY>
+        </STATICVARIABLES>
+      </REQUESTDESC>
+      <REQUESTDATA>
+${vouchersXml}      </REQUESTDATA>
+    </IMPORTDATA>
+  </BODY>
+</ENVELOPE>`;
+
+      if (Platform.OS === 'web') {
+        const blob = new Blob([fullXml], { type: 'application/xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tally_import_${new Date().toISOString().split('T')[0]}.xml`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        Alert.alert('Success', 'Tally Prime XML file exported and downloaded successfully.');
+      } else {
+        await Share.share({
+          message: fullXml,
+          title: 'Tally Prime XML Vouchers'
+        });
+      }
+    } catch (err: any) {
+      console.error("Tally XML export failed:", err);
+      Alert.alert('Export Failed', err.message || 'An error occurred during XML generation.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -202,11 +358,17 @@ export default function ReportsAnalyticsScreen() {
                     <Icon name="eye-outline" size={18} color="#64748B" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.downloadBtn, { backgroundColor: '#ECFDF5' }]}
-                    onPress={() => alert(`Generated and downloaded ${rep.filename}`)}
+                    style={[styles.downloadBtn, { backgroundColor: rep.isTally ? '#FFF4E5' : '#ECFDF5' }]}
+                    onPress={() => {
+                      if (rep.isTally) {
+                        handleTallyExport();
+                      } else {
+                        alert(`Generated and downloaded ${rep.filename}`);
+                      }
+                    }}
                     activeOpacity={0.7}
                   >
-                    <Icon name="download" size={18} color="#10B981" />
+                    <Icon name="download" size={18} color={rep.isTally ? '#EA580C' : '#10B981'} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -340,6 +502,53 @@ export default function ReportsAnalyticsScreen() {
                       <Text style={{ fontSize: 13, fontWeight: '500', color: appTheme.colors.onSurface }}>Filing liability</Text>
                       <Text style={{ fontSize: 13, fontWeight: '700', color: isGstRegistered ? '#E65100' : 'gray' }}>{isGstRegistered ? 'Pending' : 'N/A'}</Text>
                     </View>
+                  </View>
+                )}
+
+                {selectedReport.isTally && (
+                  <View style={{ gap: 8 }}>
+                    <View style={{ backgroundColor: '#FFF9E6', padding: 12, borderRadius: 8, borderLeftWidth: 4, borderLeftColor: '#F2994A', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#B7791F' }}>Tally Import Instructions:</Text>
+                      <Text style={{ fontSize: 11, color: '#D69E2E', marginTop: 4, lineHeight: 16 }}>
+                        1. Ensure the following standard ledgers exist in Tally Prime: "Cash" (for Cash sales), "Bank Account" (for UPI/Card sales), "Sales Account" (for revenue), "CGST", and "SGST" (for taxes).{"\n"}
+                        2. Open Tally Prime, go to Import &gt; Vouchers, select XML format, and choose this file.
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: appTheme.colors.onSurface }}>XML Structure Preview:</Text>
+                    <ScrollView style={{ maxHeight: 150, backgroundColor: '#F8F9FA', padding: 10, borderRadius: 8 }}>
+                      <Text style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontSize: 10, color: '#334155' }}>
+{`<?xml version="1.0"?>
+<ENVELOPE>
+  <HEADER>
+    <TALLYREQUEST>Import Data</TALLYREQUEST>
+  </HEADER>
+  <BODY>
+    <IMPORTDATA>
+      <REQUESTDESC>
+        <REPORTNAME>Vouchers</REPORTNAME>
+      </REQUESTDESC>
+      <REQUESTDATA>
+        <TALLYMESSAGE>
+          <VOUCHER VCHTYPE="Sales" ACTION="Create">
+            <DATE>YYYYMMDD</DATE>
+            <VOUCHERNUMBER>BILL-XXXX</VOUCHERNUMBER>
+            <PARTYLEDGERNAME>Cash/Bank Account</PARTYLEDGERNAME>
+            <ALLLEDGERENTRIES.LIST>
+              <LEDGERNAME>Cash/Bank Account</LEDGERNAME>
+              <AMOUNT>-Total</AMOUNT>
+            </ALLLEDGERENTRIES.LIST>
+            <ALLLEDGERENTRIES.LIST>
+              <LEDGERNAME>Sales Account</LEDGERNAME>
+              <AMOUNT>TaxableVal</AMOUNT>
+            </ALLLEDGERENTRIES.LIST>
+          </VOUCHER>
+        </TALLYMESSAGE>
+      </REQUESTDATA>
+    </IMPORTDATA>
+  </BODY>
+</ENVELOPE>`}
+                      </Text>
+                    </ScrollView>
                   </View>
                 )}
               </ScrollView>

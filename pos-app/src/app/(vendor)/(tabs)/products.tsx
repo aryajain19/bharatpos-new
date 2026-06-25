@@ -6,7 +6,7 @@ import { db, isFirebaseConfigured } from '../../../lib/firebase';
 import { collection, getDocs } from '../../../lib/firestore_adapter';
 import { useCart } from '../../../providers/CartProvider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from 'expo-router';
+import { useNavigation, router } from 'expo-router';
 import { useAuth } from '../../../providers/AuthProvider';
 
 // --- Categories with icons ---
@@ -29,26 +29,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 // --- 18 Realistic Indian products ---
-const DEMO_PRODUCTS = [
-  { id: 'p1', name: 'Tata Salt 1kg', selling_price: 24, stock_qty: 150, category: 'Grocery', gst_pct: 5, image_url: '' },
-  { id: 'p2', name: 'Fortune Sunflower Oil 1L', selling_price: 145, stock_qty: 60, category: 'Grocery', gst_pct: 5, image_url: '' },
-  { id: 'p3', name: 'Aashirvaad Atta 5kg', selling_price: 285, stock_qty: 40, category: 'Grocery', gst_pct: 5, image_url: '' },
-  { id: 'p4', name: 'India Gate Basmati Rice 1kg', selling_price: 110, stock_qty: 75, category: 'Grocery', gst_pct: 5, image_url: '' },
-  { id: 'p5', name: 'MDH Garam Masala 100g', selling_price: 72, stock_qty: 90, category: 'Grocery', gst_pct: 12, image_url: '' },
-  { id: 'p6', name: 'Amul Butter 500g', selling_price: 280, stock_qty: 35, category: 'Dairy', gst_pct: 12, image_url: '' },
-  { id: 'p7', name: 'Mother Dairy Dahi 400g', selling_price: 42, stock_qty: 50, category: 'Dairy', gst_pct: 5, image_url: '' },
-  { id: 'p8', name: 'Amul Taaza Milk 1L', selling_price: 60, stock_qty: 100, category: 'Dairy', gst_pct: 0, image_url: '' },
-  { id: 'p9', name: 'Nandini Paneer 200g', selling_price: 90, stock_qty: 20, category: 'Dairy', gst_pct: 5, image_url: '' },
-  { id: 'p10', name: 'Coca-Cola 750ml', selling_price: 40, stock_qty: 200, category: 'Beverages', gst_pct: 28, image_url: '' },
-  { id: 'p11', name: 'Tata Tea Gold 500g', selling_price: 260, stock_qty: 55, category: 'Beverages', gst_pct: 5, image_url: '' },
-  { id: 'p12', name: 'Nescafé Classic 100g', selling_price: 310, stock_qty: 30, category: 'Beverages', gst_pct: 18, image_url: '' },
-  { id: 'p13', name: 'Parle-G Biscuit 800g', selling_price: 75, stock_qty: 120, category: 'Snacks', gst_pct: 18, image_url: '' },
-  { id: 'p14', name: 'Haldiram Aloo Bhujia 400g', selling_price: 120, stock_qty: 65, category: 'Snacks', gst_pct: 12, image_url: '' },
-  { id: 'p15', name: 'Lays Magic Masala 52g', selling_price: 20, stock_qty: 300, category: 'Snacks', gst_pct: 12, image_url: '' },
-  { id: 'p16', name: 'Dove Soap 100g', selling_price: 52, stock_qty: 85, category: 'Personal Care', gst_pct: 18, image_url: '' },
-  { id: 'p17', name: 'Colgate MaxFresh 150g', selling_price: 95, stock_qty: 70, category: 'Personal Care', gst_pct: 18, image_url: '' },
-  { id: 'p18', name: 'Head & Shoulders 340ml', selling_price: 340, stock_qty: 25, category: 'Personal Care', gst_pct: 18, image_url: '' },
-];
+const DEMO_PRODUCTS: any[] = [];
 
 export default function ProductsScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
@@ -107,6 +88,7 @@ export default function ProductsScreen() {
           stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 15),
           category: p.category || 'Grocery',
           gst_pct: p.gst_pct || 0,
+          hsn: p.hsn || '',
           image_url: p.image_url || '',
         }));
       }
@@ -118,19 +100,11 @@ export default function ProductsScreen() {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const updatedProducts = baseProducts.map((p: any) => {
-        const localStock = window.localStorage.getItem(`stock_${p.id}`);
-        if (localStock !== null) {
-          return { ...p, stock_qty: parseInt(localStock, 10) };
-        } else {
-          window.localStorage.setItem(`stock_${p.id}`, String(p.stock_qty));
-          return p;
-        }
+      baseProducts.forEach((p: any) => {
+        window.localStorage.setItem(`stock_${p.id}`, String(p.stock_qty));
       });
-      setProducts(updatedProducts);
-    } else {
-      setProducts(baseProducts);
     }
+    setProducts(baseProducts);
   };
 
   const onRefresh = useCallback(async () => {
@@ -177,6 +151,7 @@ export default function ProductsScreen() {
         price: item.selling_price,
         qty: 1,
         gst_pct: item.gst_pct,
+        hsn: item.hsn || '',
         image_url: item.image_url,
       });
     };
@@ -352,7 +327,7 @@ export default function ProductsScreen() {
               <Text style={styles.cartTotalText}>₹{cartTotal.toFixed(2)}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.cartViewBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.cartViewBtn} activeOpacity={0.8} onPress={() => router.push('/(vendor)/cart')}>
             <Text style={styles.cartViewBtnText}>View Cart</Text>
             <MaterialCommunityIcons name="arrow-right" size={16} color="white" />
           </TouchableOpacity>

@@ -24,7 +24,7 @@ const secondaryApp = getApps().find(a => a.name === 'admin-provisioning') || ini
 const secondaryAuth = getAuth(secondaryApp);
 
 // Use a mock flag to determine if we should actually call Firebase in demo mode
-export const isFirebaseConfigured = firebaseConfig.apiKey !== undefined && firebaseConfig.apiKey !== "mock-api-key";
+export const isFirebaseConfigured = !!firebaseConfig.apiKey;
 
 export { app, auth, secondaryAuth };
 

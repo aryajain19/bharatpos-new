@@ -12,7 +12,11 @@ export function collection(dbInstance: any, pathStr: string, ...segments: string
 }
 
 export async function setDoc(docRef: any, data: any, options?: { merge?: boolean }) {
-  await set(docRef.ref, data);
+  if (options?.merge) {
+    await update(docRef.ref, data);
+  } else {
+    await set(docRef.ref, data);
+  }
 }
 
 export async function addDoc(collectionRef: any, data: any) {
@@ -65,8 +69,12 @@ export function limit(num: number) {
 
 export async function getDocs(queryRef: any) {
   let qRef = queryRef.ref;
-  // We skip rtdbQuery with orderByChild to avoid strict index requirements,
-  // since the loop below natively processes all 'where' constraints client-side.
+  if (queryRef.constraints) {
+    const tenantConstraint = queryRef.constraints.find((c: any) => c.type === 'where' && c.fieldPath === 'tenant_id' && c.opStr === '==');
+    if (tenantConstraint) {
+      qRef = rtdbQuery(queryRef.ref, orderByChild('tenant_id'), equalTo(tenantConstraint.value));
+    }
+  }
 
   const snapshot = await get(qRef);
   let results: any[] = [];

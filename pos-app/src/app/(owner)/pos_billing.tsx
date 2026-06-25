@@ -1,7 +1,8 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Animated, TextInput as RNTextInput, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Animated, TextInput as RNTextInput, Platform, Linking } from 'react-native';
 import { Text, Button, Divider, Surface, Chip, Portal, Dialog, SegmentedButtons, TextInput, useTheme } from 'react-native-paper';
+import * as Print from 'expo-print';
 import { useCart } from '../../providers/CartProvider';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment } from '../../lib/firestore_adapter';
@@ -107,6 +108,7 @@ export default function POSBillingScreen() {
       price: product.price, 
       qty: 1,
       gst_pct: isGstRegistered ? product.gst_pct : 0, 
+      hsn: product.hsn || '',
       image_url: product.image_url,
     });
     setSearch('');
@@ -137,11 +139,18 @@ export default function POSBillingScreen() {
     }
     return '';
   });
+  const [storeAddress, setStoreAddress] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('storeAddress') || '';
+    }
+    return '';
+  });
 
   // Checkout & sharing states
   const [showCheckout, setShowCheckout] = useState(false);
   const [custName, setCustName] = useState('');
   const [custPhone, setCustPhone] = useState('');
+  const [custGstin, setCustGstin] = useState('');
   const [payMethod, setPayMethod] = useState('UPI'); // 'Cash' | 'UPI' | 'Card'
   const [showReceipt, setShowReceipt] = useState(false);
   const [activeBillNo, setActiveBillNo] = useState('');
@@ -156,6 +165,9 @@ export default function POSBillingScreen() {
       
       const numVal = window.localStorage.getItem('gstNumber');
       if (numVal) setGstNum(numVal);
+
+      const addrVal = window.localStorage.getItem('storeAddress');
+      if (addrVal) setStoreAddress(addrVal);
     }
   }, []);
 
@@ -176,7 +188,7 @@ export default function POSBillingScreen() {
     return { cgst, sgst, totalGst };
   }, [cart, isGstRegistered]);
 
-  const discount = subtotal * 0.05;
+  const discount = 0; // Configurable discount can be implemented later
   const finalTotal = isGstRegistered
     ? (subtotal - discount + gstBreakdown.totalGst)
     : (subtotal - discount);
@@ -218,6 +230,7 @@ export default function POSBillingScreen() {
           price: data.selling_price || data.price, 
           qty: 1,
           gst_pct: isGstRegistered ? data.gst_pct : 0, 
+          hsn: data.hsn || '',
           image_url: data.image_url,
         });
         setSearch('');
@@ -236,11 +249,11 @@ export default function POSBillingScreen() {
 
   const handlePay = () => {
     if (cart.length === 0) return;
-    setActiveBillNo('INV-' + Math.floor(100000 + Math.random() * 900000));
+    setActiveBillNo('INV-' + Date.now());
     setShowCheckout(true);
   };
 
-  const handleCompleteSale = (sendInvoice: boolean) => {
+  const handleCompleteSale = async (sendInvoice: boolean) => {
     const dateObj = new Date();
     const dateStr = dateObj.toISOString().split('T')[0];
     const timeStr = dateObj.toTimeString().split(' ')[0].substring(0, 5);
@@ -249,53 +262,60 @@ export default function POSBillingScreen() {
     // 3. Save to Firebase Firestore if enabled
     if (isFirebaseConfigured) {
       const tenantId = auth.currentUser?.uid || 'anonymous';
-      addDoc(collection(db, 'sales'), {
-        tenant_id: tenantId,
-        bill_no: activeBillNo,
-        created_at: dateObj.toISOString(),
-        customer_name: custName || 'Walk-in Customer',
-        customer_phone: custPhone || '',
-        payment_method: payMethod,
-        subtotal: subtotal,
-        discount: discount,
-        gst_collected: gstBreakdown.totalGst,
-        total_amount: finalTotal,
-        items: cart.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          qty: item.qty,
-          gst_pct: item.gst_pct || 0
-        }))
-      }).catch(err => console.error("Firestore sale write error:", err));
+      try {
+        await addDoc(collection(db, 'sales'), {
+          tenant_id: tenantId,
+          vendor_id: auth.currentUser?.uid,
+          bill_no: activeBillNo,
+          created_at: dateObj.toISOString(),
+          customer_name: custName || 'Walk-in Customer',
+          customer_phone: custPhone || '',
+          customer_gstin: custGstin || '',
+          payment_method: payMethod,
+          subtotal: subtotal,
+          discount: discount,
+          gst_collected: gstBreakdown.totalGst,
+          total_amount: finalTotal,
+          items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            gst_pct: item.gst_pct || 0,
+            hsn: (item as any).hsn || ''
+          }))
+        });
 
-      addDoc(collection(db, 'transactions'), {
-        tenant_id: tenantId,
-        dateTime: `${dateStr} ${timeStr}`,
-        created_at: dateObj.toISOString(),
-        voucherType: 'Sales',
-        voucherNo: activeBillNo,
-        partyName: custName || 'Walk-in Customer',
-        debit: finalTotal,
-        credit: 0,
-        paymentMethod: payMethod,
-        gstAmount: gstBreakdown.totalGst,
-        taxableValue: subtotal - discount,
-      }).catch(err => console.error("Firestore transaction write error:", err));
+        await addDoc(collection(db, 'transactions'), {
+          tenant_id: tenantId,
+          dateTime: `${dateStr} ${timeStr}`,
+          created_at: dateObj.toISOString(),
+          voucherType: 'Sales',
+          voucherNo: activeBillNo,
+          partyName: custName || 'Walk-in Customer',
+          debit: finalTotal,
+          credit: 0,
+          paymentMethod: payMethod,
+          gstAmount: gstBreakdown.totalGst,
+          taxableValue: subtotal - discount,
+        });
 
-      // Deduct stock in Firestore
-      cart.forEach(async (item) => {
-        try {
-          if (!item.id.startsWith('p')) {
+        // Deduct stock in Firestore
+        await Promise.all(cart.map(async (item) => {
+          try {
             const productRef = doc(db, 'products', item.id);
             await updateDoc(productRef, {
               stock_qty: increment(-item.qty)
             });
+          } catch (error) {
+            console.error("Failed to update stock for item", item.id, error);
           }
-        } catch (error) {
-          console.error("Failed to update stock for item", item.id, error);
-        }
-      });
+        }));
+      } catch (err) {
+        console.error("Firestore sale write error:", err);
+        Alert.alert("Error", "Failed to complete sale. Please try again.");
+        return; // Don't proceed to success screen
+      }
     }
 
     setShowCheckout(false);
@@ -306,6 +326,7 @@ export default function POSBillingScreen() {
       clearCart();
       setCustName('');
       setCustPhone('');
+      setCustGstin('');
     }
   };
 
@@ -314,6 +335,117 @@ export default function POSBillingScreen() {
     clearCart();
     setCustName('');
     setCustPhone('');
+    setCustGstin('');
+  };
+
+  const handlePrintPdf = async () => {
+    try {
+      const itemsRows = cart.map(item => `
+        <tr>
+          <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">${item.name}</td>
+          <td style="text-align: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">${item.qty}</td>
+          <td style="text-align: right; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">₹${item.price.toFixed(2)}</td>
+          <td style="text-align: right; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">₹${(item.price * item.qty).toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      const gstRows = isGstRegistered ? `
+        <div class="total-row"><span>CGST:</span> <span>₹${gstBreakdown.cgst.toFixed(2)}</span></div>
+        <div class="total-row"><span>SGST:</span> <span>₹${gstBreakdown.sgst.toFixed(2)}</span></div>
+      ` : '';
+
+      const htmlString = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Invoice ${activeBillNo}</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #334155; background-color: #f8fafc; margin: 0; }
+              .receipt-box { max-width: 450px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
+              .header { text-align: center; margin-bottom: 24px; }
+              .store-name { font-size: 24px; font-weight: 800; margin: 0; color: #0f172a; letter-spacing: -0.5px; }
+              .store-subtitle { font-size: 13px; color: #64748b; margin: 4px 0 0 0; }
+              .gstin { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 6px; }
+              .invoice-details { margin: 20px 0; border-top: 1px dashed #e2e8f0; border-bottom: 1px dashed #e2e8f0; padding: 12px 0; font-size: 13px; color: #475569; }
+              .details-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+              .items-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+              .items-table th { border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px; }
+              .totals-section { margin-top: 24px; border-top: 2px solid #f1f5f9; padding-top: 12px; font-size: 13px; color: #475569; }
+              .total-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+              .grand-total { font-size: 18px; font-weight: 800; color: #0f172a; border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 10px; }
+              .footer { text-align: center; margin-top: 32px; font-size: 11px; color: #94a3b8; font-weight: 500; }
+              @media print {
+                body { padding: 0; background-color: #ffffff; }
+                .receipt-box { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="receipt-box">
+              <div class="header">
+                <h1 class="store-name">${storeName}</h1>
+                <p class="store-subtitle">${storeAddress || 'BharatPOS Merchant Store'}</p>
+                ${isGstRegistered && gstNum ? `<div class="gstin">GSTIN: ${gstNum}</div>` : ''}
+              </div>
+              <div class="invoice-details">
+                <div class="details-row"><span>Invoice No:</span> <strong>${activeBillNo}</strong></div>
+                <div class="details-row"><span>Date:</span> <span>${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</span></div>
+                <div class="details-row"><span>Customer Name:</span> <span>${custName || 'Walk-in Customer'}</span></div>
+                ${custPhone ? `<div class="details-row"><span>Mobile No:</span> <span>+91 ${custPhone}</span></div>` : ''}
+                ${custGstin ? `<div class="details-row"><span>Customer GSTIN:</span> <span>${custGstin}</span></div>` : ''}
+                <div class="details-row"><span>Payment Mode:</span> <span>${payMethod}</span></div>
+              </div>
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left; width: 45%;">Item Description</th>
+                    <th style="text-align: center; width: 10%;">Qty</th>
+                    <th style="text-align: right; width: 20%;">Rate</th>
+                    <th style="text-align: right; width: 25%;">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsRows}
+                </tbody>
+              </table>
+              <div class="totals-section">
+                <div class="total-row"><span>Subtotal:</span> <span>₹${subtotal.toFixed(2)}</span></div>
+                ${discount > 0 ? `<div class="total-row"><span>Discount:</span> <span>-₹${discount.toFixed(2)}</span></div>` : ''}
+                ${gstRows}
+                <div class="total-row grand-total"><span>GRAND TOTAL:</span> <span>₹${finalTotal.toFixed(2)}</span></div>
+              </div>
+              <div class="footer">
+                <p>Thank you for shopping with us!</p>
+                <p style="font-size: 9px; color: #cbd5e1; margin-top: 8px;">Powered by BharatPOS POS billing software</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      await Print.printAsync({ html: htmlString });
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Printing Error', 'Failed to generate invoice PDF.');
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    const itemsText = cart.map(item => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
+    const message = `Thank you for shopping at *${storeName}*!\n\n*Invoice No:* ${activeBillNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${payMethod}\n\n*Items:*\n${itemsText}\n\n*Subtotal:* ₹${subtotal.toFixed(2)}\n*Discount:* ₹${discount.toFixed(2)}\n${isGstRegistered ? `*GST:* ₹${gstBreakdown.totalGst.toFixed(2)}\n` : ''}*Grand Total:* *₹${finalTotal.toFixed(2)}*\n\nWe look forward to serving you again!`;
+    
+    let url = '';
+    if (custPhone) {
+      const cleanPhone = custPhone.replace(/[^0-9]/g, '');
+      url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
+    } else {
+      url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    }
+
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Error', 'Make sure WhatsApp is installed on your device to share invoices.');
+    });
   };
 
   const handlePrint = () => {
@@ -684,6 +816,16 @@ export default function POSBillingScreen() {
               activeOutlineColor="#10B981"
               left={<TextInput.Icon icon="account" color="#999" />}
             />
+            <TextInput
+              label="Customer GSTIN (Optional)"
+              value={custGstin}
+              onChangeText={setCustGstin}
+              mode="outlined"
+              outlineColor="#EEF0F6"
+              activeOutlineColor="#10B981"
+              left={<TextInput.Icon icon="bank" color="#999" />}
+              style={{ marginTop: 12 }}
+            />
           </Dialog.Content>
           <Dialog.Actions style={styles.dialogActions}>
             <Button onPress={() => handleCompleteSale(false)}>
@@ -772,10 +914,7 @@ export default function POSBillingScreen() {
             <View style={styles.sharingGrid}>
               <TouchableOpacity
                 style={styles.shareOption}
-                onPress={() => Alert.alert(
-                  'WhatsApp Shared',
-                  `Sent to customer:\n\nThank you for shopping at ${storeName}.\nInvoice Amount: ₹${finalTotal.toFixed(0)}\nDownload Bill: secure-link.com/invoice/${activeBillNo.replace('INV-', '')}`
-                )}
+                onPress={handleWhatsAppShare}
               >
                 <View style={[styles.shareIcon, { backgroundColor: appTheme.colors.surface }]}>
                   <Icon name="whatsapp" size={24} color="#4CAF50" />
@@ -796,10 +935,7 @@ export default function POSBillingScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.shareOption}
-                onPress={() => Alert.alert(
-                  'PDF Generated & Saved',
-                  `PDF receipt generated for ${custName || 'Walk-in Customer'} (+91 ${custPhone || 'N/A'}).\nFile: ${activeBillNo}.pdf has been saved to device downloads.`
-                )}
+                onPress={handlePrintPdf}
               >
                 <View style={[styles.shareIcon, { backgroundColor: appTheme.colors.surface }]}>
                   <Icon name="file-pdf-box" size={24} color="#D81B60" />

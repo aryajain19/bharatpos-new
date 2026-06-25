@@ -6,6 +6,7 @@ export type CartItem = {
   price: number;
   qty: number;
   gst_pct: number;
+  hsn?: string;
   image_url?: string;
 };
 

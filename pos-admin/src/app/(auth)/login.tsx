@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions, Animated } from 'react-native';
 import { TextInput, Button, Text, Surface } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -7,23 +7,13 @@ import { doc, getDoc, setDoc } from '../../lib/firestore_adapter';
 import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+const { width, height } = Dimensions.get('window');
+
 export default function AdminLoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSecure, setIsSecure] = useState(true);
-
-  async function handleDemoLogin() {
-    setLoading(true);
-    // Instant demo bypass
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('adminBypass', 'true');
-      }
-      setLoading(false);
-      router.replace('/' as any);
-    }, 400);
-  }
 
   async function handleLogin() {
     setLoading(true);
@@ -56,7 +46,6 @@ export default function AdminLoginScreen() {
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userSnap = await getDoc(userDocRef);
       
-      // Auto-provision admin role for the admin email
       if (email === 'aryajain1906@gmail.com') {
         const adminData = userSnap.exists() ? userSnap.data() : {};
         if (adminData.role !== 'admin') {
@@ -94,83 +83,75 @@ export default function AdminLoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.backgroundAccent} />
+      {/* Dynamic Background Elements */}
+      <View style={[styles.glowOrb, styles.orbTopRight]} />
+      <View style={[styles.glowOrb, styles.orbBottomLeft]} />
       
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Surface style={styles.cardContainer} elevation={5}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.contentWrapper}>
           
-          <View style={styles.headerBox}>
-            <View style={styles.iconCircle}>
-              <Icon name="shield-crown" size={32} color="#FFD700" />
+          <View style={styles.logoContainer}>
+            <View style={styles.iconRingExt}>
+              <View style={styles.iconRingInt}>
+                <Icon name="shield-lock" size={38} color="#818CF8" />
+              </View>
             </View>
-            <Text style={styles.title}>Super Admin Portal</Text>
-            <Text style={styles.subtitle}>Central Command & Platform Control</Text>
+            <Text style={styles.title}>Admin Portal</Text>
+            <Text style={styles.subtitle}>Secure Access Required</Text>
           </View>
 
-          <View style={styles.formContainer}>
-            <TextInput
-              label="Admin Email or ID"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.input}
-              mode="outlined"
-              outlineColor="#33364A"
-              activeOutlineColor="#4F46E5"
-              textColor="#FFF"
-              theme={{ colors: { onSurfaceVariant: '#A0AEC0' } }}
-              left={<TextInput.Icon icon="account-key-outline" color="#A0AEC0" />}
-            />
+          <Surface style={styles.cardContainer} elevation={0}>
+            <View style={styles.formContainer}>
+              <TextInput
+                label="Admin Email or ID"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
+                mode="outlined"
+                outlineColor="transparent"
+                activeOutlineColor="#818CF8"
+                textColor="#F8FAFC"
+                placeholderTextColor="#64748B"
+                theme={{ colors: { onSurfaceVariant: '#94A3B8', primary: '#818CF8' }, roundness: 12 }}
+                left={<TextInput.Icon icon="email-outline" color="#64748B" />}
+              />
 
-            <TextInput
-              label="Security Passkey"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={isSecure}
-              style={styles.input}
-              mode="outlined"
-              outlineColor="#33364A"
-              activeOutlineColor="#4F46E5"
-              textColor="#FFF"
-              theme={{ colors: { onSurfaceVariant: '#A0AEC0' } }}
-              left={<TextInput.Icon icon="lock-outline" color="#A0AEC0" />}
-              right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#A0AEC0" onPress={() => setIsSecure(!isSecure)} />}
-            />
+              <TextInput
+                label="Security Passkey"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={isSecure}
+                style={[styles.input, { marginTop: 16 }]}
+                mode="outlined"
+                outlineColor="transparent"
+                activeOutlineColor="#818CF8"
+                textColor="#F8FAFC"
+                placeholderTextColor="#64748B"
+                theme={{ colors: { onSurfaceVariant: '#94A3B8', primary: '#818CF8' }, roundness: 12 }}
+                left={<TextInput.Icon icon="lock-outline" color="#64748B" />}
+                right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#64748B" onPress={() => setIsSecure(!isSecure)} />}
+              />
 
-            <Button
-              mode="contained"
-              onPress={handleLogin}
-              loading={loading}
-              style={styles.loginBtn}
-              contentStyle={styles.loginBtnContent}
-              labelStyle={styles.loginBtnLabel}
-            >
-              Secure Authentication
-            </Button>
-
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>DEMO MODE</Text>
-              <View style={styles.dividerLine} />
+              <Button
+                mode="contained"
+                onPress={handleLogin}
+                loading={loading}
+                style={styles.loginBtn}
+                contentStyle={styles.loginBtnContent}
+                labelStyle={styles.loginBtnLabel}
+                buttonColor="#6366F1"
+              >
+                Sign In to Dashboard
+              </Button>
             </View>
-
-            <Button
-              mode="outlined"
-              onPress={handleDemoLogin}
-              style={styles.demoBtn}
-              textColor="#A0AEC0"
-              icon="lightning-bolt"
-            >
-              Instant Admin Demo Access
-            </Button>
-
-            <Text style={styles.footerInfo}>
-              Unauthorized access to this terminal is strictly prohibited. Activity is logged.
-            </Text>
-          </View>
+          </Surface>
           
-        </Surface>
+          <Text style={styles.footerText}>
+            Protected by advanced 256-bit encryption.
+          </Text>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -179,111 +160,115 @@ export default function AdminLoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0C10',
+    backgroundColor: '#020617', // Very dark slate (Tailwind slate-950)
   },
-  backgroundAccent: {
+  glowOrb: {
     position: 'absolute',
-    top: -150,
-    right: -100,
-    width: 600,
-    height: 600,
-    borderRadius: 300,
-    backgroundColor: '#4F46E5',
-    opacity: 0.1,
-    filter: 'blur(100px)' as any,
+    width: width * 0.8,
+    height: width * 0.8,
+    borderRadius: width * 0.4,
+    opacity: 0.15,
+    filter: 'blur(80px)' as any,
+  },
+  orbTopRight: {
+    top: -height * 0.1,
+    right: -width * 0.2,
+    backgroundColor: '#6366F1', // Indigo
+  },
+  orbBottomLeft: {
+    bottom: -height * 0.1,
+    left: -width * 0.2,
+    backgroundColor: '#8B5CF6', // Violet
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
   },
-  cardContainer: {
+  contentWrapper: {
     width: '100%',
-    maxWidth: 420,
-    backgroundColor: '#1F2833',
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#33364A',
-  },
-  headerBox: {
-    backgroundColor: '#12141D',
+    maxWidth: 400,
     alignItems: 'center',
-    paddingVertical: 32,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2B2E42',
   },
-  iconCircle: {
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  iconRingExt: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  iconRingInt: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.2)',
+    borderColor: 'rgba(99, 102, 241, 0.3)',
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '800',
-    color: '#FFF',
-    letterSpacing: 1,
+    color: '#F8FAFC',
+    letterSpacing: -0.5,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 12,
-    color: '#8B8FAD',
-    marginTop: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 2,
+    fontSize: 14,
+    color: '#94A3B8',
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+  cardContainer: {
+    width: '100%',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)', // Slate 900 with opacity for glass effect
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.4,
+    shadowRadius: 30,
+    elevation: 10, // for Android
   },
   formContainer: {
     padding: 32,
   },
   input: {
-    backgroundColor: '#12141D',
-    marginBottom: 16,
+    backgroundColor: 'rgba(2, 6, 23, 0.6)', // Slate 950 inside the input
   },
   loginBtn: {
-    marginTop: 12,
-    borderRadius: 8,
-    backgroundColor: '#4F46E5',
+    marginTop: 32,
+    borderRadius: 12,
+    elevation: 4,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
   loginBtnContent: {
-    paddingVertical: 6,
+    paddingVertical: 10,
   },
   loginBtnLabel: {
-    fontWeight: 'bold',
-    fontSize: 14,
+    fontWeight: '700',
+    fontSize: 15,
     letterSpacing: 0.5,
+    color: '#FFF',
   },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#33364A',
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: '#6B7280',
-    fontSize: 10,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  demoBtn: {
-    borderColor: '#33364A',
-    borderRadius: 8,
-  },
-  footerInfo: {
-    marginTop: 24,
-    fontSize: 11,
-    color: '#4B5563',
+  footerText: {
+    marginTop: 40,
+    fontSize: 12,
+    color: '#475569', // Slate 600
     textAlign: 'center',
-    lineHeight: 16,
+    fontWeight: '500',
   },
 });

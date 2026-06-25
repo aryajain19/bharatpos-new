@@ -1,10 +1,11 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator, Alert, Platform } from 'react-native';
 import { Text, useTheme, Card, DataTable, Button, Surface, Divider, TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
-import { collection, getDocs, query, orderBy, where } from '../../lib/firestore_adapter';
+import { collection, getDocs, query, orderBy, where, doc, getDoc, setDoc } from '../../lib/firestore_adapter';
+import * as Print from 'expo-print';
 
 // Dynamic GST summaries are computed from actual sales data.
 const fmt = (n: number) => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -19,17 +20,70 @@ export default function GSTManagementScreen() {
   const isDesktop = width > 800;
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [gstNumber, setGstNumber] = useState('22AAAAA0000A1Z5');
+  const [gstNumber, setGstNumber] = useState('');
   const [defaultGstPct, setDefaultGstPct] = useState('18');
   const [returnPeriod, setReturnPeriod] = useState('June 2026');
   const [sales, setSales] = useState<any[]>([]);
   const [totalGstCollected, setTotalGstCollected] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [storeName, setStoreName] = useState('BharatPOS');
 
   useEffect(() => {
+    loadSettings();
     fetchSales();
   }, []);
+
+  const loadSettings = async () => {
+    // Load from localStorage first for fast display
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const sn = window.localStorage.getItem('storeName');
+      if (sn) setStoreName(sn);
+      const gn = window.localStorage.getItem('gstNumber');
+      if (gn) setGstNumber(gn);
+    }
+    // Then load from Firebase for source of truth
+    if (!isFirebaseConfigured) return;
+    try {
+      const tenantId = auth.currentUser?.uid || 'anonymous';
+      const settingsRef = doc(db, 'settings', tenantId);
+      const snap = await getDoc(settingsRef);
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.gstNumber) setGstNumber(d.gstNumber);
+        if (d.defaultGstPct) setDefaultGstPct(String(d.defaultGstPct));
+        if (d.storeName) setStoreName(d.storeName);
+      }
+    } catch (err) {
+      console.error('Failed to load GST settings:', err);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!isFirebaseConfigured) {
+      Alert.alert('Error', 'Firebase is not configured.');
+      return;
+    }
+    try {
+      const tenantId = auth.currentUser?.uid || 'anonymous';
+      const settingsRef = doc(db, 'settings', tenantId);
+      await setDoc(settingsRef, {
+        gstNumber,
+        defaultGstPct: parseFloat(defaultGstPct) || 18,
+        storeName,
+        tenant_id: tenantId,
+      }, { merge: true });
+      // Also persist in localStorage for offline use
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.localStorage.setItem('gstNumber', gstNumber);
+        window.localStorage.setItem('storeName', storeName);
+      }
+      Alert.alert('Saved', 'GST settings saved successfully.');
+    } catch (err: any) {
+      console.error('Failed to save GST settings:', err);
+      Alert.alert('Error', err.message || 'Failed to save settings.');
+    }
+  };
 
   const fetchSales = async () => {
     if (!isFirebaseConfigured) {
@@ -42,7 +96,7 @@ export default function GSTManagementScreen() {
       const tenantId = auth.currentUser?.uid || 'anonymous';
       const q = query(collection(db, 'sales'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setSales(data);
       let totalGst = 0;
       data.forEach((sale: any) => {
@@ -66,9 +120,15 @@ export default function GSTManagementScreen() {
   const { b2bSupplies, b2cSmallSupplies, hsnSummary, outwardSupplies, eligibleITC, paymentOfTax, b2bTotals, cgstTot, sgstTot } = React.useMemo(() => {
     let cgstTot = 0, sgstTot = 0, taxTot = 0;
     const rates: Record<number, any> = {};
+    const hsnGroups: Record<string, { hsn: string; description: string; totalQty: number; taxableValue: number; igst: number; cgst: number; sgst: number }> = {};
+    const b2bRecords: any[] = [];
+    let b2bTotalTaxable = 0, b2bTotalCgst = 0, b2bTotalSgst = 0, b2bTotalTotal = 0;
     
     sales.forEach(sale => {
       const items = sale.items || [];
+      const isB2B = !!(sale.customer_gstin && sale.customer_gstin.length >= 15);
+      let saleTaxable = 0, saleCgst = 0, saleSgst = 0;
+
       items.forEach((item: any) => {
         const rate = item.gst_pct || 0;
         const taxable = (item.price * item.qty);
@@ -78,22 +138,56 @@ export default function GSTManagementScreen() {
         taxTot += taxable;
         cgstTot += cgst;
         sgstTot += sgst;
+        saleTaxable += taxable;
+        saleCgst += cgst;
+        saleSgst += sgst;
 
-        if (rate > 0) {
+        if (rate > 0 && !isB2B) {
           if (!rates[rate]) rates[rate] = { rate, taxableValue: 0, cgst: 0, sgst: 0, total: 0 };
           rates[rate].taxableValue += taxable;
           rates[rate].cgst += cgst;
           rates[rate].sgst += sgst;
           rates[rate].total += (taxable + cgst + sgst);
         }
+
+        // HSN Summary grouping
+        const hsnCode = item.hsn || 'N/A';
+        if (!hsnGroups[hsnCode]) {
+          hsnGroups[hsnCode] = { hsn: hsnCode, description: item.name || 'Unknown', totalQty: 0, taxableValue: 0, igst: 0, cgst: 0, sgst: 0 };
+        }
+        hsnGroups[hsnCode].totalQty += (item.qty || 1);
+        hsnGroups[hsnCode].taxableValue += taxable;
+        hsnGroups[hsnCode].cgst += cgst;
+        hsnGroups[hsnCode].sgst += sgst;
       });
+
+      // B2B Supplies: group per sale if customer GSTIN exists
+      if (isB2B) {
+        const saleTotal = saleTaxable + saleCgst + saleSgst;
+        const dateStr = sale.created_at ? new Date(sale.created_at).toLocaleDateString('en-IN') : (sale.dateTime || '—');
+        b2bRecords.push({
+          gstin: sale.customer_gstin,
+          invoiceNo: sale.bill_no || sale.voucherNo || '—',
+          date: dateStr,
+          taxableValue: saleTaxable,
+          cgst: saleCgst,
+          sgst: saleSgst,
+          total: saleTotal,
+        });
+        b2bTotalTaxable += saleTaxable;
+        b2bTotalCgst += saleCgst;
+        b2bTotalSgst += saleSgst;
+        b2bTotalTotal += saleTotal;
+      }
     });
 
+    const hsnSummaryArr = Object.values(hsnGroups).filter(h => h.hsn !== 'N/A').sort((a, b) => a.hsn.localeCompare(b.hsn));
+
     return {
-      b2bSupplies: [] as any[], // No B2B registered supplies in base POS mock
-      b2bTotals: { taxable: 0, cgst: 0, sgst: 0, total: 0 },
+      b2bSupplies: b2bRecords,
+      b2bTotals: { taxable: b2bTotalTaxable, cgst: b2bTotalCgst, sgst: b2bTotalSgst, total: b2bTotalTotal },
       b2cSmallSupplies: Object.values(rates),
-      hsnSummary: [] as any[],
+      hsnSummary: hsnSummaryArr,
       outwardSupplies: [
         { nature: 'Taxable outward supplies (other than zero/nil/exempt)', taxable: taxTot, igst: 0, cgst: cgstTot, sgst: sgstTot },
         { nature: 'Outward supplies (zero rated)', taxable: 0, igst: 0, cgst: 0, sgst: 0 },
@@ -116,6 +210,87 @@ export default function GSTManagementScreen() {
       sgstTot
     };
   }, [sales]);
+
+  // ── Download / Print Handlers ──────────────────────────────────────────
+
+  const triggerDownload = (data: object, filename: string) => {
+    const jsonStr = JSON.stringify(data, null, 2);
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else {
+      // Native: use Share API
+      const { Share } = require('react-native');
+      Share.share({ message: jsonStr, title: filename }).catch(() => {});
+    }
+  };
+
+  const handleDownloadGSTR1 = () => {
+    const gstr1Data = {
+      gstin: gstNumber,
+      fp: returnPeriod,
+      b2b: b2bSupplies.map(s => ({
+        ctin: s.gstin,
+        inv: [{ inum: s.invoiceNo, idt: s.date, val: s.total, itms: [{ txval: s.taxableValue, camt: s.cgst, samt: s.sgst }] }]
+      })),
+      b2cs: b2cSmallSupplies.map(r => ({ rt: r.rate, txval: r.taxableValue, camt: r.cgst, samt: r.sgst })),
+      hsn: { data: hsnSummary.map(h => ({ hsn_sc: h.hsn, desc: h.description, qty: h.totalQty, txval: h.taxableValue, camt: h.cgst, samt: h.sgst, iamt: 0 })) },
+    };
+    triggerDownload(gstr1Data, `GSTR1_${returnPeriod.replace(/\s/g, '_')}.json`);
+    Alert.alert('Downloaded', `GSTR-1 JSON for ${returnPeriod} exported.`);
+  };
+
+  const handleDownloadGSTR3B = () => {
+    const gstr3bData = {
+      gstin: gstNumber,
+      ret_period: returnPeriod,
+      sup_details: {
+        osup_det: { txval: outwardSupplies[0].taxable, iamt: 0, camt: outwardSupplies[0].cgst, samt: outwardSupplies[0].sgst },
+        osup_zero: { txval: 0, iamt: 0, camt: 0, samt: 0 },
+        osup_nil_exmp: { txval: 0 },
+        osup_nongst: { txval: 0 },
+      },
+      itc_elg: { itc_avl: eligibleITC.map(r => ({ ty: r.nature, iamt: r.igst, camt: r.cgst, samt: r.sgst })) },
+      intr_ltfee: { intr_details: { iamt: 0, camt: 0, samt: 0 } },
+      tax_pmt: paymentOfTax.map(r => ({ desc: r.description, tax_payable: r.taxPayable, paid_itc: r.paidITC, paid_cash: r.paidCash })),
+    };
+    triggerDownload(gstr3bData, `GSTR3B_${returnPeriod.replace(/\s/g, '_')}.json`);
+    Alert.alert('Downloaded', `GSTR-3B JSON for ${returnPeriod} exported.`);
+  };
+
+  const handlePrintGSTR3B = async () => {
+    const outwardRows = outwardSupplies.map(r =>
+      `<tr><td style="padding:6px 8px;border:1px solid #ddd;">${r.nature}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.taxable)}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.igst)}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.cgst)}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.sgst)}</td></tr>`
+    ).join('');
+    const taxRows = paymentOfTax.map(r =>
+      `<tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:bold;">${r.description}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.taxPayable)}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.paidITC)}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.paidCash)}</td><td style="text-align:right;padding:6px 8px;border:1px solid #ddd;">${fmt(r.total)}</td></tr>`
+    ).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>GSTR-3B ${returnPeriod}</title>
+      <style>body{font-family:sans-serif;padding:24px;color:#333}h1{font-size:20px}h2{font-size:16px;margin-top:24px}table{width:100%;border-collapse:collapse;margin-top:8px}th{background:#f5f5f5;padding:8px;border:1px solid #ddd;font-size:11px;text-transform:uppercase}</style>
+    </head><body>
+      <h1>Form GSTR-3B — ${returnPeriod}</h1>
+      <p>GSTIN: ${gstNumber} | Business: ${storeName}</p>
+      <h2>3.1 Outward Supplies & Inward Supplies (Reverse Charge)</h2>
+      <table><thead><tr><th style="text-align:left">Nature</th><th>Taxable</th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead><tbody>${outwardRows}</tbody></table>
+      <h2>6. Payment of Tax</h2>
+      <table><thead><tr><th style="text-align:left">Description</th><th>Tax Payable</th><th>Paid via ITC</th><th>Paid via Cash</th><th>Total</th></tr></thead><tbody>${taxRows}</tbody></table>
+      <p style="margin-top:24px;font-size:12px;color:#999">Generated by BharatPOS on ${new Date().toLocaleDateString('en-IN')}</p>
+    </body></html>`;
+
+    try {
+      await Print.printAsync({ html });
+    } catch (err) {
+      console.error('Print failed:', err);
+    }
+  };
 
   // ── Renderers ──────────────────────────────────────────
 
@@ -148,7 +323,7 @@ export default function GSTManagementScreen() {
               right={<TextInput.Affix text="%" />}
             />
 
-            <Button mode="contained" onPress={() => {}} style={styles.saveBtn} icon="content-save">
+            <Button mode="contained" onPress={handleSaveSettings} style={styles.saveBtn} icon="content-save">
               Save Settings
             </Button>
           </Card.Content>
@@ -206,7 +381,7 @@ export default function GSTManagementScreen() {
             dense
             style={{ width: 180, backgroundColor: 'white' }}
           />
-          <Button mode="contained-tonal" icon="download" onPress={() => {}}>
+          <Button mode="contained-tonal" icon="download" onPress={handleDownloadGSTR1}>
             Download JSON
           </Button>
         </Card.Content>
@@ -357,11 +532,11 @@ export default function GSTManagementScreen() {
                 <DataTable.Row style={styles.totalRow}>
                   <DataTable.Cell style={{ flex: 0.6 }}><Text style={styles.totalText}>Total</Text></DataTable.Cell>
                   <DataTable.Cell style={{ flex: 1.5 }}><Text>—</Text></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 0.5 }}><Text style={styles.totalText}>0</Text></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.totalText}>{fmt(0)}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 0.5 }}><Text style={styles.totalText}>{hsnSummary.reduce((s, r) => s + r.totalQty, 0)}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.totalText}>{fmt(hsnSummary.reduce((s, r) => s + r.taxableValue, 0))}</Text></DataTable.Cell>
                   <DataTable.Cell numeric style={{ flex: 0.7 }}><Text style={styles.totalText}>{fmt(0)}</Text></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 0.7 }}><Text style={styles.totalText}>{fmt(0)}</Text></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 0.7 }}><Text style={styles.totalText}>{fmt(0)}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 0.7 }}><Text style={styles.totalText}>{fmt(hsnSummary.reduce((s, r) => s + r.cgst, 0))}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 0.7 }}><Text style={styles.totalText}>{fmt(hsnSummary.reduce((s, r) => s + r.sgst, 0))}</Text></DataTable.Cell>
                 </DataTable.Row>
               )}
             </DataTable>
@@ -385,10 +560,10 @@ export default function GSTManagementScreen() {
             dense
             style={{ width: 180, backgroundColor: 'white' }}
           />
-          <Button mode="contained-tonal" icon="download" onPress={() => {}}>
+          <Button mode="contained-tonal" icon="download" onPress={handleDownloadGSTR3B}>
             Download JSON
           </Button>
-          <Button mode="outlined" icon="printer" onPress={() => {}}>
+          <Button mode="outlined" icon="printer" onPress={handlePrintGSTR3B}>
             Print Preview
           </Button>
         </Card.Content>

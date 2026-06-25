@@ -18,25 +18,22 @@ export default function UpgradeScreen() {
     if (!isFirebaseConfigured || !user) return;
     setLoading(true);
 
-    // Mock Payment Gateway Delay
-    setTimeout(async () => {
-      const newEndDate = new Date();
-      newEndDate.setFullYear(newEndDate.getFullYear() + years);
+    const newEndDate = new Date();
+    newEndDate.setFullYear(newEndDate.getFullYear() + years);
 
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        await updateDoc(userRef, {
-          subscription_plan: planName,
-          subscription_end_date: newEndDate.toISOString()
-        });
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        subscription_plan: planName,
+        subscription_end_date: newEndDate.toISOString()
+      });
 
-        setLoading(false);
-        Alert.alert('Success', `You are now upgraded to the ${planName} plan! Reloading app...`);
-      } catch (error: any) {
-        setLoading(false);
-        Alert.alert('Upgrade Failed', error.message);
-      }
-    }, 1500);
+      Alert.alert('Success', `You are now upgraded to the ${planName} plan! Reloading app...`);
+    } catch (error: any) {
+      Alert.alert('Upgrade Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

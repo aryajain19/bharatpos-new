@@ -241,7 +241,8 @@ export default function OwnerLayout() {
     );
   }
 
-  if (isTrialExpired) {
+  const isUpgradePage = pathname?.includes('upgrade');
+  if (isTrialExpired && !isUpgradePage) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
         <Surface style={{ width: '100%', maxWidth: 500, padding: 40, borderRadius: 20, alignItems: 'center', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#FECACA' }} elevation={4}>

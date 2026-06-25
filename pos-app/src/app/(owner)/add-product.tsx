@@ -19,11 +19,17 @@ export default function AddProductScreen() {
   const [gstPct, setGstPct] = useState('0');
   const [loading, setLoading] = useState(false);
 
-  // Simple auto-generate barcode (EAN-13 mock)
+  // Generate unique EAN-13 barcode with merchant prefix to prevent cross-merchant collisions
   const generateBarcode = () => {
-    const timestamp = Date.now().toString().slice(-9); // 9 digits
-    const prefix = '890'; // Example country code
-    const base = prefix + timestamp;
+    const tenantId = auth.currentUser?.uid || '0000';
+    let hash = 0;
+    for (let i = 0; i < tenantId.length; i++) {
+      hash = (hash + tenantId.charCodeAt(i)) % 10000;
+    }
+    const storePrefix = hash.toString().padStart(4, '0');
+    const randomDigits = Math.floor(10000 + Math.random() * 90000).toString(); // 5 digits
+    const prefix = '890'; // India prefix
+    const base = prefix + storePrefix + randomDigits; // 12 digits
     
     // Calculate EAN-13 check digit
     let sum = 0;

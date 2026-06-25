@@ -5,7 +5,7 @@ import { Camera, CameraView } from 'expo-camera';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
 import { useCart } from '../../providers/CartProvider';
-import { db, isFirebaseConfigured } from '../../lib/firebase';
+import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, query, where, getDocs } from '../../lib/firestore_adapter';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -45,7 +45,12 @@ export default function ScanScreen() {
           return;
         }
 
-        const q = query(collection(db, 'products'), where('barcode', '==', cleanBarcode));
+        const tenantId = auth.currentUser?.uid || 'anonymous';
+        const q = query(
+          collection(db, 'products'),
+          where('tenant_id', '==', tenantId),
+          where('barcode', '==', cleanBarcode)
+        );
         const snapshot = await getDocs(q);
         
         if (!snapshot.empty) {
@@ -56,6 +61,7 @@ export default function ScanScreen() {
             price: productData.selling_price || productData.price,
             qty: 1,
             gst_pct: productData.gst_pct || 0,
+            hsn: productData.hsn || '',
             image_url: productData.image_url,
           });
           router.replace('/(vendor)/cart');
