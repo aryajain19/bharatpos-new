@@ -27,7 +27,7 @@ export default function SalesHistoryScreen() {
 
   const { isDarkMode, toggleTheme } = useAppTheme();
 
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const [sales, setSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +56,7 @@ export default function SalesHistoryScreen() {
     try {
       const q = query(
         collection(db, 'sales'),
+        where('tenant_id', '==', tenantId || 'anonymous'),
         where('vendor_id', '==', user.uid),
         orderBy('created_at', 'desc')
       );

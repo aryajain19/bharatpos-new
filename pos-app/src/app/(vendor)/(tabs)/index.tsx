@@ -127,6 +127,7 @@ export default function VendorDashboard() {
     try {
       const q = query(
         collection(db, 'sales'),
+        where('tenant_id', '==', tenantId || 'anonymous'),
         where('vendor_id', '==', user.uid),
         where('created_at', '>=', today.toISOString())
       );
@@ -162,6 +163,7 @@ export default function VendorDashboard() {
 
       const allSalesQuery = query(
         collection(db, 'sales'),
+        where('tenant_id', '==', tenantId || 'anonymous'),
         where('vendor_id', '==', user.uid)
       );
       const allSalesSnap = await getDocs(allSalesQuery);
