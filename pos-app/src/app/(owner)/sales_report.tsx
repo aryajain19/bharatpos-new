@@ -1,16 +1,15 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Text, Card, useTheme, Button } from 'react-native-paper';
 import { BarChart } from 'react-native-chart-kit';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, getDocs, query, where } from '../../lib/firestore_adapter';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const { width } = Dimensions.get('window');
-
 
 export default function SalesReportScreen() {
+  const { width } = useWindowDimensions();
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, Animated, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, Animated, Platform, TouchableOpacity, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Text, Card, useTheme, Surface, TextInput, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LineChart } from 'react-native-chart-kit';
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
   const appTheme = useTheme();
 
   const theme = useTheme();
-  const screenWidth = Dimensions.get('window').width;
+  const { width: screenWidth } = useWindowDimensions();
 
   const [todaySales, setTodaySales] = useState(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -540,11 +540,11 @@ export default function AdminDashboard() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.content}>
-
+      <View style={[styles.content, { padding: screenWidth <= 600 ? 12 : 24 }]}>
+ 
         {/* ── Greeting Header ─────────────────────────────────────── */}
         <FadeInSection delay={0}>
-          <View style={styles.greetingContainer}>
+          <View style={[styles.greetingContainer, screenWidth <= 600 && { flexDirection: 'column', alignItems: 'flex-start', gap: 12 }]}>
             <View>
               <Text style={styles.greetingText}>{getGreeting()}, {userName}! </Text>
               <Text style={styles.greetingSubtext}>{getFormattedDate()}</Text>
@@ -555,7 +555,7 @@ export default function AdminDashboard() {
             </View>
           </View>
         </FadeInSection>
-
+ 
         {/* ── Metric Cards ────────────────────────────────────────── */}
         <FadeInSection delay={100}>
           <View style={styles.metricsGrid}>
@@ -564,17 +564,17 @@ export default function AdminDashboard() {
             ))}
           </View>
         </FadeInSection>
-
+ 
         {/* ── Shop Mode Adaptive Console Widget ──────────────────── */}
         <FadeInSection delay={150}>
           {renderShopModeWidget()}
         </FadeInSection>
-
+ 
         {/* ── Chart + Recent Activity Row ─────────────────────────── */}
         <View style={styles.bottomRow}>
           {/* Sales Chart */}
           <FadeInSection delay={200}>
-            <Card style={styles.chartCard} elevation={0}>
+            <Card style={[styles.chartCard, { minWidth: screenWidth <= 600 ? '100%' : 500 }]} elevation={0}>
               <Card.Content>
                 <View style={styles.chartHeader}>
                   <View>
@@ -632,9 +632,9 @@ export default function AdminDashboard() {
               </Card.Content>
             </Card>
           </FadeInSection>
-
+ 
           {/* Recent Activity + Top Selling Column */}
-          <View style={styles.rightColumn}>
+          <View style={[styles.rightColumn, { minWidth: screenWidth <= 600 ? '100%' : 320 }]}>
             {/* Recent Activity Feed */}
             <FadeInSection delay={300}>
               <Card style={styles.activityCard} elevation={0}>

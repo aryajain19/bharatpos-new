@@ -394,22 +394,29 @@ export default function OwnerLayout() {
             >
               <Icon name={isSidebarOpen ? 'menu-open' : 'menu'} size={22} color="#333" />
             </TouchableOpacity>
-            <View style={styles.topBarDivider} />
-            <Icon name="store-outline" size={18} color="#10B981" />
-            <Text style={styles.storeName}>Main Branch</Text>
+            {screenWidth > 480 && (
+              <>
+                <View style={styles.topBarDivider} />
+                <Icon name="store-outline" size={18} color="#10B981" />
+                <Text style={styles.storeName}>Main Branch</Text>
+              </>
+            )}
           </View>
 
           <View style={styles.topBarRight}>
             {/* Date & Time */}
-            <View style={styles.dateTimeContainer}>
-              <Icon name="calendar-outline" size={15} color="#888" />
-              <Text style={styles.dateTimeText}>{dateStr}</Text>
-              <View style={styles.timeDot} />
-              <Icon name="clock-outline" size={15} color="#888" />
-              <Text style={styles.dateTimeText}>{timeStr}</Text>
-            </View>
-
-            <View style={styles.topBarDivider} />
+            {screenWidth > 768 && (
+              <>
+                <View style={styles.dateTimeContainer}>
+                  <Icon name="calendar-outline" size={15} color="#888" />
+                  <Text style={styles.dateTimeText}>{dateStr}</Text>
+                  <View style={styles.timeDot} />
+                  <Icon name="clock-outline" size={15} color="#888" />
+                  <Text style={styles.dateTimeText}>{timeStr}</Text>
+                </View>
+                <View style={styles.topBarDivider} />
+              </>
+            )}
 
             {/* Notification Bell */}
             <View style={styles.bellContainer}>
@@ -466,14 +473,16 @@ export default function OwnerLayout() {
               )}
             </View>
 
-            <View style={styles.topBarDivider} />
+            {screenWidth > 600 && <View style={styles.topBarDivider} />}
 
             {/* User Avatar */}
             <View style={styles.userContainer}>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{userName}</Text>
-                <Text style={styles.userRole}>Owner</Text>
-              </View>
+              {screenWidth > 600 && (
+                <View style={styles.userInfo}>
+                  <Text style={styles.userName}>{userName}</Text>
+                  <Text style={styles.userRole}>Owner</Text>
+                </View>
+              )}
               <Avatar.Text
                 size={36}
                 label={initial}

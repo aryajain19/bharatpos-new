@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, FlatList, Platform, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, FlatList, Platform, Animated, useWindowDimensions } from 'react-native';
 import { 
   Text, Card, Button, DataTable, IconButton, Portal, Dialog, 
   TextInput, Switch, Searchbar, Checkbox, Divider, List, Badge, SegmentedButtons
@@ -117,7 +117,7 @@ export default function SuperAdminDashboard() {
       params: { tab: tabName }
     } as any);
   };
-  const screenWidth = Dimensions.get('window').width;
+  const { width: screenWidth } = useWindowDimensions();
   const isMobileSize = screenWidth <= 900;
   const chartWidth = isMobileSize ? screenWidth - 72 : Math.max((screenWidth - 340) / 3.15, 300);
 

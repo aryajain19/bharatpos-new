@@ -1,14 +1,15 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, ActivityIndicator, Alert, Share } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, ActivityIndicator, Alert, Share, useWindowDimensions } from 'react-native';
 import { Text, Card, useTheme, Surface, TextInput, Portal, Modal, Button, Divider } from 'react-native-paper';
 import { PieChart } from 'react-native-chart-kit';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const { width } = Dimensions.get('window');
-const chartWidth = width > 800 ? (width - 350) / 2.1 : width - 50;
 
 export default function ReportsAnalyticsScreen() {
+  const { width } = useWindowDimensions();
+  const chartWidth = width > 800 ? (width - 350) / 2.1 : width - 50;
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -327,7 +328,7 @@ ${vouchersXml}      </REQUESTDATA>
         </Card.Content>
       </Card>
 
-      <View style={styles.contentRow}>
+      <View style={[styles.contentRow, { flexDirection: width > 800 ? 'row' : 'column' }]}>
         {/* Left column: PDF Downloads */}
         <View style={styles.reportsColumn}>
           <Text style={styles.sectionTitle}>Download PDF Reports</Text>
@@ -594,7 +595,6 @@ const styles = StyleSheet.create({
 
   // Layout Grid
   contentRow: {
-    flexDirection: width > 800 ? 'row' : 'column',
     gap: 20,
   },
   reportsColumn: {

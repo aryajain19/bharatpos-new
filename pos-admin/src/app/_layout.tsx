@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated, useWindowDimensions } from 'react-native';
 import { Text, Divider, useTheme, IconButton, Avatar, Surface, PaperProvider, MD3LightTheme as DefaultTheme, Badge } from 'react-native-paper';
 import { Slot, router, usePathname, useLocalSearchParams, useSegments } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -181,11 +181,25 @@ function AdminLayout() {
   const currentTab = tab || 'overview';
   const rTheme = useTheme();
   
+  const { width: screenWidth } = useWindowDimensions();
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(Dimensions.get('window').width > 900);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(screenWidth > 900);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const sidebarAnim = useRef(new Animated.Value(Dimensions.get('window').width > 900 ? 1 : 0)).current;
+  const sidebarAnim = useRef(new Animated.Value(screenWidth > 900 ? 1 : 0)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
+
+  // Track screen size changes to toggle sidebar
+  const lastWidthRef = useRef(screenWidth);
+
+  useEffect(() => {
+    if (screenWidth > 900 && lastWidthRef.current <= 900) {
+      setIsSidebarOpen(true);
+    }
+    if (screenWidth <= 900 && lastWidthRef.current > 900) {
+      setIsSidebarOpen(false);
+    }
+    lastWidthRef.current = screenWidth;
+  }, [screenWidth]);
 
   // Live clock
   useEffect(() => {
@@ -195,7 +209,7 @@ function AdminLayout() {
 
   // Animated sidebar open/close
   useEffect(() => {
-    const isMobile = Dimensions.get('window').width <= 900;
+    const isMobile = screenWidth <= 900;
     Animated.parallel([
       Animated.spring(sidebarAnim, {
         toValue: isSidebarOpen ? 1 : 0,
@@ -209,7 +223,7 @@ function AdminLayout() {
         useNativeDriver: false,
       }),
     ]).start();
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen, screenWidth]);
 
   const handleLogout = async () => {
     try {
@@ -231,7 +245,7 @@ function AdminLayout() {
       params: { tab: tabName }
     } as any);
     
-    if (Dimensions.get('window').width <= 900) {
+    if (screenWidth <= 900) {
       setIsSidebarOpen(false);
     }
   };
@@ -272,7 +286,7 @@ function AdminLayout() {
   return (
     <View style={[styles.container, { backgroundColor: mainBg }]}>
       {/* Animated Overlay */}
-      {isSidebarOpen && Dimensions.get('window').width <= 900 && (
+      {isSidebarOpen && screenWidth <= 900 && (
         <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
           <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setIsSidebarOpen(false)} />
         </Animated.View>
@@ -282,7 +296,7 @@ function AdminLayout() {
       <Animated.View style={[
         styles.sidebar,
         { backgroundColor: sidebarBg, width: sidebarWidth },
-        Dimensions.get('window').width <= 900 ? { position: 'absolute', zIndex: 100, height: '100%' } : {},
+        screenWidth <= 900 ? { position: 'absolute', zIndex: 100, height: '100%' } : {},
       ]}>
         <View style={styles.sidebarInner}>
           {/* Logo Area */}
@@ -364,19 +378,23 @@ function AdminLayout() {
               <Text style={[styles.topBarTitle, { color: textPrimary }]}>
                 Super Admin Control
               </Text>
-              <View style={styles.topBarDateRow}>
-                <Icon name="clock-outline" size={12} color={isDarkMode ? '#6B6F96' : '#9E9E9E'} />
-                <Text style={[styles.topBarDate, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>
-                  {formatDate(currentTime)} · {formatTime(currentTime)}
-                </Text>
-              </View>
+              {screenWidth > 768 && (
+                <View style={styles.topBarDateRow}>
+                  <Icon name="clock-outline" size={12} color={isDarkMode ? '#6B6F96' : '#9E9E9E'} />
+                  <Text style={[styles.topBarDate, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>
+                    {formatDate(currentTime)} · {formatTime(currentTime)}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
           <View style={styles.topBarRight}>
             {/* Search */}
-            <TouchableOpacity style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#252640' : '#F5F3FF' }]}>
-              <Icon name="magnify" size={19} color={isDarkMode ? '#8B8FAD' : '#7E57C2'} />
-            </TouchableOpacity>
+            {screenWidth > 600 && (
+              <TouchableOpacity style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#252640' : '#F5F3FF' }]}>
+                <Icon name="magnify" size={19} color={isDarkMode ? '#8B8FAD' : '#7E57C2'} />
+              </TouchableOpacity>
+            )}
 
             {/* Notification Bell with Badge */}
             <TouchableOpacity 
@@ -392,22 +410,28 @@ function AdminLayout() {
             </TouchableOpacity>
 
             {/* Security */}
-            <TouchableOpacity 
-              style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#252640' : '#F5F3FF' }]}
-              onPress={() => handleNav('security')}
-            >
-              <Icon name="shield-check-outline" size={19} color={isDarkMode ? '#8B8FAD' : '#7E57C2'} />
-            </TouchableOpacity>
+            {screenWidth > 600 && (
+              <TouchableOpacity 
+                style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#252640' : '#F5F3FF' }]}
+                onPress={() => handleNav('security')}
+              >
+                <Icon name="shield-check-outline" size={19} color={isDarkMode ? '#8B8FAD' : '#7E57C2'} />
+              </TouchableOpacity>
+            )}
 
             {/* Divider */}
-            <View style={[styles.topBarDivider, { backgroundColor: isDarkMode ? '#2D2D44' : '#EEF0F6' }]} />
+            {screenWidth > 600 && (
+              <View style={[styles.topBarDivider, { backgroundColor: isDarkMode ? '#2D2D44' : '#EEF0F6' }]} />
+            )}
 
             {/* User Avatar Area */}
             <TouchableOpacity style={styles.userSection} activeOpacity={0.7}>
-              <View style={styles.userInfo}>
-                <Text style={[styles.userName, { color: textPrimary }]}>Arya</Text>
-                <Text style={[styles.userRole, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>Super Admin</Text>
-              </View>
+              {screenWidth > 600 && (
+                <View style={styles.userInfo}>
+                  <Text style={[styles.userName, { color: textPrimary }]}>Arya</Text>
+                  <Text style={[styles.userRole, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>Super Admin</Text>
+                </View>
+              )}
               <View style={styles.avatarWrap}>
                 <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
                 <View style={styles.onlineDot} />
