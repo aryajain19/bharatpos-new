@@ -117,7 +117,7 @@ function VectorQRCode({ value, size = 60 }: { value: string; size?: number }) {
     
     return (
       <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', marginVertical: 2 }}>
-        <Svg width={size} height={size}>
+        <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ width: size, height: size }}>
           {rects}
         </Svg>
       </View>
@@ -745,6 +745,10 @@ export default function BarcodeGeneratorScreen() {
               height: ${codeType === 'qrcode' ? `${qrSize}px` : barcodeHeight};
               width: 100%;
               margin: 2px 0;
+            }
+            .barcode-container svg {
+              width: ${codeType === 'qrcode' ? `${qrSize}px` : 'auto'};
+              height: ${codeType === 'qrcode' ? `${qrSize}px` : 'auto'};
             }
             .barcode-val {
               font-size: 8px;
