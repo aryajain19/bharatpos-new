@@ -1,7 +1,8 @@
 {
   "rules": {
     "users": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (query.orderByChild === 'tenant_id' && (query.equalTo === auth.uid || root.child('users').child(auth.uid).child('tenant_id').val() === query.equalTo)))",
+      ".indexOn": ["tenant_id"],
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('tenant_id').val() === $uid || root.child('users').child($uid).child('tenant_id').val() === auth.uid)",
         ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || newData.child('tenant_id').val() === auth.uid || data.child('tenant_id').val() === auth.uid)"
