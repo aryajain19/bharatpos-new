@@ -1,7 +1,8 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Animated, TextInput as RNTextInput, Platform, Linking } from 'react-native';
-import { Text, Button, Divider, Surface, Chip, Portal, Dialog, SegmentedButtons, TextInput, useTheme } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Animated, TextInput as RNTextInput, Platform, Linking, Modal } from 'react-native';
+import { Text, Button, Divider, Surface, Chip, Portal, Dialog, SegmentedButtons, TextInput, useTheme, IconButton } from 'react-native-paper';
+import { CameraView, Camera } from 'expo-camera';
 import * as Print from 'expo-print';
 import { useCart } from '../../providers/CartProvider';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
@@ -36,6 +37,21 @@ export default function POSBillingScreen() {
   const searchInputRef = useRef<RNTextInput>(null);
   
   const [products, setProducts] = useState<any[]>([]);
+  
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [cameraScanned, setCameraScanned] = useState(false);
+
+  const handleOpenScanner = async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasCameraPermission(status === 'granted');
+    if (status === 'granted') {
+      setShowCameraScanner(true);
+      setCameraScanned(false);
+    } else {
+      Alert.alert('Permission Denied', 'Camera permission is required to scan barcodes.');
+    }
+  };
   
   const params = useLocalSearchParams();
   const scanBarcodeParam = params.scanBarcode;
@@ -513,7 +529,13 @@ export default function POSBillingScreen() {
                 activeUnderlineColor="#10B981"
                 placeholderTextColor="#aaa"
                 left={<TextInput.Icon icon="magnify" color="#999" />}
-                right={search ? <TextInput.Icon icon="close" color="#999" onPress={() => { setSearch(''); setShowSuggestions(false); }} /> : undefined}
+                right={
+                  search ? (
+                    <TextInput.Icon icon="close" color="#999" onPress={() => { setSearch(''); setShowSuggestions(false); }} />
+                  ) : (
+                    <TextInput.Icon icon="camera" color="#10B981" onPress={handleOpenScanner} />
+                  )
+                }
               />
             </View>
 
@@ -951,6 +973,96 @@ export default function POSBillingScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      {/* Camera Barcode Scanner Modal */}
+      {showCameraScanner && (
+        <Modal
+          visible={showCameraScanner}
+          animationType="slide"
+          onRequestClose={() => setShowCameraScanner(false)}
+        >
+          <View style={styles.cameraModalContainer}>
+            <View style={styles.cameraHeader}>
+              <IconButton icon="close" iconColor="white" size={24} onPress={() => setShowCameraScanner(false)} />
+              <Text style={styles.cameraHeaderTitle}>Scan Barcode</Text>
+              <View style={{ width: 48 }} />
+            </View>
+            
+            <View style={styles.cameraPreviewBox}>
+              {hasCameraPermission ? (
+                <CameraView
+                  style={StyleSheet.absoluteFill}
+                  onBarcodeScanned={cameraScanned ? undefined : async ({ data }) => {
+                    setCameraScanned(true);
+                    if (data) {
+                      const cleanBarcode = data.trim().replace(/[\r\n]/g, '');
+                      // Search locally in products first
+                      const matchingProduct = products.find(p => p.barcode === cleanBarcode);
+                      if (matchingProduct) {
+                        handleAddProduct(matchingProduct);
+                        setShowCameraScanner(false);
+                      } else {
+                        // Attempt database check if firebase is configured
+                        if (isFirebaseConfigured) {
+                          try {
+                            const tenantId = auth.currentUser?.uid || 'anonymous';
+                            const q = query(
+                              collection(db, 'products'),
+                              where('tenant_id', '==', tenantId),
+                              where('barcode', '==', cleanBarcode)
+                            );
+                            const snapshot = await getDocs(q);
+                            if (!snapshot.empty) {
+                              const pId = snapshot.docs[0].id;
+                              const pData = snapshot.docs[0].data();
+                              const newProduct = {
+                                id: pId,
+                                name: pData.name,
+                                price: pData.selling_price || pData.price || 0,
+                                gst_pct: pData.gst_pct || 0,
+                                hsn: pData.hsn || '',
+                                image_url: pData.image_url,
+                                barcode: pData.barcode || ''
+                              };
+                              setProducts(prev => [newProduct, ...prev]);
+                              handleAddProduct(newProduct);
+                              setShowCameraScanner(false);
+                              return;
+                            }
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        }
+                        Alert.alert('Not Found', `Product with barcode: ${cleanBarcode} not found in inventory.`, [
+                          { text: 'OK', onPress: () => setCameraScanned(false) }
+                        ]);
+                      }
+                    } else {
+                      setCameraScanned(false);
+                    }
+                  }}
+                  barcodeScannerSettings={{
+                    barcodeTypes: ["qr", "ean13", "ean8", "code128"],
+                  }}
+                />
+              ) : (
+                <Text style={{ color: 'white' }}>Requesting camera permission...</Text>
+              )}
+              
+              {/* Overlay Frame */}
+              <View style={styles.cameraOverlayFrame}>
+                <View style={[styles.cameraCorner, styles.cameraTopLeft]} />
+                <View style={[styles.cameraCorner, styles.cameraTopRight]} />
+                <View style={[styles.cameraCorner, styles.cameraBottomLeft]} />
+                <View style={[styles.cameraCorner, styles.cameraBottomRight]} />
+                <View style={styles.cameraLaser} />
+              </View>
+            </View>
+            
+            <Text style={styles.cameraInstruction}>Position barcode inside the frame</Text>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -1115,5 +1227,88 @@ const styles = StyleSheet.create({
   sharingGrid: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 8 },
   shareOption: { alignItems: 'center' },
   shareIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  shareText: { fontSize: 11, fontWeight: '600', }
+  shareText: { fontSize: 11, fontWeight: '600', },
+
+  // Camera Barcode Scanner styles
+  cameraModalContainer: {
+    flex: 1,
+    backgroundColor: '#0D0F14',
+    justifyContent: 'space-between',
+    paddingBottom: 40,
+  },
+  cameraHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingHorizontal: 16,
+  },
+  cameraHeaderTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  cameraPreviewBox: {
+    width: 280,
+    height: 280,
+    alignSelf: 'center',
+    borderRadius: 24,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000000',
+  },
+  cameraOverlayFrame: {
+    width: 220,
+    height: 170,
+    position: 'absolute',
+    justifyContent: 'center',
+  },
+  cameraCorner: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    borderColor: '#10B981',
+  },
+  cameraTopLeft: {
+    top: 0,
+    left: 0,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopLeftRadius: 8,
+  },
+  cameraTopRight: {
+    top: 0,
+    right: 0,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+    borderTopRightRadius: 8,
+  },
+  cameraBottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+    borderBottomLeftRadius: 8,
+  },
+  cameraBottomRight: {
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomRightRadius: 8,
+  },
+  cameraLaser: {
+    height: 2,
+    backgroundColor: '#EF4444',
+    width: '100%',
+    position: 'absolute',
+  },
+  cameraInstruction: {
+    color: '#8891A8',
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 40,
+  },
 });
