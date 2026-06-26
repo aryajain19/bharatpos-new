@@ -154,10 +154,10 @@ export default function SuperAdminDashboard() {
             const d = doc.data();
             fetchedUsers.push({
               id: doc.id,
-              name: d.owner_name || 'N/A',
-              store: d.store_name || 'Unnamed Store',
+              name: d.owner_name || d.fullName || d.full_name || 'N/A',
+              store: d.store_name || d.storeName || 'Unnamed Store',
               email: d.email || 'N/A',
-              phone: d.phone || 'N/A',
+              phone: d.phone || d.mobileNumber || 'N/A',
               status: d.subscription_status || d.status || 'Active',
               plan: d.subscription_plan || 'Free Trial',
               expiry: d.subscription_end_date ? (d.subscription_end_date.toDate ? new Date(d.subscription_end_date.toDate()).toLocaleDateString() : new Date(d.subscription_end_date).toLocaleDateString()) : 'N/A',

@@ -18,8 +18,8 @@ export default function AdminLoginScreen() {
   async function handleLogin() {
     setLoading(true);
     
-    // Quick Demo Bypass
-    if ((email === 'aryajain1906@gmail.com' && (password === 'aryajain' || password === '@Aryajain19')) || email.includes('admin') || email === '0000000000') {
+    // Quick Demo Bypass (only active when Firebase is not configured)
+    if (!isFirebaseConfigured && ((email === 'aryajain1906@gmail.com' && (password === 'aryajain' || password === '@Aryajain19')) || email.includes('admin') || email === '0000000000')) {
       setTimeout(() => {
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('adminBypass', 'true');

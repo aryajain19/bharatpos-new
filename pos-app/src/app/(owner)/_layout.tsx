@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated, useWindowDimensions } from 'react-native';
 import { Text, Divider, useTheme, IconButton, Avatar, Surface, Badge, Button, TextInput, ActivityIndicator } from 'react-native-paper';
 import { Slot, router, usePathname } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -113,7 +113,7 @@ export default function OwnerLayout() {
   
   const [storeName, setStoreName] = useState('BharatPOS');
   const [shopMode, setShopMode] = useState('Mobile Only');
-  const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
+  const { width: screenWidth } = useWindowDimensions();
   const [isGstRegistered, setIsGstRegistered] = useState(true);
 
   // Announcement/Notification state & synchronization
@@ -172,10 +172,6 @@ export default function OwnerLayout() {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const mode = window.localStorage.getItem('shopMode');
       if (mode) setShopMode(mode);
-      
-      const handleResize = () => setScreenWidth(window.innerWidth);
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
 
@@ -203,8 +199,20 @@ export default function OwnerLayout() {
 
   const isLaptopLocked = false;
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(Dimensions.get('window').width > 800);
-  const sidebarAnim = useRef(new Animated.Value(Dimensions.get('window').width > 800 ? 260 : 0)).current;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(screenWidth > 800);
+  const lastWidthRef = useRef(screenWidth);
+
+  useEffect(() => {
+    if (screenWidth > 800 && lastWidthRef.current <= 800) {
+      setIsSidebarOpen(true);
+    }
+    if (screenWidth <= 800 && lastWidthRef.current > 800) {
+      setIsSidebarOpen(false);
+    }
+    lastWidthRef.current = screenWidth;
+  }, [screenWidth]);
+
+  const sidebarAnim = useRef(new Animated.Value(screenWidth > 800 ? 260 : 0)).current;
 
   useEffect(() => {
     Animated.timing(sidebarAnim, {
@@ -227,7 +235,7 @@ export default function OwnerLayout() {
 
   const handleNav = (path: any) => {
     router.push(path);
-    if (Dimensions.get('window').width <= 800) {
+    if (screenWidth <= 800) {
       setIsSidebarOpen(false);
     }
   };
@@ -314,7 +322,7 @@ export default function OwnerLayout() {
 
   return (
     <View style={styles.container}>
-      {isSidebarOpen && Dimensions.get('window').width <= 800 && (
+      {isSidebarOpen && screenWidth <= 800 && (
         <TouchableOpacity style={styles.overlay} onPress={() => setIsSidebarOpen(false)} />
       )}
 
@@ -322,8 +330,8 @@ export default function OwnerLayout() {
       <Animated.View style={[
         styles.sidebar,
         { width: sidebarAnim },
-        Dimensions.get('window').width <= 800 && isSidebarOpen && { position: 'absolute', zIndex: 100, width: 260 },
-        !isSidebarOpen && Dimensions.get('window').width > 800 && { width: 0, overflow: 'hidden' },
+        screenWidth <= 800 && isSidebarOpen && { position: 'absolute', zIndex: 100, width: 260 },
+        !isSidebarOpen && { width: 0, overflow: 'hidden' },
       ]}>
         {/* Logo Area */}
         <View style={styles.logoContainer}>
