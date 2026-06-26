@@ -470,43 +470,34 @@ export default function SuperAdminDashboard() {
 
     if (isFirebaseConfigured) {
       try {
-        try {
-          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, finalEmail, defaultPassword);
-          newCustId = userCredential.user.uid;
-        } catch (authErr: any) {
-          if (authErr.code === 'auth/email-already-in-use') {
-            authNotice = ' (Auth already existed, proceeded to DB)';
-          } else {
-            throw authErr;
-          }
-        }
-        
-        const dbPromise = setDoc(doc(db, 'users', newCustId), {
-          owner_name: formName,
-          store_name: formStore,
-          email: finalEmail,
-          phone: formPhone || '9999999999',
-          role: 'owner',
-          subscription_plan: formPlan,
-          subscription_status: 'Active',
-          created_at: serverTimestamp(),
-          tenant_id: 'tenant_' + newCustId
+        const apiBase = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8083' : '';
+        const response = await fetch(`${apiBase}/api/create-owner`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formName,
+            storeName: formStore,
+            email: finalEmail,
+            phone: formPhone || '9999999999',
+            password: defaultPassword,
+            plan: formPlan
+          })
         });
-        
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('firestore-timeout')), 15000));
-        await Promise.race([dbPromise, timeoutPromise]);
-        
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create owner account');
+        }
+
+        newCustId = data.uid;
+        authNotice = data.authNotice || '';
+
         alert(`Successfully created account for ${formName}!${authNotice}\nEmail: ${finalEmail}\nPassword: ${defaultPassword}`);
       } catch (error: any) {
-        if (error.message === 'firestore-timeout') {
-          console.warn('Note: Firestore Database connection took too long. The account has been created locally.');
-        } else if (error.code === 'permission-denied' || error.message?.includes('PERMISSION_DENIED')) {
-          console.warn('Note: Firebase Realtime Database rules denied the write. The account has been created locally.');
-        } else {
-          alert('Error provisioning Firebase user: ' + error.message);
-          setIsCreating(false);
-          return;
-        }
+        alert('Error provisioning Firebase user: ' + error.message);
+        setIsCreating(false);
+        return;
       }
     }
 
