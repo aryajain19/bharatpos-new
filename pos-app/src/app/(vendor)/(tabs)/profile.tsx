@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert, Switch, Platform } from 'react-native';
 import { Text, Surface, Divider, useTheme, TextInput } from 'react-native-paper';
 import { useAuth } from '../../../providers/AuthProvider';
-import { auth, isFirebaseConfigured } from '../../../lib/firebase';
+import { auth, db, isFirebaseConfigured } from '../../../lib/firebase';
+import { doc, getDoc, collection, query, where, getDocs } from '../../../lib/firestore_adapter';
 import { signOut } from 'firebase/auth';
 import { useAppTheme } from '../../../providers/ThemeProvider';
 import { router } from 'expo-router';
@@ -22,11 +23,30 @@ export default function ProfileScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const theme = useTheme();
 
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // Profile and Store Information States
+  const [profileName, setProfileName] = useState(() => {
+    return user?.email?.split('@')[0] || 'Ramesh';
+  });
+  const [storeNameText, setStoreNameText] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('storeName') || 'BharatPOS';
+    }
+    return 'BharatPOS';
+  });
+  const [shiftTiming, setShiftTiming] = useState('9:00 AM – 6:00 PM');
+  const [storeIdText, setStoreIdText] = useState('SGS-BLR-042');
+
+  // Real Stats States
+  const [totalSales, setTotalSales] = useState(0);
+  const [billsGenerated, setBillsGenerated] = useState(0);
+  const [daysActive, setDaysActive] = useState(1);
 
   // Animations
   const avatarScale = useRef(new Animated.Value(0)).current;
@@ -52,22 +72,79 @@ export default function ProfileScreen() {
     Animated.stagger(150, statAnims.map(a =>
       Animated.spring(a, { toValue: 1, useNativeDriver: true, speed: 10, bounciness: 8 })
     )).start();
-  }, []);
 
-  const [storeName, setStoreName] = useState(() => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      return window.localStorage.getItem('storeName') || 'BharatPOS';
+    fetchProfileData();
+  }, [user]);
+
+  const fetchProfileData = async () => {
+    if (!isFirebaseConfigured || !user) {
+      setLoading(false);
+      return;
     }
-    return 'BharatPOS';
-  });
+    setLoading(true);
+    try {
+      // 1. Fetch salesperson profile from users collection
+      const userDocRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userDocRef);
+      let resolvedCreatedAt = new Date();
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        if (data.full_name) {
+          setProfileName(data.full_name);
+        }
+        if (data.shift_timing) {
+          setShiftTiming(data.shift_timing);
+        }
+        if (data.created_at) {
+          const rawCreated = data.created_at;
+          resolvedCreatedAt = new Date(rawCreated);
+          const diffTime = Math.abs(Date.now() - resolvedCreatedAt.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+          setDaysActive(diffDays);
+        }
+      }
 
-  const userName = user?.email?.split('@')[0] || 'Ramesh';
-  const userInitial = (user?.email?.[0] || 'R').toUpperCase();
+      // 2. Fetch store name from owner's user document (tenantId)
+      if (tenantId) {
+        const tenantDocRef = doc(db, 'users', tenantId);
+        const tenantSnap = await getDoc(tenantDocRef);
+        if (tenantSnap.exists()) {
+          const tenantData = tenantSnap.data();
+          if (tenantData.store_name) {
+            setStoreNameText(tenantData.store_name);
+          }
+        }
+        // Generate a custom Store ID based on tenantId
+        setStoreIdText(`SGS-${tenantId.substring(0, 6).toUpperCase()}`);
+      }
+
+      // 3. Fetch sales metrics for this vendor
+      const q = query(
+        collection(db, 'sales'),
+        where('tenant_id', '==', tenantId || 'anonymous'),
+        where('vendor_id', '==', user.uid)
+      );
+      const snapshot = await getDocs(q);
+      setBillsGenerated(snapshot.docs.length);
+      let total = 0;
+      snapshot.docs.forEach((doc: any) => {
+        const d = doc.data();
+        total += Number(d.total_amount || 0);
+      });
+      setTotalSales(total);
+    } catch (err) {
+      console.error("Error fetching vendor profile metrics:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const userName = profileName;
+  const userInitial = (profileName?.[0] || 'R').toUpperCase();
   const userEmail = user?.email || 'ramesh@store.com';
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
-      // For web, just logout directly
       doLogout();
     } else {
       Alert.alert(
@@ -93,11 +170,21 @@ export default function ProfileScreen() {
     if (key === 'notifications') setNotifications(value);
   };
 
+  const formatSales = (val: number) => {
+    if (val >= 100000) {
+      return `₹${(val / 100000).toFixed(2)}L`;
+    }
+    if (val >= 1000) {
+      return `₹${(val / 1000).toFixed(1)}k`;
+    }
+    return `₹${val.toFixed(0)}`;
+  };
+
   // --- Stats Data ---
   const statsData = [
-    { label: 'Total Sales', value: '₹1.2L', icon: 'trending-up', color: appTheme.colors.onSurface, bg: '#E8F5E9' },
-    { label: 'Bills Generated', value: '347', icon: 'receipt', color: appTheme.colors.onSurface, bg: '#D1FAE5' },
-    { label: 'Days Active', value: '42', icon: 'calendar-check', color: appTheme.colors.onSurface, bg: '#E3F2FD' },
+    { label: 'Total Sales', value: formatSales(totalSales), icon: 'trending-up', color: appTheme.colors.onSurface, bg: '#E8F5E9' },
+    { label: 'Bills Generated', value: String(billsGenerated), icon: 'receipt', color: appTheme.colors.onSurface, bg: '#D1FAE5' },
+    { label: 'Days Active', value: String(daysActive), icon: 'calendar-check', color: appTheme.colors.onSurface, bg: '#E3F2FD' },
   ];
 
   return (
@@ -139,7 +226,7 @@ export default function ProfileScreen() {
             <View style={styles.storeInfoRow}>
               <View style={styles.storeInfoItem}>
                 <Text style={styles.storeInfoLabel}>Store Name</Text>
-                <Text style={styles.storeInfoValue}>{storeName}</Text>
+                <Text style={styles.storeInfoValue}>{storeNameText}</Text>
               </View>
               <View style={styles.storeInfoItem}>
                 <Text style={styles.storeInfoLabel}>Role</Text>
@@ -149,11 +236,11 @@ export default function ProfileScreen() {
             <View style={styles.storeInfoRow}>
               <View style={styles.storeInfoItem}>
                 <Text style={styles.storeInfoLabel}>Shift Timing</Text>
-                <Text style={styles.storeInfoValue}>9:00 AM – 6:00 PM</Text>
+                <Text style={styles.storeInfoValue}>{shiftTiming}</Text>
               </View>
               <View style={styles.storeInfoItem}>
                 <Text style={styles.storeInfoLabel}>Store ID</Text>
-                <Text style={styles.storeInfoValue}>SGS-BLR-042</Text>
+                <Text style={styles.storeInfoValue}>{storeIdText}</Text>
               </View>
             </View>
           </Surface>
