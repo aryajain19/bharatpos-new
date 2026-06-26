@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { Text, Card, DataTable, useTheme, Surface, Button } from 'react-native-paper';
@@ -9,6 +11,8 @@ import { useNavigation, router } from 'expo-router';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
 
 export default function ReorderProductsScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode } = useAppTheme();
   const appTheme = useTheme();
   const navigation = useNavigation();
@@ -33,7 +37,7 @@ export default function ReorderProductsScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(
         collection(db, 'products'),
         where('tenant_id', '==', tenantId)
@@ -48,7 +52,7 @@ export default function ReorderProductsScreen() {
           category: d.category || 'N/A',
           mrp: d.mrp || d.price || 0,
           selling_price: d.selling_price || d.price || 0,
-          stock_qty: d.stock_qty !== undefined ? Number(d.stock_qty) : (d.stock !== undefined ? Number(d.stock) : 15),
+          stock_qty: d.stock_qty !== undefined ? Number(d.stock_qty) : (d.stock !== undefined ? Number(d.stock) : 0),
         };
       });
 

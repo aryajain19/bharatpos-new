@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Alert, Platform, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Card, DataTable, Button, Divider, IconButton, Surface, TextInput } from 'react-native-paper';
@@ -45,6 +47,8 @@ const TYPE_TEXT_COLORS: Record<VoucherType, string> = {
 let lineIdCounter = 3;
 
 export default function JournalEntryScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -80,7 +84,7 @@ export default function JournalEntryScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'transactions'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -138,7 +142,7 @@ export default function JournalEntryScreen() {
       const { collection, addDoc } = await import('../../lib/firestore_adapter');
       if (isFirebaseConfigured) {
         try {
-          const tenantId = auth.currentUser?.uid || 'anonymous';
+          if (!tenantId) return;
           await addDoc(collection(db, 'transactions'), {
             tenant_id: tenantId,
             dateTime: `${dateStr} 12:00`,

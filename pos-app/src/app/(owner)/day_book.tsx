@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, useWindowDimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, Card, DataTable, Button, Surface, Divider, useTheme, IconButton, TextInput } from 'react-native-paper';
@@ -62,6 +64,8 @@ function SummaryCard({ icon, label, amount, color, iconBg }: { icon: string; lab
 // Day Book Screen
 // ═══════════════════════════════════════════════════════════════════════
 export default function DayBookScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -87,7 +91,7 @@ export default function DayBookScreen() {
     setError(null);
     try {
       const { auth } = await import('../../lib/firebase');
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'transactions'), where('tenant_id', '==', tenantId), orderBy('created_at', 'desc'));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));

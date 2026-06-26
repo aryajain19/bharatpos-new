@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+
+import { useAuth } from '../../providers/AuthProvider';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { Text, Button, useTheme, TextInput } from 'react-native-paper';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
@@ -8,6 +10,8 @@ import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function AddProductVendorScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -23,7 +27,7 @@ export default function AddProductVendorScreen() {
 
   // Generate unique EAN-13 barcode with merchant prefix to prevent cross-merchant collisions
   const generateBarcode = () => {
-    const tenantId = auth.currentUser?.uid || '0000';
+    if (!tenantId) return;
     let hash = 0;
     for (let i = 0; i < tenantId.length; i++) {
       hash = (hash + tenantId.charCodeAt(i)) % 10000;

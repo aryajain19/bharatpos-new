@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, Card, DataTable, useTheme, TextInput, Button } from 'react-native-paper';
@@ -8,6 +10,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
 
 export default function TopSellingProductsScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -25,7 +29,7 @@ export default function TopSellingProductsScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'sales'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
       setSales(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));

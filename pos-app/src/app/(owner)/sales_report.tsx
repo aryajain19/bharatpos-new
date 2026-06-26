@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Text, Card, useTheme, Button } from 'react-native-paper';
@@ -9,6 +11,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 export default function SalesReportScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { width } = useWindowDimensions();
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
@@ -31,7 +35,7 @@ export default function SalesReportScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'sales'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
 

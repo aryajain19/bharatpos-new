@@ -9,15 +9,6 @@ import { db, auth, isFirebaseConfigured } from '../../../lib/firebase';
 import { collection, query, where, getDocs } from '../../../lib/firestore_adapter';
 import { signOut } from 'firebase/auth';
 
-// --- Recent Transactions Demo Data ---
-const RECENT_TRANSACTIONS = [
-  { id: '1', name: 'Parle-G Biscuit x3', amount: 60, time: '2 min ago', icon: 'cookie', color: '#10B981' },
-  { id: '2', name: 'Amul Butter 500g x1', amount: 280, time: '18 min ago', icon: 'cheese', color: '#F44336' },
-  { id: '3', name: 'Tata Salt 1kg x2', amount: 48, time: '35 min ago', icon: 'shaker-outline', color: '#2196F3' },
-  { id: '4', name: 'Surf Excel 1kg x1', amount: 230, time: '1 hr ago', icon: 'washing-machine', color: '#FF9800' },
-  { id: '5', name: 'Haldiram Namkeen x4', amount: 160, time: '1.5 hr ago', icon: 'food-variant', color: '#9C27B0' },
-];
-
 // --- Greeting Helper ---
 const getGreeting = (): string => {
   const hour = new Date().getHours();

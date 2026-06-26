@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import { Text, Card, DataTable, useTheme, TextInput, Button } from 'react-native-paper';
@@ -10,6 +12,8 @@ import { useNavigation } from 'expo-router';
 
 
 export default function InventoryManagementScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -36,7 +40,7 @@ export default function InventoryManagementScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(
         collection(db, 'products'),
         where('tenant_id', '==', tenantId),
@@ -53,7 +57,7 @@ export default function InventoryManagementScreen() {
           category: p.category || '',
           gst_pct: p.gst_pct || 0,
           hsn: p.hsn || '',
-          stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 15),
+          stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 0),
         }));
       }
     } catch (err: any) {
@@ -132,7 +136,7 @@ export default function InventoryManagementScreen() {
                 <DataTable.Row key={item.id}>
                   <DataTable.Cell style={{ flex: 3 }}><Text style={{ fontWeight: 'bold', color: appTheme.colors.onSurface }}>{item.name}</Text></DataTable.Cell>
                   <DataTable.Cell numeric>{item.stock_qty}</DataTable.Cell>
-                  <DataTable.Cell numeric>5</DataTable.Cell>
+                  <DataTable.Cell numeric>{item.min_stock || 0}</DataTable.Cell>
                   <DataTable.Cell style={{ flex: 1.5, justifyContent: 'center' }}>
                     <Text style={{ color: statusColor, fontWeight: '700' }}>{statusText}</Text>
                   </DataTable.Cell>

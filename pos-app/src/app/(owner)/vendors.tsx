@@ -44,8 +44,9 @@ export default function VendorManagementScreen() {
   };
 
   const deviceLimit = getDeviceLimit();
-  const currentDevices = vendors.length + 1; // workers + owner phone
-  const isLimitReached = currentDevices >= deviceLimit;
+  const workerLimit = deviceLimit === 9999 ? 9999 : Math.max(0, deviceLimit - 1); // subtract 1 for owner device
+  const workerCount = vendors.length;
+  const isLimitReached = workerCount >= workerLimit;
 
   useEffect(() => {
     if (!authLoading) {
@@ -221,12 +222,14 @@ export default function VendorManagementScreen() {
           <Icon name="cellphone-link-variant" size={24} color={isLimitReached ? '#D97706' : '#10B981'} />
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 13, fontWeight: '700', color: isLimitReached ? '#92400E' : '#1E40AF' }}>
-              Device Count Status: {currentDevices} / {deviceLimit === 9999 ? 'Unlimited' : `${deviceLimit} registered`}
+              Workers Registered: {workerCount} / {workerLimit === 9999 ? 'Unlimited' : workerLimit}
             </Text>
             <Text style={{ fontSize: 11, color: isLimitReached ? '#B45309' : '#059669', marginTop: 2 }}>
               {isLimitReached 
-                ? "You have reached your device limit. Upgrade subscription plan to register more cashier phones."
-                : `Your current plan allows registering up to ${deviceLimit - 1} workers' phones.`}
+                ? "You have reached your worker limit. Upgrade subscription plan to register more cashier phones."
+                : workerCount === 0 
+                  ? `No workers registered yet. Your plan allows up to ${workerLimit} worker devices.`
+                  : `Your current plan allows registering up to ${workerLimit} worker devices.`}
             </Text>
           </View>
           {isLimitReached && (

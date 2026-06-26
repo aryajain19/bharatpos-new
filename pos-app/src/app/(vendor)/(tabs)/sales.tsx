@@ -11,10 +11,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 type DateFilter = 'today' | 'week' | 'month';
 
 // --- Payment modes ---
-const PAYMENT_MODES = ['Cash', 'UPI', 'Card', 'Cash', 'UPI', 'Cash', 'UPI', 'Card', 'UPI', 'Cash', 'UPI', 'Cash'];
+
 
 // --- Demo sales data ---
-const DEMO_SALES: any[] = [];
+
 
 export default function SalesHistoryScreen() {
   const appTheme = useTheme();
@@ -47,7 +47,7 @@ export default function SalesHistoryScreen() {
 
   const fetchSales = async () => {
     if (!isFirebaseConfigured || !user) {
-      setSales(DEMO_SALES);
+      setSales([]);
       setLoading(false);
       return;
     }

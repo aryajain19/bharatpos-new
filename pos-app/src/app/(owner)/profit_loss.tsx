@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Card, Button, Divider, Surface, TextInput } from 'react-native-paper';
@@ -12,6 +14,8 @@ interface LineItem {
 }
 
 export default function ProfitLossScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -35,7 +39,7 @@ export default function ProfitLossScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'transactions'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));

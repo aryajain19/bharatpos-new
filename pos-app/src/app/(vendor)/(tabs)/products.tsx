@@ -29,7 +29,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 // --- 18 Realistic Indian products ---
-const DEMO_PRODUCTS: any[] = [];
+
 
 export default function ProductsScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
@@ -66,7 +66,7 @@ export default function ProductsScreen() {
   const fetchProducts = async () => {
     let baseProducts: any[] = [];
     if (!isFirebaseConfigured) {
-      setProducts(DEMO_PRODUCTS);
+      setProducts([]);
       setLoading(false);
       return;
     }

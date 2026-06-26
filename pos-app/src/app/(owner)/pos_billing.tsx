@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Animated, TextInput as RNTextInput, Platform, Linking, Modal } from 'react-native';
 import { Text, Button, Divider, Surface, Chip, Portal, Dialog, SegmentedButtons, TextInput, useTheme, IconButton } from 'react-native-paper';
@@ -30,6 +31,7 @@ const FadeIn = ({ delay = 0, style, children }: { delay?: number; style?: any; c
 export default function POSBillingScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
+  const { tenantId, loading: authLoading } = useAuth();
 
   const { cart, addToCart, removeFromCart, updateQty, getSubtotal, clearCart } = useCart();
   const [search, setSearch] = useState('');
@@ -82,7 +84,7 @@ export default function POSBillingScreen() {
   const fetchProducts = async () => {
     if (isFirebaseConfigured) {
       try {
-        const tenantId = auth.currentUser?.uid || 'anonymous';
+        if (!tenantId) return;
         const q = query(
           collection(db, 'products'),
           where('tenant_id', '==', tenantId)
@@ -98,7 +100,7 @@ export default function POSBillingScreen() {
             category: p.category || '',
             gst_pct: p.gst_pct || 0,
             hsn: p.hsn || '',
-            stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 15),
+            stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 0),
             image_url: p.image_url
           }));
           setProducts(formatted);
@@ -230,7 +232,7 @@ export default function POSBillingScreen() {
       const cleanBarcode = barcode.trim().replace(/[\r\n]/g, '');
       if (!cleanBarcode) return;
 
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(
         collection(db, 'products'), 
         where('tenant_id', '==', tenantId), 
@@ -277,11 +279,14 @@ export default function POSBillingScreen() {
 
     // 3. Save to Firebase Firestore if enabled
     if (isFirebaseConfigured) {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) {
+        Alert.alert('Error', 'Tenant ID is missing. Please log in again.');
+        return;
+      }
       try {
         await addDoc(collection(db, 'sales'), {
           tenant_id: tenantId,
-          vendor_id: auth.currentUser?.uid,
+          vendor_id: auth.currentUser?.uid || 'owner',
           bill_no: activeBillNo,
           created_at: dateObj.toISOString(),
           customer_name: custName || 'Walk-in Customer',
@@ -674,9 +679,7 @@ export default function POSBillingScreen() {
               <View style={styles.summaryRow}>
                 <View style={styles.labelWithBadge}>
                   <Text style={styles.summaryLabel}>Discount</Text>
-                  <View style={styles.discountBadge}>
-                    <Text style={styles.discountBadgeText}>5%</Text>
-                  </View>
+
                 </View>
                 <Text style={[styles.summaryValue, { color: appTheme.colors.onSurface }]}>- ₹{discount.toFixed(2)}</Text>
               </View>
@@ -927,8 +930,7 @@ export default function POSBillingScreen() {
               <Text style={{ fontSize: 10, fontWeight: 'bold', color: appTheme.colors.onSurface, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Dispatched Message Preview</Text>
               <Text style={{ fontSize: 12, color: appTheme.colors.onSurface, lineHeight: 17, fontStyle: 'italic' }}>
                 "Thank you for shopping at {storeName}.{"\n"}
-                Invoice Amount: ₹{finalTotal.toFixed(0)}{"\n"}
-                Download Bill: secure-link.com/invoice/{activeBillNo.replace('INV-', '')}"
+                Invoice Amount: ₹{finalTotal.toFixed(0)}
               </Text>
             </View>
 
@@ -946,8 +948,7 @@ export default function POSBillingScreen() {
               <TouchableOpacity
                 style={styles.shareOption}
                 onPress={() => Alert.alert(
-                  'SMS Shared',
-                  `SMS Bill link dispatched to customer:\n\nThank you for shopping at ${storeName}.\nInvoice Amount: ₹${finalTotal.toFixed(0)}\nDownload Bill: secure-link.com/invoice/${activeBillNo.replace('INV-', '')}`
+                  `SMS Bill link dispatched to customer:\n\nThank you for shopping at ${storeName}.\nInvoice Amount: ₹${finalTotal.toFixed(0)}`
                 )}
               >
                 <View style={[styles.shareIcon, { backgroundColor: appTheme.colors.surface }]}>

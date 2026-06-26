@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
+import { useAuth } from '../../providers/AuthProvider';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Text, useTheme, IconButton, TextInput } from 'react-native-paper';
 import { Camera, CameraView } from 'expo-camera';
@@ -10,6 +12,8 @@ import { collection, query, where, getDocs } from '../../lib/firestore_adapter';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function ScanScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -45,7 +49,7 @@ export default function ScanScreen() {
           return;
         }
 
-        const tenantId = auth.currentUser?.uid || 'anonymous';
+        if (!tenantId) return;
         const q = query(
           collection(db, 'products'),
           where('tenant_id', '==', tenantId),

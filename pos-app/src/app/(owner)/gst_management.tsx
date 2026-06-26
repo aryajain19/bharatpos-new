@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator, Alert, Platform } from 'react-native';
 import { Text, useTheme, Card, DataTable, Button, Surface, Divider, TextInput } from 'react-native-paper';
@@ -13,6 +15,8 @@ const fmt = (n: number) => '₹' + n.toLocaleString('en-IN', { minimumFractionDi
 type TabType = 'overview' | 'gstr1' | 'gstr3b';
 
 export default function GSTManagementScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -45,7 +49,7 @@ export default function GSTManagementScreen() {
     // Then load from Firebase for source of truth
     if (!isFirebaseConfigured) return;
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const settingsRef = doc(db, 'settings', tenantId);
       const snap = await getDoc(settingsRef);
       if (snap.exists()) {
@@ -65,7 +69,7 @@ export default function GSTManagementScreen() {
       return;
     }
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const settingsRef = doc(db, 'settings', tenantId);
       await setDoc(settingsRef, {
         gstNumber,
@@ -93,7 +97,7 @@ export default function GSTManagementScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'sales'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));

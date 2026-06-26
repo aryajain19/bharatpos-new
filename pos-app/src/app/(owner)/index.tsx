@@ -7,6 +7,7 @@ import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, query, where, getDocs, onSnapshot, doc, getDoc } from '../../lib/firestore_adapter';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { useAuth } from '../../providers/AuthProvider';
 import { router } from 'expo-router';
 
 // ── Animated Counter Hook ──────────────────────────────────────────────
@@ -87,6 +88,7 @@ export default function AdminDashboard() {
 
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
+  const { tenantId, loading: authLoading, subscriptionPlan } = useAuth();
 
   const [todaySales, setTodaySales] = useState(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -167,10 +169,10 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
     fetchMetrics();
     let unsubscribe: any = null;
-    if (isFirebaseConfigured) {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+    if (isFirebaseConfigured && tenantId) {
       const now = new Date();
       const sevenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
       const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -203,7 +205,7 @@ export default function AdminDashboard() {
     }
 
     return () => { if (unsubscribe) unsubscribe(); };
-  }, []);
+  }, [authLoading, tenantId]);
 
   const processSalesData = (docs: any[]) => {
     const now = new Date();
@@ -239,15 +241,26 @@ export default function AdminDashboard() {
         dataPoints[idx] += amt;
       }
 
-      // Approx 15% margin
-      profit += amt * 0.15;
-
-      // Top selling
+      // Calculate real profit
+      let cost = 0;
+      let hasCostPrice = false;
       (data.items || []).forEach((item: any) => {
+        if (item.cost_price !== undefined && item.cost_price > 0) {
+           hasCostPrice = true;
+           cost += (parseFloat(item.cost_price) * item.qty);
+        } else {
+           // fallback logic if needed, but we will just rely on actual cost_price
+        }
         if (!productStats[item.id]) productStats[item.id] = { name: item.name, qty: 0, revenue: 0 };
         productStats[item.id].qty += item.qty;
-        productStats[item.id].revenue += (item.qty * item.price);
+        productStats[item.id].revenue += (item.qty * parseFloat(item.price || 0));
       });
+      
+      // If no cost price available, don't add to profit to avoid fake numbers. 
+      // If we want to show 0 when no cost price is available.
+      if (hasCostPrice) {
+         profit += (amt - cost);
+      }
 
       activities.push({
         id: doc.id,
@@ -301,7 +314,8 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
+      
       
       // Fetch Workers
       const workersSnapshot = await getDocs(query(
@@ -372,13 +386,13 @@ export default function AdminDashboard() {
   const metrics: MetricConfig[] = shopMode === 'Mobile Only' ? (
     isGstRegistered ? [
       { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-      { title: "Total Amount Collected", value: Math.round(salesValue * 0.95), prefix: '₹', icon: 'cash-check', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
+      { title: "Total Amount Collected", value: salesValue, prefix: '₹', icon: 'cash-check', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
       { title: "Total Profit", value: totalProfit, prefix: '₹', icon: 'trending-up', color: appTheme.colors.onSurface, bgColor: '#EEF2FF' },
-      { title: "GST Collected", value: Math.round(salesValue * 0.05), prefix: '₹', icon: 'bank', color: appTheme.colors.onSurface, bgColor: '#FEF2F2' },
+      { title: "GST Collected", value: 0, prefix: '₹', icon: 'bank', color: appTheme.colors.onSurface, bgColor: '#FEF2F2' },
     ] : [
       { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-      { title: "Total Amount Collected", value: Math.round(salesValue * 0.95), prefix: '₹', icon: 'cash-check', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-      { title: "Pending Payment (Khata)", value: 0, prefix: '₹', icon: 'account-clock', color: appTheme.colors.onSurface, bgColor: '#FEF2F2' },
+      { title: "Total Amount Collected", value: salesValue, prefix: '₹', icon: 'cash-check', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
+      { title: "Coming Soon (Khata)", value: 0, prefix: '₹', icon: 'account-clock', color: appTheme.colors.onSurface, bgColor: '#FEF2F2' },
       { title: "Low Stock Alert", value: lowStockAlertCount, icon: 'alert-outline', color: appTheme.colors.onSurface, bgColor: '#FFFBEB' },
     ]
   ) : [
@@ -457,9 +471,7 @@ export default function AdminDashboard() {
                   Instruct cashiers to enter this code on the worker sign-in screen to connect their devices.
                 </Text>
               </View>
-              <View style={{ backgroundColor: appTheme.colors.surface, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>1 Active Phone</Text>
-              </View>
+              <Text style={{ fontSize: 11, color: 'gray' }}>Worker</Text>
             </View>
           </Card.Content>
         </Card>
@@ -495,6 +507,7 @@ export default function AdminDashboard() {
                 )}
               </View>
               <View style={{ flex: 1, minWidth: 200, backgroundColor: appTheme.colors.surface, borderWidth: 1, borderColor: appTheme.colors.outline, borderRadius: 10, padding: 12, justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 13, fontWeight: 'bold', color: appTheme.colors.primary }}>{workersList.length + 1} Active Devices</Text>
                 <Text style={{ fontSize: 11, fontWeight: 'bold', color: appTheme.colors.onSurface, textTransform: 'uppercase' }}>Terminal Permissions</Text>
                 <Text style={{ fontSize: 12, color: appTheme.colors.onSurface, marginTop: 4 }}>Staff are restricted from accessing reports or inventory settings.</Text>
                 <TouchableOpacity onPress={() => router.push('/(owner)/vendors' as any)} style={{ marginTop: 8 }}>

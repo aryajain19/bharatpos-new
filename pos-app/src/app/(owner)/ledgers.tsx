@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
 import { Text, Card, Button, Surface, Divider, useTheme, TextInput } from 'react-native-paper';
@@ -97,6 +99,8 @@ const fmt = (n: number) => '₹' + n.toLocaleString('en-IN', { minimumFractionDi
 // Ledgers Screen (Chart of Accounts)
 // ═══════════════════════════════════════════════════════════════════════
 export default function LedgersScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -136,7 +140,7 @@ export default function LedgersScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'transactions'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));

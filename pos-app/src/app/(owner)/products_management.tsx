@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
+import { useAuth } from '../../providers/AuthProvider';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, useTheme, Card, DataTable, Button, IconButton, TextInput } from 'react-native-paper';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
@@ -9,6 +11,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
 
 export default function ProductsManagementScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -21,7 +25,7 @@ export default function ProductsManagementScreen() {
   const fetchProducts = async () => {
     if (!isFirebaseConfigured) return;
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(
         collection(db, 'products'),
         where('tenant_id', '==', tenantId),

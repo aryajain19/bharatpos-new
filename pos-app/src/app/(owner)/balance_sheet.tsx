@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Card, Button, Divider, Surface, TextInput } from 'react-native-paper';
@@ -15,6 +17,8 @@ import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, getDocs, query, where } from '../../lib/firestore_adapter';
 
 export default function BalanceSheetScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -49,7 +53,7 @@ export default function BalanceSheetScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
 
       // 1. Fetch products to calculate inventory value
       const prodSnapshot = await getDocs(query(collection(db, 'products'), where('tenant_id', '==', tenantId)));

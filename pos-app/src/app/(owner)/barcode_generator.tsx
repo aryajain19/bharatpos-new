@@ -168,6 +168,8 @@ const getScanUrl = (barcode: string) => {
 };
 
 export default function BarcodeGeneratorScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode } = useAppTheme();
   const appTheme = useTheme();
   const { permissions, role } = useAuth();
@@ -272,7 +274,7 @@ export default function BarcodeGeneratorScreen() {
   const fetchShopName = async () => {
     if (!isFirebaseConfigured) return;
     try {
-      const uid = auth.currentUser?.uid;
+      const uid = tenantId;
       if (uid) {
         const userSnap = await getDoc(doc(db, 'users', uid));
         if (userSnap.exists && userSnap.exists()) {
@@ -288,7 +290,7 @@ export default function BarcodeGeneratorScreen() {
   const fetchProducts = async () => {
     if (!isFirebaseConfigured) return;
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return '';
       const q = query(collection(db, 'products'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
       const list = snapshot.docs.map(doc => {
@@ -310,7 +312,7 @@ export default function BarcodeGeneratorScreen() {
   };
 
   const generateAutoBarcodeValue = () => {
-    const tenantId = auth.currentUser?.uid || '0000';
+    if (!tenantId) return '';
     let hash = 0;
     for (let i = 0; i < tenantId.length; i++) {
       hash = (hash + tenantId.charCodeAt(i)) % 10000;
@@ -526,7 +528,7 @@ export default function BarcodeGeneratorScreen() {
             mrp: basePrice,
             selling_price: basePrice,
             stock_qty: 0,
-            tenant_id: auth.currentUser?.uid || 'anonymous',
+            tenant_id: tenantId,
             created_at: new Date().toISOString()
           });
           finalId = docRef.id;

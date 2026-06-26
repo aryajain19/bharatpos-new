@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, Card, Avatar, useTheme, ProgressBar, TextInput, Button } from 'react-native-paper';
@@ -7,6 +9,8 @@ import { collection, getDocs, query, orderBy, where } from '../../lib/firestore_
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function VendorPerformanceScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -25,7 +29,7 @@ export default function VendorPerformanceScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const q = query(collection(db, 'sales'), where('tenant_id', '==', tenantId));
       const snapshot = await getDocs(q);
       setSalesData(snapshot.docs.map(doc => doc.data()));

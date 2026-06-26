@@ -1,4 +1,6 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+
+import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, ActivityIndicator, Alert, Share, useWindowDimensions } from 'react-native';
 import { Text, Card, useTheme, Surface, TextInput, Portal, Modal, Button, Divider } from 'react-native-paper';
@@ -7,6 +9,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 export default function ReportsAnalyticsScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { width } = useWindowDimensions();
   const chartWidth = width > 800 ? (width - 350) / 2.1 : width - 50;
 
@@ -50,7 +54,7 @@ export default function ReportsAnalyticsScreen() {
     setLoading(true);
     setError(null);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const now = new Date();
       const firstOfMonthObj = new Date(now.getFullYear(), now.getMonth(), 1);
       const firstOfMonthISO = firstOfMonthObj.toISOString();
@@ -76,7 +80,7 @@ export default function ReportsAnalyticsScreen() {
         const data = doc.data();
         const amt = parseFloat(data.total_amount || 0);
         const date = new Date(data.created_at || new Date()).getTime();
-        const gstVal = parseFloat(data.gst_amount || 0);
+        const gstVal = parseFloat(data.gst_collected || 0);
 
         if (date >= firstOfMonth) {
           totalSalesVal += amt;
@@ -97,7 +101,7 @@ export default function ReportsAnalyticsScreen() {
 
       setTotalSales(totalSalesVal);
       setGstCollected(gstSum);
-      setNetProfit(Math.round(totalSalesVal * 0.15));
+      setNetProfit(0); /* Replace fake profit with calculated one if possible */
       setPaymentStats({ upi: upiCount, cash: cashCount, card: cardCount });
       setPaymentAmts({ upi: upiSum, cash: cashSum, card: cardSum });
     } catch (e: any) {
@@ -140,7 +144,7 @@ export default function ReportsAnalyticsScreen() {
     
     setLoading(true);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       const now = new Date();
       const firstOfMonthObj = new Date(now.getFullYear(), now.getMonth(), 1);
       const firstOfMonthISO = firstOfMonthObj.toISOString();

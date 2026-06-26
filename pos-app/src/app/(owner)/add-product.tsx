@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+
+import { useAuth } from '../../providers/AuthProvider';
 import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, useTheme, Button, Surface, TextInput } from 'react-native-paper';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
@@ -7,6 +9,8 @@ import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
 
 export default function AddProductScreen() {
+  const { tenantId, loading: authLoading } = useAuth();
+
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
@@ -21,7 +25,7 @@ export default function AddProductScreen() {
 
   // Generate unique EAN-13 barcode with merchant prefix to prevent cross-merchant collisions
   const generateBarcode = () => {
-    const tenantId = auth.currentUser?.uid || '0000';
+    if (!tenantId) return;
     let hash = 0;
     for (let i = 0; i < tenantId.length; i++) {
       hash = (hash + tenantId.charCodeAt(i)) % 10000;
@@ -50,7 +54,7 @@ export default function AddProductScreen() {
 
     setLoading(true);
     try {
-      const tenantId = auth.currentUser?.uid || 'anonymous';
+      if (!tenantId) return;
       await addDoc(collection(db, 'products'), {
         tenant_id: tenantId,
         name,

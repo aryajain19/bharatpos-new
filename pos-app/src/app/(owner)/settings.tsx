@@ -64,7 +64,7 @@ export default function AdminSettingsScreen() {
     }
     setBackupLoading(true);
     try {
-      const resolvedTenant = tenantId || auth.currentUser?.uid || 'anonymous';
+      const resolvedTenant = tenantId;
       
       // Fetch products
       const prodSnap = await getDocs(query(collection(db, 'products'), where('tenant_id', '==', resolvedTenant)));
@@ -126,7 +126,7 @@ export default function AdminSettingsScreen() {
         throw new Error("Invalid backup format. Backup must contain products, sales, and transactions.");
       }
 
-      const resolvedTenant = tenantId || auth.currentUser?.uid || 'anonymous';
+      const resolvedTenant = tenantId;
       
       // Restore products
       for (const p of data.products) {
