@@ -36,11 +36,7 @@ export default function VendorManagementScreen() {
 
   // Device Limit Logic
   const getDeviceLimit = () => {
-    if (subscriptionPlan === 'free_trial') return 1; // 1 device only
-    if (subscriptionPlan === 'paid_1_year') return 3; // Small Vendor: 3 devices (2 workers + 1 owner)
-    if (subscriptionPlan === 'paid_2_year') return 5; // Medium Shop: 5 devices (4 workers + 1 owner)
-    if (subscriptionPlan === 'paid_3_year') return 9999; // Large Shop: Unlimited
-    return 3; // Default Small Vendor
+    return 9999; // Unlimited worker registration requested by owner
   };
 
   const deviceLimit = getDeviceLimit();
