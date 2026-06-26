@@ -995,7 +995,14 @@ export default function POSBillingScreen() {
                   onBarcodeScanned={cameraScanned ? undefined : async ({ data }) => {
                     setCameraScanned(true);
                     if (data) {
-                      const cleanBarcode = data.trim().replace(/[\r\n]/g, '');
+                      let barcode = data;
+                      if (data && typeof data === 'string' && data.includes('scanBarcode=')) {
+                        const match = data.match(/[?&]scanBarcode=([^&]+)/);
+                        if (match) {
+                          barcode = match[1];
+                        }
+                      }
+                      const cleanBarcode = barcode.trim().replace(/[\r\n]/g, '');
                       // Search locally in products first
                       const matchingProduct = products.find(p => p.barcode === cleanBarcode);
                       if (matchingProduct) {
