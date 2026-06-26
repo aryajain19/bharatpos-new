@@ -457,11 +457,15 @@ export default function SuperAdminDashboard() {
 
   const handleCreateCustomer = async () => {
     if (!formName || !formStore || isCreating) return;
+    if (!formPassword) {
+      alert('Password is required.');
+      return;
+    }
     setIsCreating(true);
 
     let newCustId = (customers.length + 1).toString() + '_' + Date.now();
     const finalEmail = formEmail || `${formName.toLowerCase().replace(' ', '')}@pos.com`;
-    const defaultPassword = formPassword || 'Welcome@123';
+    const defaultPassword = formPassword;
     let authNotice = '';
 
     if (isFirebaseConfigured) {
@@ -1922,7 +1926,7 @@ export default function SuperAdminDashboard() {
             <TextInput label="Store Brand Name" value={formStore} onChangeText={setFormStore} mode="outlined" style={styles.formInput} outlineColor="#EEF0F6" activeOutlineColor="#2563EB" />
             <TextInput label="Email Address" value={formEmail} onChangeText={setFormEmail} mode="outlined" style={styles.formInput} keyboardType="email-address" outlineColor="#EEF0F6" activeOutlineColor="#2563EB" />
             <TextInput label="Mobile Phone Number" value={formPhone} onChangeText={setFormPhone} mode="outlined" style={styles.formInput} keyboardType="phone-pad" outlineColor="#EEF0F6" activeOutlineColor="#2563EB" />
-            <TextInput label="Password (Optional)" value={formPassword} onChangeText={setFormPassword} mode="outlined" style={styles.formInput} secureTextEntry outlineColor="#EEF0F6" activeOutlineColor="#2563EB" />
+            <TextInput label="Password" value={formPassword} onChangeText={setFormPassword} mode="outlined" style={styles.formInput} secureTextEntry outlineColor="#EEF0F6" activeOutlineColor="#2563EB" />
             <Text style={{ marginTop: 12, fontWeight: '700', color: '#1A1A2E', fontSize: 13 }}>Default Package Plan</Text>
             <SegmentedButtons
               value={formPlan}

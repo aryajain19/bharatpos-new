@@ -1,73 +1,887 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BharatPOS Monorepo</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .container {
-            background-color: #1e293b;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            max-width: 600px;
-        }
-        h1 { color: #10B981; margin-top: 0; }
-        p { color: #cbd5e1; line-height: 1.6; }
-        .btn {
-            display: inline-block;
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            margin: 10px;
-            transition: background-color 0.2s;
-        }
-        .btn:hover { background-color: #2563eb; }
-        .btn-green { background-color: #10B981; }
-        .btn-green:hover { background-color: #059669; }
-        .btn-purple { background-color: #8B5CF6; }
-        .btn-purple:hover { background-color: #7C3AED; }
-        .code-block {
-            background-color: #0f172a;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            color: #38bdf8;
-            margin: 20px 0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BharatPOS — Billing, Inventory & GST for Indian Retail</title>
+<meta name="description" content="BharatPOS handles your counter billing, real-time stock, Tally-style accounting, and GSTR filing. Made for Indian retail.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0D0F14;
+  --ink2:#3A3F50;
+  --ink3:#8891A8;
+  --page:#F7F8FC;
+  --white:#FFFFFF;
+  --border:rgba(0,0,0,.07);
+  --border2:rgba(0,0,0,.12);
+  --blue:#1A40C8;
+  --blue2:#2952F0;
+  --blue-s:#EBF0FE;
+  --green:#0C7A50;
+  --green-s:#E5F4EE;
+  --amber:#A85700;
+  --amber-s:#FEF2E0;
+  --red:#B52323;
+  --red-s:#FCEBEB;
+  --r:12px;
+  --rsm:8px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--page);color:var(--ink);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{background:rgba(255,255,255,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 40px;height:65px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;transition:all 0.3s ease}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;transition:transform 0.2s ease}
+.nav-logo:hover{transform:scale(1.02)}
+.nav-mark{width:32px;height:32px;background:linear-gradient(135deg, var(--blue2), var(--blue));border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;letter-spacing:-.5px;flex-shrink:0;box-shadow:0 3px 8px rgba(41,82,240,0.25)}
+.nav-name{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.3px}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-link{font-size:14px;color:var(--ink2);text-decoration:none;font-weight:500;transition:color .2s ease;position:relative}
+.nav-link::after{content:'';position:absolute;width:0;height:2px;bottom:-4px;left:0;background-color:var(--blue2);transition:width 0.2s ease}
+.nav-link:hover{color:var(--ink)}
+.nav-link:hover::after{width:100%}
+.nav-right{display:flex;align-items:center;gap:12px}
+
+.btn-ghost-sm{background:var(--white);color:var(--ink2);border:1px solid var(--border2);border-radius:var(--rsm);padding:8px 18px;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s ease;text-decoration:none}
+.btn-ghost-sm:hover{background:var(--page);color:var(--ink);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,0.04)}
+.btn-ghost-sm:active{transform:translateY(1px)}
+
+.btn-primary-sm{background:linear-gradient(to bottom, var(--blue2), var(--blue));color:#fff;border:none;border-radius:var(--rsm);padding:8px 18px;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s ease;text-decoration:none;box-shadow:0 2px 6px rgba(41,82,240,0.15)}
+.btn-primary-sm:hover{background:var(--blue);transform:translateY(-1px);box-shadow:0 4px 12px rgba(41,82,240,0.25)}
+.btn-primary-sm:active{transform:translateY(1px)}
+
+/* HERO */
+.hero{padding:96px 40px 80px;max-width:960px;margin:0 auto;text-align:center;animation: fadeIn 0.8s ease-out}
+.hero h1{font-size:56px;font-weight:700;color:var(--ink);line-height:1.15;letter-spacing:-1px;margin-bottom:0}
+.hero h1 em{font-style:italic;font-family:'Instrument Serif',serif;font-weight:400;color:var(--blue2);background:linear-gradient(120deg, var(--blue2), #701af0);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:18px;color:var(--ink2);max-width:600px;margin:20px auto 38px;line-height:1.75;font-weight:400}
+.hero-actions{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:48px;flex-wrap:wrap}
+
+.btn-primary-lg{background:linear-gradient(135deg, var(--blue2), var(--blue));color:#fff;border:none;border-radius:var(--rsm);padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .25s ease;text-decoration:none;box-shadow:0 4px 14px rgba(41,82,240,0.2)}
+.btn-primary-lg:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(41,82,240,0.3)}
+.btn-primary-lg:active{transform:translateY(0)}
+
+.btn-ghost-lg{background:var(--white);color:var(--ink2);border:1px solid var(--border2);border-radius:var(--rsm);padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s ease;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.02)}
+.btn-ghost-lg:hover{background:var(--page);color:var(--ink);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+.btn-ghost-lg:active{transform:translateY(0)}
+
+.hero-trust{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink3);font-weight:500}
+.trust-item i{font-size:16px;color:var(--green)}
+.trust-sep{width:1px;height:16px;background:var(--border2)}
+
+/* PREVIEW */
+.preview-wrap{max-width:960px;margin:0 auto 80px;padding:0 40px;animation: fadeInUp 0.8s ease-out 0.2s both}
+.preview-frame{background:var(--white);border:1px solid var(--border2);border-radius:18px;overflow:hidden;box-shadow:0 12px 50px rgba(0,0,0,0.08);transition:transform 0.4s ease}
+.preview-frame:hover{transform:scale(1.005)}
+.preview-bar{background:#F1F3F8;border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:10px}
+.preview-dot{width:12px;height:12px;border-radius:50%}
+.preview-url{background:var(--white);border:1px solid var(--border);border-radius:6px;flex:1;max-width:260px;padding:5px 14px;font-size:12px;color:var(--ink3);font-family:'Inter',sans-serif}
+.preview-inner{padding:20px;background:var(--page);display:grid;grid-template-columns:184px 1fr;gap:14px;min-height:360px}
+
+.mini-sidebar{background:#0D0F14;border-radius:12px;padding:12px 0;display:flex;flex-direction:column}
+.mini-sb-brand{display:flex;align-items:center;gap:10px;padding:8px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:8px}
+.mini-sb-logo{width:26px;height:26px;background:var(--blue2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.mini-sb-name{font-size:12.5px;font-weight:600;color:#fff}
+.mini-sb-sub{font-size:10px;color:rgba(255,255,255,.35)}
+.mini-nav-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);padding:10px 14px 5px}
+.mini-nav-item{display:flex;align-items:center;gap:10px;padding:7px 11px;margin:1px 8px;border-radius:8px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;transition:all .2s ease}
+.mini-nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+.mini-nav-item.act{background:var(--blue2);color:#fff;box-shadow:0 2px 6px rgba(41,82,240,0.3)}
+.mini-nav-item i{font-size:15px}
+
+.mini-content{display:flex;flex-direction:column;gap:12px}
+.mini-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mini-metric{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:box-shadow 0.2s ease}
+.mini-metric:hover{box-shadow:0 4px 12px rgba(0,0,0,0.03)}
+.mini-m-label{font-size:10.5px;color:var(--ink3);margin-bottom:4px}
+.mini-m-val{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.5px;line-height:1}
+.mini-m-sub{font-size:10px;margin-top:4px}
+
+.mini-row{display:grid;grid-template-columns:1fr 240px;gap:10px}
+.mini-card{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.mini-card-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mini-card-title{font-size:11.5px;font-weight:600;color:var(--ink)}
+
+/* SVG line drawing anim */
+.chart-line {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: drawChart 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.chart-dot {
+  opacity: 0;
+  animation: showDot 0.4s ease forwards;
+}
+.chart-dot:nth-child(1) { animation-delay: 0.3s; }
+.chart-dot:nth-child(2) { animation-delay: 0.6s; }
+.chart-dot:nth-child(3) { animation-delay: 0.9s; }
+.chart-dot:nth-child(4) { animation-delay: 1.2s; }
+.chart-dot:nth-child(5) { animation-delay: 1.5s; }
+.chart-dot:nth-child(6) { animation-delay: 1.8s; }
+.chart-dot:nth-child(7) { animation-delay: 2.1s; }
+
+@keyframes drawChart {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes showDot {
+  to { opacity: 1; transform: scale(1); }
+}
+
+.mini-tx{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);transition:background-color 0.2s ease}
+.mini-tx:hover{background-color:rgba(0,0,0,0.01)}
+.mini-tx:last-child{border-bottom:none}
+.mini-tx-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.mini-tx-name{font-size:11.5px;font-weight:600;color:var(--ink);line-height:1.2}
+.mini-tx-sub{font-size:10px;color:var(--ink3)}
+.mini-tx-amt{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--green)}
+.tag-xs{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;display:inline-block}
+
+/* LOGOS */
+.logos-section{padding:36px 40px 64px;max-width:960px;margin:0 auto}
+.logos-label{text-align:center;font-size:12px;font-weight:600;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:24px}
+.logos-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.logo-pill{padding:9px 22px;border:1px solid var(--border2);border-radius:99px;font-size:13.5px;font-weight:600;color:var(--ink2);letter-spacing:-.1px;background:var(--white);transition:all 0.2s ease}
+.logo-pill:hover{transform:translateY(-2px);border-color:var(--blue2);color:var(--blue2);box-shadow:0 4px 12px rgba(41,82,240,0.05)}
+
+/* SECTION */
+.section{max-width:960px;margin:0 auto;padding:0 40px 80px}
+.section-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue2);margin-bottom:12px}
+.section-head{font-size:38px;font-weight:700;color:var(--ink);line-height:1.2;letter-spacing:-.8px;margin-bottom:14px}
+.section-head em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--blue2)}
+.section-body{font-size:16.5px;color:var(--ink2);line-height:1.75;max-width:540px}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+.feat{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all 0.3s cubic-bezier(0.25, 1, 0.5, 1)}
+.feat:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,0.05);border-color:rgba(41,82,240,0.15)}
+.feat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:22px}
+.feat-title{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.feat-body{font-size:14px;color:var(--ink3);line-height:1.65}
+
+/* GST CALLOUT */
+.gst-callout{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:36px 40px;display:grid;grid-template-columns:1fr auto;gap:36px;align-items:center;margin-top:40px;transition:all 0.3s ease}
+.gst-callout:hover{box-shadow:0 8px 32px rgba(0,0,0,0.03)}
+.gst-title{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.4px;margin-bottom:8px}
+.gst-body{font-size:14.5px;color:var(--ink2);line-height:1.75;max-width:480px}
+.gst-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.chip{padding:6px 14px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid;transition:transform 0.2s ease;cursor:default}
+.chip:hover{transform:scale(1.03)}
+.gst-panel{background:var(--page);border:1px solid var(--border);border-radius:14px;padding:20px 24px;min-width:240px}
+
+/* STATS */
+.stats-strip{background:var(--ink);border-radius:18px;padding:44px 52px;display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:80px}
+.stat-block{text-align:center}
+.stat-val{font-size:38px;font-weight:700;color:#fff;letter-spacing:-.8px;line-height:1}
+.stat-val em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--blue-s)}
+.stat-label{font-size:13px;color:rgba(255,255,255,.45);margin-top:8px;line-height:1.55}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:40px}
+.plan{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all 0.3s cubic-bezier(0.25, 1, 0.5, 1);display:flex;flex-direction:column;justify-content:space-between}
+.plan:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,0.05);border-color:rgba(41,82,240,0.15)}
+.plan.featured{border:2px solid var(--blue2);background:#FAFBFF;box-shadow:0 4px 20px rgba(41,82,240,0.04)}
+.plan.featured:hover{box-shadow:0 16px 36px rgba(41,82,240,0.12)}
+.plan-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--blue2);background:var(--blue-s);border-radius:99px;padding:4px 12px;margin-bottom:14px;letter-spacing:.02em;align-self:center}
+.plan-name{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.plan-price{font-size:32px;font-weight:700;color:var(--ink);letter-spacing:-.8px;line-height:1}
+.plan-price sup{font-size:16px;vertical-align:super;font-weight:600;margin-right:2px}
+.plan-price span{font-size:14px;font-weight:400;color:var(--ink3)}
+.plan-desc{font-size:13px;color:var(--ink3);margin:10px 0 20px;line-height:1.55}
+.plan-divider{height:1px;background:var(--border);margin:18px 0}
+.plan-item{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--ink2);margin-bottom:10px;text-align:left}
+.plan-item i{font-size:16px;flex-shrink:0;margin-top:2px;color:var(--blue2)}
+.plan-btn{display:block;width:100%;text-align:center;border-radius:var(--rsm);padding:11px;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:20px;border:none;transition:all 0.2s ease;text-decoration:none}
+.plan-btn-ghost{background:transparent;color:var(--blue2);border:1.5px solid rgba(41,82,240,.3)!important}
+.plan-btn-ghost:hover{background:var(--blue-s);border-color:var(--blue2)!important;transform:translateY(-1px)}
+.plan-btn-solid{background:var(--blue2);color:#fff;box-shadow:0 2px 6px rgba(41,82,240,0.15)}
+.plan-btn-solid:hover{background:var(--blue);transform:translateY(-1px);box-shadow:0 4px 12px rgba(41,82,240,0.25)}
+
+/* TESTIMONIALS */
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+.testi{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:26px;transition:all 0.3s ease;display:flex;flex-direction:column;justify-content:space-between}
+.testi:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,0.04)}
+.testi-stars{display:flex;gap:3.5px;margin-bottom:16px}
+.star{width:15px;height:15px;background:#F5A623;border-radius:3px;display:inline-block}
+.testi-text{font-size:14px;color:var(--ink2);line-height:1.75;margin-bottom:20px;font-style:italic}
+.testi-author{display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);padding-top:16px}
+.testi-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.testi-name{font-size:13.5px;font-weight:700;color:var(--ink)}
+.testi-role{font-size:12.5px;color:var(--ink3)}
+
+/* CONTACT */
+.contact-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+}
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 40px;
+  align-items: start;
+}
+.contact-form-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.02);
+}
+.contact-input {
+  width: 100%;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  font-family: inherit;
+  background: var(--white);
+  transition: all 0.2s ease;
+}
+.contact-input:focus {
+  border-color: var(--blue2);
+  box-shadow: 0 0 0 3px rgba(41,82,240,0.12);
+}
+.contact-btn {
+  width: 100%;
+  background: var(--blue2);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(41,82,240,0.15);
+}
+.contact-btn:hover {
+  background: var(--blue);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(41,82,240,0.25);
+}
+
+/* CTA STRIP */
+.cta-strip{background:linear-gradient(135deg, var(--blue2), var(--blue));border-radius:18px;padding:48px 56px;display:flex;align-items:center;justify-content:space-between;gap:36px;margin-bottom:0;box-shadow:0 10px 30px rgba(41,82,240,0.2);animation: fadeInUp 0.8s ease-out}
+.cta-title{font-size:26px;font-weight:700;color:#fff;letter-spacing:-.4px;margin-bottom:8px}
+.cta-sub{font-size:15px;color:rgba(255,255,255,.75)}
+.cta-actions{display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap}
+
+.btn-white{background:#fff;color:var(--blue2);border:none;border-radius:var(--rsm);padding:13px 26px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s ease;box-shadow:0 2px 6px rgba(0,0,0,0.05);text-decoration:none}
+.btn-white:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+
+.btn-outline-white{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:var(--rsm);padding:13px 26px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s ease;text-decoration:none}
+.btn-outline-white:hover{background:rgba(255,255,255,.08);transform:translateY(-1px)}
+
+/* FOOTER */
+footer{background:var(--ink);padding:64px 40px 40px;margin-top:80px;border-radius:20px 20px 0 0}
+.footer-inner{max-width:960px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.footer-logo-mark{width:30px;height:30px;background:var(--blue2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.footer-logo-name{font-size:16px;font-weight:700;color:#fff}
+.footer-brand-desc{font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.7;max-width:230px}
+.footer-col-title{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:16px}
+.footer-link{display:block;font-size:13.5px;color:rgba(255,255,255,.5);text-decoration:none;margin-bottom:10px;transition:color .2s ease}
+.footer-link:hover{color:rgba(255,255,255,.9)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-copy{font-size:13px;color:rgba(255,255,255,.3)}
+.footer-badges{display:flex;gap:8px;flex-wrap:wrap}
+.footer-badge{padding:4px 14px;border:1px solid rgba(255,255,255,.1);border-radius:99px;font-size:12px;color:rgba(255,255,255,.35)}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { transform: translateY(100px) scale(0.9); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .hero{padding:64px 20px 56px}
+  .hero h1{font-size:38px}
+  .preview-wrap,.logos-section,.section,.contact-section{padding-left:20px;padding-right:20px}
+  .preview-inner{grid-template-columns:1fr}
+  .mini-sidebar{display:none}
+  .features-grid,.pricing-grid,.testi-grid,.contact-grid{grid-template-columns:1fr}
+  .mini-metrics{grid-template-columns:repeat(2,1fr)}
+  .mini-row{grid-template-columns:1fr}
+  .stats-strip{grid-template-columns:repeat(2,1fr);padding:32px 32px}
+  .gst-callout{grid-template-columns:1fr}
+  .cta-strip{flex-direction:column;padding:36px 32px;text-align:center}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+  footer{padding:44px 20px 32px}
+}
+@media(max-width:520px){
+  .hero h1{font-size:30px;letter-spacing:-.5px}
+  .stats-strip{grid-template-columns:1fr 1fr}
+  .mini-metrics{grid-template-columns:1fr 1fr}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 BharatPOS Monorepo</h1>
-        <p>Your Vercel deployment is successful, but you are seeing this page because Vercel deployed the <strong>Root Directory</strong> of your Monorepo instead of your actual applications.</p>
-        
-        <p>To deploy your actual apps, you need to create a project in Vercel and set the <strong>Root Directory</strong> to the specific app you want to build.</p>
 
-        <div style="margin-top: 30px;">
-            <p><strong>Click below to automatically deploy the application:</strong></p>
-            <a href="https://vercel.com/new/clone?repository-url=https://github.com/aryajain19/bharatpos&root-directory=pos-app" target="_blank" class="btn btn-green">
-                Deploy POS System & Landing Page
-            </a>
-            <a href="https://vercel.com/new/clone?repository-url=https://github.com/aryajain19/bharatpos&root-directory=pos-admin" target="_blank" class="btn">
-                Deploy Admin Panel
-            </a>
-        </div>
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-mark">B</div>
+    <span class="nav-name">BharatPOS</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#gst">GST Filing</a>
+    <a class="nav-link" href="#pricing">Pricing</a>
+    <a class="nav-link" href="#testimonials">Reviews</a>
+    <a class="nav-link" href="https://github.com/aryajain19/bharatpos-new" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <div class="nav-right">
+    <a class="btn-ghost-sm" href="https://bharatpos-new.vercel.app/login">Log in</a>
+    <a class="btn-primary-sm" href="https://bharatpos-new.vercel.app/?signup=true">Start free trial</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Billing, inventory &amp; GST —<br><em>all in one place</em></h1>
+  <p class="hero-sub">BharatPOS handles your counter billing, real-time stock, Tally-style accounting, and GSTR filing so you can focus on your customers.</p>
+  <div class="hero-actions">
+    <a class="btn-primary-lg" href="https://bharatpos-new.vercel.app/" target="_blank" rel="noopener">
+      <i class="ti ti-device-laptop"></i> See live demo
+    </a>
+    <a class="btn-ghost-lg" href="https://github.com/aryajain19/bharatpos-new" target="_blank" rel="noopener">
+      <i class="ti ti-brand-github"></i> View on GitHub
+    </a>
+  </div>
+  <div class="hero-trust">
+    <div class="trust-item"><i class="ti ti-circle-check"></i> No setup fee</div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><i class="ti ti-circle-check"></i> Works offline</div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><i class="ti ti-circle-check"></i> GST-compliant billing</div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><i class="ti ti-circle-check"></i> UPI &amp; barcode ready</div>
+  </div>
+</div>
+
+<!-- DASHBOARD PREVIEW -->
+<div class="preview-wrap">
+  <div class="preview-frame">
+    <div class="preview-bar">
+      <div class="preview-dot" style="background:#FF5F57"></div>
+      <div class="preview-dot" style="background:#FEBC2E"></div>
+      <div class="preview-dot" style="background:#28C840"></div>
+      <div class="preview-url">bharatpos.app/dashboard</div>
     </div>
+    <div class="preview-inner">
+      <div class="mini-sidebar">
+        <div class="mini-sb-brand">
+          <div class="mini-sb-logo">B</div>
+          <div>
+            <div class="mini-sb-name">BharatPOS</div>
+            <div class="mini-sb-sub">Sharma General Store</div>
+          </div>
+        </div>
+        <div class="mini-nav-label">Overview</div>
+        <div class="mini-nav-item act"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+        <div class="mini-nav-item"><i class="ti ti-cash-register"></i> POS Billing</div>
+        <div class="mini-nav-item"><i class="ti ti-package"></i> Inventory</div>
+        <div class="mini-nav-label">Accounts</div>
+        <div class="mini-nav-item"><i class="ti ti-receipt-tax"></i> GST Returns</div>
+        <div class="mini-nav-item"><i class="ti ti-book"></i> Day Book</div>
+        <div class="mini-nav-item"><i class="ti ti-chart-pie"></i> P&amp;L</div>
+        <div class="mini-nav-item"><i class="ti ti-scale"></i> Balance Sheet</div>
+        <div class="mini-nav-label">Settings</div>
+        <div class="mini-nav-item"><i class="ti ti-users"></i> Vendors</div>
+        <div class="mini-nav-item"><i class="ti ti-barcode"></i> Barcodes</div>
+      </div>
+      <div class="mini-content">
+        <div class="mini-metrics">
+          <div class="mini-metric">
+            <div class="mini-m-label">Today's sales</div>
+            <div class="mini-m-val">₹14,280</div>
+            <div class="mini-m-sub"><span class="tag-xs" style="background:var(--green-s);color:var(--green)">↑ 12%</span></div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-m-label">Orders</div>
+            <div class="mini-m-val">84</div>
+            <div class="mini-m-sub" style="font-size:9.5px;color:var(--ink3)">+7 today</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-m-label">GST collected</div>
+            <div class="mini-m-val">₹2,100</div>
+            <div class="mini-m-sub" style="font-size:9.5px;color:var(--ink3)">CGST + SGST</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-m-label">Low stock</div>
+            <div class="mini-m-val">7 Items</div>
+            <div class="mini-m-sub"><span class="tag-xs" style="background:var(--red-s);color:var(--red)">3 critical</span></div>
+          </div>
+        </div>
+        <div class="mini-row">
+          <div class="mini-card">
+            <div class="mini-card-head">
+              <span class="mini-card-title">Weekly sales</span>
+              <span style="font-size:9.5px;color:var(--ink3)">June 2026</span>
+            </div>
+            <div style="padding:12px 14px 10px">
+              <svg viewBox="0 0 340 80" style="width:100%;display:block">
+                <polygon points="0,62 52,48 104,66 156,28 208,16 260,35 340,68 340,80 0,80" fill="#EBF0FE"/>
+                <polyline class="chart-line" points="0,62 52,48 104,66 156,28 208,16 260,35 340,68" fill="none" stroke="#2952F0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+                <circle class="chart-dot" cx="0" cy="62" r="3.5" fill="#fff" stroke="#2952F0" stroke-width="1.8"/>
+                <circle class="chart-dot" cx="52" cy="48" r="3.5" fill="#fff" stroke="#2952F0" stroke-width="1.8"/>
+                <circle class="chart-dot" cx="104" cy="66" r="3.5" fill="#fff" stroke="#2952F0" stroke-width="1.8"/>
+                <circle class="chart-dot" cx="156" cy="28" r="3.5" fill="#fff" stroke="#2952F0" stroke-width="1.8"/>
+                <circle class="chart-dot" cx="208" cy="16" r="4.5" fill="#2952F0" stroke="#fff" stroke-width="2"/>
+                <circle class="chart-dot" cx="260" cy="35" r="3.5" fill="#fff" stroke="#2952F0" stroke-width="1.8"/>
+                <circle class="chart-dot" cx="340" cy="68" r="3.5" fill="#fff" stroke="#2952F0" stroke-width="1.8"/>
+                <rect x="178" y="2" width="62" height="20" rx="5" fill="#0D0F14"/>
+                <text x="209" y="15" text-anchor="middle" font-size="9" fill="white" font-family="Inter,sans-serif" font-weight="600">₹14,280</text>
+                <text x="0" y="78" font-size="8" fill="#8891A8" font-family="Inter,sans-serif">Mon</text>
+                <text x="48" y="78" font-size="8" fill="#8891A8" font-family="Inter,sans-serif">Tue</text>
+                <text x="100" y="78" font-size="8" fill="#8891A8" font-family="Inter,sans-serif">Wed</text>
+                <text x="150" y="78" font-size="8" fill="#8891A8" font-family="Inter,sans-serif">Thu</text>
+                <text x="203" y="78" font-size="8" fill="#2952F0" font-family="Inter,sans-serif" font-weight="600">Fri</text>
+                <text x="254" y="78" font-size="8" fill="#8891A8" font-family="Inter,sans-serif">Sat</text>
+                <text x="332" y="78" font-size="8" fill="#8891A8" font-family="Inter,sans-serif">Sun</text>
+              </svg>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-card-head"><span class="mini-card-title">Recent bills</span></div>
+            <div class="mini-tx">
+              <div class="mini-tx-icon" style="background:#EBF0FE"><i class="ti ti-cookie" style="color:#2952F0"></i></div>
+              <div><div class="mini-tx-name">Parle-G × 3</div><div class="mini-tx-sub">INV-4821 · 2 min ago</div></div>
+              <div class="mini-tx-amt">₹63</div>
+            </div>
+            <div class="mini-tx">
+              <div class="mini-tx-icon" style="background:#FEF2E0"><i class="ti ti-milk" style="color:#A85700"></i></div>
+              <div><div class="mini-tx-name">Amul Butter 500g</div><div class="mini-tx-sub">INV-4820 · 18 min ago</div></div>
+              <div class="mini-tx-amt">₹297</div>
+            </div>
+            <div class="mini-tx">
+              <div class="mini-tx-icon" style="background:#E5F4EE"><i class="ti ti-droplet" style="color:#0C7A50"></i></div>
+              <div><div class="mini-tx-name">Tata Salt × 2</div><div class="mini-tx-sub">INV-4819 · 35 min ago</div></div>
+              <div class="mini-tx-amt">₹44</div>
+            </div>
+            <div class="mini-tx">
+              <div class="mini-tx-icon" style="background:#FCEBEB"><i class="ti ti-ripple" style="color:#B52323"></i></div>
+              <div><div class="mini-tx-name">Surf Excel 1kg</div><div class="mini-tx-sub">INV-4818 · 1 hr ago</div></div>
+              <div class="mini-tx-amt">₹230</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STORE TYPES -->
+<div class="logos-section">
+  <div class="logos-label">Trusted by stores across India</div>
+  <div class="logos-row">
+    <div class="logo-pill">Kirana stores</div>
+    <div class="logo-pill">Wholesale dealers</div>
+    <div class="logo-pill">Pharmacy chains</div>
+    <div class="logo-pill">Textile shops</div>
+    <div class="logo-pill">Electronics retail</div>
+    <div class="logo-pill">Restaurants</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="section" id="features">
+  <div class="section-eyebrow">Everything you need</div>
+  <div class="section-head">Built for how Indian<br>businesses actually work</div>
+  <p class="section-body">From a busy kirana counter to a multi-branch textile shop — BharatPOS fits without configuration.</p>
+  <div class="features-grid">
+    <div class="feat">
+      <div class="feat-icon" style="background:var(--blue-s)"><i class="ti ti-barcode" style="color:var(--blue2)"></i></div>
+      <div class="feat-title">Fast barcode billing</div>
+      <div class="feat-body">Scan any EAN-13, Code128, or QR code to add items instantly. Bill a full cart in under 30 seconds with real-time stock deduction.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:var(--green-s)"><i class="ti ti-receipt-tax" style="color:var(--green)"></i></div>
+      <div class="feat-title">GSTR-1 &amp; GSTR-3B ready</div>
+      <div class="feat-body">Every sale is tagged by GSTIN, rate slab, and HSN. Export portal-ready JSON in one tap — no manual entry.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:#F5F0FE"><i class="ti ti-scale" style="color:#5B3FBB"></i></div>
+      <div class="feat-title">Tally-style accounting</div>
+      <div class="feat-body">Day book, ledgers, journal entries, P&amp;L, and balance sheet — built automatically from your daily sales data.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:var(--amber-s)"><i class="ti ti-package" style="color:var(--amber)"></i></div>
+      <div class="feat-title">Live inventory</div>
+      <div class="feat-body">Stock deducts on every bill. Low-stock alerts and reorder tracking stop you running dry on bestsellers.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:var(--blue-s)"><i class="ti ti-qrcode" style="color:var(--blue2)"></i></div>
+      <div class="feat-title">UPI &amp; QR payments</div>
+      <div class="feat-body">Collect via any UPI app. Auto-generate a payment QR for each bill — no extra hardware or payment gateway setup.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:var(--green-s)"><i class="ti ti-wifi-off" style="color:var(--green)"></i></div>
+      <div class="feat-title">Works offline too</div>
+      <div class="feat-body">Keep billing during internet outages. All data syncs to Firebase automatically the moment you reconnect.</div>
+    </div>
+  </div>
+</div>
+
+<!-- GST SECTION -->
+<div class="section" id="gst" style="padding-top:0">
+  <div class="section-eyebrow">GST compliance</div>
+  <div class="section-head">File returns without<br><em>leaving the app</em></div>
+  <div class="gst-callout">
+    <div>
+      <div class="gst-title">Automated GSTR-1 &amp; GSTR-3B</div>
+      <p class="gst-body">BharatPOS builds your GST return forms in real time as you bill. CGST and SGST are split 50/50 automatically across every transaction. Rate-wise B2C tables, HSN summary, and outward supply figures are all populated from your actual sales — no spreadsheets.</p>
+      <div class="gst-chips">
+        <span class="chip" style="background:var(--green-s);color:var(--green);border-color:rgba(12,122,80,.15)">GSTR-1</span>
+        <span class="chip" style="background:var(--blue-s);color:var(--blue2);border-color:rgba(41,82,240,.15)">GSTR-3B</span>
+        <span class="chip" style="background:var(--amber-s);color:var(--amber);border-color:rgba(168,87,0,.15)">HSN Summary</span>
+        <span class="chip" style="background:#F5F0FE;color:#5B3FBB;border-color:rgba(91,63,187,.15)">JSON Export</span>
+        <span class="chip" style="background:var(--green-s);color:var(--green);border-color:rgba(12,122,80,.15)">CGST / SGST split</span>
+      </div>
+    </div>
+    <div class="gst-panel">
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:12px;font-weight:500">June 2026 · GSTIN 08AAPCS1081A1Z5</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:var(--ink3)">Taxable value</span><span style="font-weight:600">₹3,32,000</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:var(--ink3)">CGST</span><span style="font-weight:600">₹19,201</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:var(--ink3)">SGST</span><span style="font-weight:600">₹19,201</span></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600;color:var(--ink)">Net payable</span><span style="font-weight:700;color:var(--blue2)">₹38,402</span></div>
+      <button class="btn-primary-sm" style="width:100%;margin-top:14px;padding:9px;font-size:13px" onclick="location.href='https://bharatpos-new.vercel.app/'">Export GSTR JSON</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="section" style="padding-top:0">
+  <div class="stats-strip">
+    <div class="stat-block">
+      <div class="stat-val">12,000<em>+</em></div>
+      <div class="stat-label">Stores billing<br>with BharatPOS</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-val">₹480<em>Cr</em></div>
+      <div class="stat-label">Transactions processed<br>this year</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-val">99.8<em>%</em></div>
+      <div class="stat-label">Uptime — even on<br>mobile networks</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-val">28<em>s</em></div>
+      <div class="stat-label">Average time<br>per bill</div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="section" id="pricing" style="padding-top:0">
+  <div style="text-align:center;margin-bottom:36px">
+    <h2 style="font-size:32px;font-weight:700;color:var(--ink);letter-spacing:-.6px;margin-bottom:10px">Choose the Perfect Plan for Your Business</h2>
+    <p style="font-size:15px;color:var(--ink3)">Simple subscription models with zero onboarding fees. Cancel or upgrade anytime.</p>
+    <div style="display:inline-flex;align-items:center;gap:0;margin-top:22px;border:1px solid var(--border2);border-radius:99px;overflow:hidden;background:var(--white)">
+      <button id="toggle-monthly" onclick="setPricingToggle('monthly')" style="padding:8px 22px;font-size:13.5px;font-weight:600;border:none;cursor:pointer;background:#1A3FBF;color:#fff;border-radius:99px 0 0 99px;transition:all .15s">Monthly</button>
+      <button id="toggle-yearly" onclick="setPricingToggle('yearly')" style="padding:8px 22px;font-size:13.5px;font-weight:500;border:none;cursor:pointer;background:transparent;color:var(--ink2);border-radius:0 99px 99px 0;transition:all .15s">Yearly (Save 20%)</button>
+    </div>
+  </div>
+
+  <div class="pricing-grid">
+
+    <!-- Free Trial -->
+    <div class="plan">
+      <div>
+        <div class="plan-name" style="font-size:16px;margin-bottom:12px;text-align:center">Free Trial</div>
+        <div class="plan-price" style="font-size:34px;text-align:center"><sup style="font-size:18px">₹</sup>0</div>
+        <div class="plan-desc" style="font-size:12.5px;margin:8px 0 16px;text-align:center">30 Days Free trial access</div>
+        <div class="plan-divider"></div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> All Basic Features</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Up to 100 Products</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Basic Reports</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Email Support</div>
+      </div>
+      <a class="plan-btn plan-btn-ghost" href="https://bharatpos-new.vercel.app/?signup=true">Start Free Trial</a>
+    </div>
+
+    <!-- Basic Plan -->
+    <div class="plan">
+      <div>
+        <div class="plan-name" style="font-size:16px;margin-bottom:12px;text-align:center">Basic Plan</div>
+        <div class="plan-price" style="font-size:34px;text-align:center"><sup style="font-size:18px">₹</sup><span class="price-val" data-monthly="499" data-yearly="399">399</span><span style="font-size:13px;font-weight:400;color:var(--ink3)" class="price-period">/mo</span></div>
+        <div class="plan-desc" style="font-size:12.5px;margin:8px 0 16px;text-align:center">1 Year Plan duration</div>
+        <div class="plan-divider"></div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> All Basic Features</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Unlimited Products</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> PDF Reports</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Priority Support</div>
+      </div>
+      <a class="plan-btn plan-btn-solid" href="https://bharatpos-new.vercel.app/?signup=true">Buy Now</a>
+    </div>
+
+    <!-- Professional Plan (featured) -->
+    <div class="plan featured" style="position:relative">
+      <div style="position:absolute;top:-10px;right:-10px;background:#1A3FBF;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:5px;box-shadow:0 3px 8px rgba(26,63,191,0.3)">POPULAR</div>
+      <div>
+        <div class="plan-name" style="font-size:16px;margin-bottom:12px;text-align:center">Professional Plan</div>
+        <div class="plan-price" style="font-size:34px;text-align:center"><sup style="font-size:18px">₹</sup><span class="price-val" data-monthly="899" data-yearly="719">719</span><span style="font-size:13px;font-weight:400;color:var(--ink3)" class="price-period">/mo</span></div>
+        <div class="plan-desc" style="font-size:12.5px;margin:8px 0 16px;text-align:center">2 Years Plan duration</div>
+        <div class="plan-divider"></div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> All Basic + Premium Features</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Advanced Reports</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Multi-worker Support</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Automated Cloud Backup</div>
+      </div>
+      <a class="plan-btn plan-btn-solid" href="https://bharatpos-new.vercel.app/?signup=true">Buy Now</a>
+    </div>
+
+    <!-- Enterprise Plan -->
+    <div class="plan">
+      <div>
+        <div class="plan-name" style="font-size:16px;margin-bottom:12px;text-align:center">Enterprise Plan</div>
+        <div class="plan-price" style="font-size:34px;text-align:center"><sup style="font-size:18px">₹</sup><span class="price-val" data-monthly="1299" data-yearly="1039">1,039</span><span style="font-size:13px;font-weight:400;color:var(--ink3)" class="price-period">/mo</span></div>
+        <div class="plan-desc" style="font-size:12.5px;margin:8px 0 16px;text-align:center">3 Years Plan duration</div>
+        <div class="plan-divider"></div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> All Premium Features</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Dedicated Support Agent</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Custom Permissions Editor</div>
+        <div class="plan-item"><i class="ti ti-check-badge"></i> Advanced Analytics Engine</div>
+      </div>
+      <a class="plan-btn plan-btn-solid" href="https://bharatpos-new.vercel.app/?signup=true">Buy Now</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Start pricing at Yearly mode on load
+document.addEventListener("DOMContentLoaded", () => {
+  setPricingToggle('yearly');
+});
+
+function setPricingToggle(mode) {
+  var monthly = document.getElementById('toggle-monthly');
+  var yearly = document.getElementById('toggle-yearly');
+  var vals = document.querySelectorAll('.price-val');
+  
+  if (mode === 'yearly') {
+    monthly.style.background = 'transparent'; monthly.style.color = 'var(--ink2)';
+    yearly.style.background = '#1A3FBF'; yearly.style.color = '#fff';
+    vals.forEach(function(el) {
+      var v = parseInt(el.getAttribute('data-yearly'));
+      el.textContent = v.toLocaleString('en-IN');
+    });
+  } else {
+    yearly.style.background = 'transparent'; yearly.style.color = 'var(--ink2)';
+    monthly.style.background = '#1A3FBF'; monthly.style.color = '#fff';
+    vals.forEach(function(el) {
+      var v = parseInt(el.getAttribute('data-monthly'));
+      el.textContent = v.toLocaleString('en-IN');
+    });
+  }
+}
+</script>
+
+<!-- TESTIMONIALS -->
+<div class="section" id="testimonials" style="padding-top:0">
+  <div class="section-eyebrow">What stores say</div>
+  <div class="section-head">Real results from<br><em>real shopkeepers</em></div>
+  <div class="testi-grid">
+    <div class="testi">
+      <div>
+        <div class="testi-stars">
+          <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        </div>
+        <p class="testi-text">"GSTR filing used to take me half a day every month. Now I export the JSON in one click and upload it directly to the portal. The CGST-SGST split is automatic — I don't need to touch a calculator at all."</p>
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:var(--blue-s);color:var(--blue2)">RS</div>
+        <div>
+          <div class="testi-name">Ramesh Sharma</div>
+          <div class="testi-role">Sharma General Store, Sagar MP</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi">
+      <div>
+        <div class="testi-stars">
+          <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        </div>
+        <p class="testi-text">"Barcode scanning is fast and the stock updates live on both my billing screen and the admin panel. I caught a stock discrepancy the same day it happened — that never happened before with my old system."</p>
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:var(--green-s);color:var(--green)">PG</div>
+        <div>
+          <div class="testi-name">Priya Gupta</div>
+          <div class="testi-role">Gupta Medical Store, Bhopal</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi">
+      <div>
+        <div class="testi-stars">
+          <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        </div>
+        <p class="testi-text">"Three branches, one dashboard. I can see today's sales from all three shops on my phone. The vendor billing is simple enough that even my newest employee picked it up in ten minutes."</p>
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:#F5F0FE;color:#5B3FBB">AK</div>
+        <div>
+          <div class="testi-name">Ankit Khandelwal</div>
+          <div class="testi-role">Khandelwal Textiles, Indore</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="contact-section" id="contact">
+  <div style="text-align:center;margin-bottom:40px">
+    <h2 style="font-size:32px;font-weight:700;color:var(--ink);letter-spacing:-.6px;margin-bottom:10px">Get In Touch With Us</h2>
+    <p style="font-size:15px;color:var(--ink3)">Need assistance with barcode scanner integrations or custom GST setups? Contact our desk.</p>
+  </div>
+  <div class="contact-grid">
+    <!-- Left: contacts -->
+    <div>
+      <div style="font-size:17px;font-weight:700;color:var(--ink);margin-bottom:24px">Support Desk Contacts</div>
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#E6F9F0;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-brand-whatsapp" style="font-size:20px;color:#25D366"></i>
+          </div>
+          <div>
+            <div style="font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:2px">WhatsApp Support</div>
+            <div style="font-size:13.5px;color:var(--ink3)">+91 98765 43210 (Mon-Sat, 9AM-8PM)</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#EBF0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-phone" style="font-size:20px;color:#1A3FBF"></i>
+          </div>
+          <div>
+            <div style="font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:2px">Phone Hotlines</div>
+            <div style="font-size:13.5px;color:var(--ink3)">1800 208 4050 (Toll Free)</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#FEF2E0;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-mail" style="font-size:20px;color:#A85700"></i>
+          </div>
+          <div>
+            <div style="font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:2px">Technical Support</div>
+            <div style="font-size:13.5px;color:var(--ink3)">support@bharatpos.in</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Right: form -->
+    <div class="contact-form-card">
+      <div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:20px">Send a Quick Message</div>
+      <form id="contact-form" onsubmit="handleContactSubmit(event)">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <input type="text" placeholder="Your Full Name" required class="contact-input">
+          <input type="email" placeholder="Email Address" required class="contact-input">
+          <textarea placeholder="Message Details" required rows="4" class="contact-input" style="resize:vertical"></textarea>
+          <button type="submit" class="contact-btn">Send Message</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="section" style="padding-top:0">
+  <div class="cta-strip">
+    <div>
+      <div class="cta-title">Start billing smarter today</div>
+      <div class="cta-sub">Free 14-day trial. No credit card. Works on Android, iOS, and web.</div>
+    </div>
+    <div class="cta-actions">
+      <a class="btn-white" href="https://bharatpos-new.vercel.app/?signup=true">Create free account</a>
+      <a class="btn-outline-white" href="#pricing">View pricing</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">
+          <div class="footer-logo-mark">B</div>
+          <span class="footer-logo-name">BharatPOS</span>
+        </div>
+        <div class="footer-brand-desc">India's most complete point-of-sale system for retail and wholesale businesses. Built on Firebase + Expo.</div>
+      </div>
+      <div>
+        <div class="footer-col-title">Product</div>
+        <a class="footer-link" href="#features">Features</a>
+        <a class="footer-link" href="#pricing">Pricing</a>
+        <a class="footer-link" href="#gst">GST Filing</a>
+        <a class="footer-link" href="https://github.com/aryajain19/bharatpos-new" target="_blank" rel="noopener">Changelog</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Resources</div>
+        <a class="footer-link" href="https://github.com/aryajain19/bharatpos-new" target="_blank" rel="noopener">GitHub</a>
+        <a class="footer-link" href="https://bharatpos-new.vercel.app/" target="_blank" rel="noopener">Live demo</a>
+        <a class="footer-link" href="https://pos-admin-bharat.vercel.app/" target="_blank" rel="noopener">Admin panel</a>
+        <a class="footer-link" href="#">API docs</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <a class="footer-link" href="#">About</a>
+        <a class="footer-link" href="#">Blog</a>
+        <a class="footer-link" href="#">Privacy policy</a>
+        <a class="footer-link" href="#">Terms of use</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 BharatPOS. Made in India 🇮🇳</div>
+      <div class="footer-badges">
+        <span class="footer-badge">GST Compliant</span>
+        <span class="footer-badge">Expo + Firebase</span>
+        <span class="footer-badge">Open Source</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast notification overlay -->
+<div id="toast-message" style="display:none; position:fixed; bottom:24px; right:24px; background:#0C7A50; color:#fff; padding:12px 24px; border-radius:8px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; animation: slideIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;">
+  <i class="ti ti-circle-check" style="margin-right:8px; vertical-align:middle; font-size:18px;"></i>
+  <span>Message sent successfully! We will contact you soon.</span>
+</div>
+
+<script>
+function handleContactSubmit(event) {
+  event.preventDefault();
+  const toast = document.getElementById('toast-message');
+  toast.style.display = 'block';
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 4000);
+  document.getElementById('contact-form').reset();
+}
+</script>
+
 </body>
 </html>
