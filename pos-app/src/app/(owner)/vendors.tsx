@@ -13,7 +13,7 @@ export default function VendorManagementScreen() {
   const appTheme = useTheme();
 
   const theme = useTheme();
-  const { subscriptionPlan } = useAuth();
+  const { subscriptionPlan, tenantId, loading: authLoading } = useAuth();
   
   const [vendors, setVendors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,11 +48,18 @@ export default function VendorManagementScreen() {
   const isLimitReached = currentDevices >= deviceLimit;
 
   useEffect(() => {
-    fetchVendors();
-  }, []);
+    if (!authLoading) {
+      fetchVendors();
+    }
+  }, [authLoading, tenantId]);
 
   const fetchVendors = async () => {
     if (!isFirebaseConfigured) {
+      setVendors([]);
+      setLoading(false);
+      return;
+    }
+    if (!tenantId) {
       setVendors([]);
       setLoading(false);
       return;
@@ -61,11 +68,10 @@ export default function VendorManagementScreen() {
     setError(null);
     
     try {
-      const ownerTenantId = auth.currentUser?.uid || 'anonymous';
       const q = query(
         collection(db, 'users'), 
         where('role', '==', 'salesperson'),
-        where('tenant_id', '==', ownerTenantId)
+        where('tenant_id', '==', tenantId)
       );
       const snapshot = await getDocs(q);
       const vendorsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -111,9 +117,13 @@ export default function VendorManagementScreen() {
       return;
     }
 
+    if (!tenantId) {
+      Alert.alert('Error', 'Tenant ID is missing. Please log in again.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const ownerTenantId = auth.currentUser?.uid || 'anonymous';
       const finalEmail = phone.includes('@') ? phone : `${phone}@pos.com`;
       const defaultPassword = password;
 
@@ -126,7 +136,7 @@ export default function VendorManagementScreen() {
         phone: phone,
         email: finalEmail,
         role: 'salesperson',
-        tenant_id: ownerTenantId,
+        tenant_id: tenantId,
         permissions: newPermissions,
         subscription_plan: subscriptionPlan || 'free_trial',
         created_at: new Date().toISOString()
