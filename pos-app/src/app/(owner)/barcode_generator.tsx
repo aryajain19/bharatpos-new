@@ -116,8 +116,38 @@ function VectorQRCode({ value, size = 60 }: { value: string; size?: number }) {
     }
     
     return (
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', marginVertical: 2 }}>
-        <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ width: size, height: size }}>
+      <View 
+        style={{ 
+          width: size, 
+          height: size, 
+          minWidth: size, 
+          minHeight: size, 
+          maxWidth: size, 
+          maxHeight: size, 
+          flexShrink: 0, 
+          flexGrow: 0,
+          aspectRatio: 1,
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          marginVertical: 2 
+        }}
+      >
+        <Svg 
+          width={size} 
+          height={size} 
+          viewBox={`0 0 ${size} ${size}`} 
+          style={{ 
+            width: size, 
+            height: size, 
+            minWidth: size, 
+            minHeight: size, 
+            maxWidth: size, 
+            maxHeight: size, 
+            flexShrink: 0, 
+            flexGrow: 0,
+            aspectRatio: 1
+          }}
+        >
           {rects}
         </Svg>
       </View>
@@ -661,7 +691,7 @@ export default function BarcodeGeneratorScreen() {
     const shopNameFontSize = config.perPage > 50 ? '6px' : (config.perPage > 30 ? '7px' : '9px');
     const barcodeHeight = config.perPage > 50 ? '16px' : (config.perPage > 30 ? '24px' : '34px');
     const labelPadding = config.perPage > 50 ? '2px' : (config.perPage > 30 ? '4px' : '6px');
-    const qrSize = config.perPage > 50 ? 32 : (config.perPage > 30 ? 44 : 60);
+    const qrSize = config.perPage > 50 ? 24 : (config.perPage > 30 ? 36 : 48);
 
     let htmlContent = `
       <html>
@@ -1304,7 +1334,7 @@ export default function BarcodeGeneratorScreen() {
                                     {codeType === 'qrcode' ? (
                                       <VectorQRCode 
                                         value={getScanUrl(item.barcode)} 
-                                        size={gridConfig.perPage > 50 ? 32 : (gridConfig.perPage > 30 ? 44 : 60)} 
+                                        size={gridConfig.perPage > 50 ? 24 : (gridConfig.perPage > 30 ? 36 : 48)} 
                                       />
                                     ) : (
                                       <VectorBarcode value={item.barcode} height={gridConfig.perPage > 50 ? 12 : 24} width={0.7} />
