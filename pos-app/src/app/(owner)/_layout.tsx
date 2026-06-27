@@ -365,14 +365,6 @@ export default function OwnerLayout() {
           <View style={{ height: 20 }} />
         </ScrollView>
 
-        {/* Logout */}
-        <Divider style={{ backgroundColor: '#E2E8F0', marginHorizontal: 16 }} />
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
-          <View style={styles.logoutIconContainer}>
-            <Icon name="logout" size={18} color="#EF5350" />
-          </View>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
       </Animated.View>
 
       {/* ── Main Content ────────────────────────────────────────── */}
