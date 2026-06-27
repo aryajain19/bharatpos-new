@@ -124,22 +124,31 @@ export default function VendorManagementScreen() {
       const finalEmail = phone.includes('@') ? phone : `${phone}@pos.com`;
       const defaultPassword = password;
 
-      const { createUserWithEmailAndPassword } = await import('firebase/auth');
-      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, finalEmail, defaultPassword);
-      const workerUid = userCredential.user.uid;
+      const isWeb = Platform.OS === 'web';
+      const apiHost = isWeb ? '' : 'https://bharatpos-new.vercel.app';
 
-      await setDoc(doc(db, 'users', workerUid), {
-        full_name: fullName,
-        phone: phone,
-        email: finalEmail,
-        role: 'salesperson',
-        tenant_id: tenantId,
-        permissions: newPermissions,
-        subscription_plan: subscriptionPlan || 'free_trial',
-        created_at: new Date().toISOString()
+      const response = await fetch(`${apiHost}/api/create-worker`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fullName,
+          phone,
+          email: finalEmail,
+          password: defaultPassword,
+          tenantId,
+          permissions: newPermissions,
+          subscriptionPlan: subscriptionPlan || 'free_trial'
+        })
       });
 
-      Alert.alert('Success', `Worker ${fullName} successfully registered!\nLogin Phone/Email: ${phone}\nPassword: ${password}`);
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.error || 'Failed to register worker');
+      }
+
+      Alert.alert('Success', `Worker ${fullName} successfully registered!\nLogin Phone/Email: ${phone}\nPassword: ${password}${resData.authNotice || ''}`);
       setPhone('');
       setPassword('');
       setFullName('');
