@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated, useWindowDimensions } from 'react-native';
-import { Text, Divider, useTheme, IconButton, Avatar, Surface, Badge, Button, TextInput, ActivityIndicator } from 'react-native-paper';
+import { Text, Divider, useTheme, IconButton, Avatar, Surface, Badge, Button, TextInput, ActivityIndicator, Portal } from 'react-native-paper';
 import { Slot, router, usePathname } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth, isFirebaseConfigured, db } from '../../lib/firebase';
@@ -9,7 +9,7 @@ import { useAuth } from '../../providers/AuthProvider';
 import { collection, query, onSnapshot } from '../../lib/firestore_adapter';
 
 const menuSections = [
-  {
+{
     label: 'POS Billing & Stock',
     items: [
       { name: 'Dashboard', icon: 'view-dashboard', path: '/(owner)' },
@@ -30,15 +30,6 @@ const menuSections = [
       { name: 'Profit & Loss', icon: 'chart-line', path: '/(owner)/profit_loss' },
       { name: 'Balance Sheet', icon: 'scale-balance', path: '/(owner)/balance_sheet' },
       { name: 'GST Returns', icon: 'file-percent-outline', path: '/(owner)/gst_management', isGstOnly: true },
-    ]
-  },
-  {
-    label: 'Shop Management',
-    items: [
-      { name: 'Worker Mgmt', icon: 'account-group', path: '/(owner)/vendors' },
-      { name: 'Reports Center', icon: 'file-chart', path: '/(owner)/reports' },
-      { name: 'Subscription', icon: 'arrow-up-bold-circle', path: '/(owner)/upgrade' },
-      { name: 'Settings', icon: 'cog', path: '/(owner)/settings' },
     ]
   }
 ];
@@ -500,40 +491,48 @@ export default function OwnerLayout() {
 
               {/* Shop Management Profile Dropdown Menu */}
               {showProfileMenu && (
-                <Surface style={styles.profileDropdown} elevation={4}>
-                  <View style={styles.dropdownHeader}>
-                    <Text style={styles.dropdownUser}>{userName}</Text>
-                    <Text style={styles.dropdownRole}>Store Owner</Text>
+                <Portal>
+                  {/* Invisible full-screen backdrop to dismiss menu */}
+                  <TouchableOpacity
+                    style={StyleSheet.absoluteFill}
+                    onPress={() => setShowProfileMenu(false)}
+                    activeOpacity={1}
+                  />
+                  <View style={[styles.profileDropdown, { top: 60, right: 20 }]}>
+                    <View style={styles.dropdownHeader}>
+                      <Text style={styles.dropdownUser}>{userName}</Text>
+                      <Text style={styles.dropdownRole}>Store Owner</Text>
+                    </View>
+                    <Divider style={{ backgroundColor: '#F1F5F9' }} />
+                    
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/vendors' as any); }}>
+                      <Icon name="account-group" size={18} color="#64748B" />
+                      <Text style={styles.dropdownText}>Worker Mgmt</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/reports' as any); }}>
+                      <Icon name="file-chart" size={18} color="#64748B" />
+                      <Text style={styles.dropdownText}>Reports Center</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/upgrade' as any); }}>
+                      <Icon name="arrow-up-bold-circle" size={18} color="#64748B" />
+                      <Text style={styles.dropdownText}>Subscription</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/settings' as any); }}>
+                      <Icon name="cog" size={18} color="#64748B" />
+                      <Text style={styles.dropdownText}>Settings</Text>
+                    </TouchableOpacity>
+                    
+                    <Divider style={{ backgroundColor: '#F1F5F9' }} />
+                    
+                    <TouchableOpacity style={[styles.dropdownItem, { paddingVertical: 12 }]} onPress={async () => { setShowProfileMenu(false); await handleLogout(); }}>
+                      <Icon name="logout" size={18} color="#EF4444" />
+                      <Text style={[styles.dropdownText, { color: '#EF4444', fontWeight: 'bold' }]}>Logout</Text>
+                    </TouchableOpacity>
                   </View>
-                  <Divider style={{ backgroundColor: '#F1F5F9' }} />
-                  
-                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/vendors' as any); }}>
-                    <Icon name="account-group" size={18} color="#64748B" />
-                    <Text style={styles.dropdownText}>Worker Mgmt</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/reports' as any); }}>
-                    <Icon name="file-chart" size={18} color="#64748B" />
-                    <Text style={styles.dropdownText}>Reports Center</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/upgrade' as any); }}>
-                    <Icon name="arrow-up-bold-circle" size={18} color="#64748B" />
-                    <Text style={styles.dropdownText}>Subscription</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/settings' as any); }}>
-                    <Icon name="cog" size={18} color="#64748B" />
-                    <Text style={styles.dropdownText}>Settings</Text>
-                  </TouchableOpacity>
-                  
-                  <Divider style={{ backgroundColor: '#F1F5F9' }} />
-                  
-                  <TouchableOpacity style={[styles.dropdownItem, { paddingVertical: 12 }]} onPress={async () => { setShowProfileMenu(false); await handleLogout(); }}>
-                    <Icon name="logout" size={18} color="#EF4444" />
-                    <Text style={[styles.dropdownText, { color: '#EF4444', fontWeight: 'bold' }]}>Logout</Text>
-                  </TouchableOpacity>
-                </Surface>
+                </Portal>
               )}
             </View>
           </View>
