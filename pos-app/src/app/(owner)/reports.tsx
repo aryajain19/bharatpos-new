@@ -41,8 +41,10 @@ export default function ReportsAnalyticsScreen() {
       const name = window.localStorage.getItem('storeName');
       if (name) setStoreName(name);
     }
-    fetchReportData();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchReportData();
+    }
+  }, [authLoading, tenantId]);
 
   const fetchReportData = async () => {
     const { isFirebaseConfigured, db, auth } = await import('../../lib/firebase');
@@ -75,6 +77,7 @@ export default function ReportsAnalyticsScreen() {
       let cashSum = 0;
       let cardSum = 0;
       let gstSum = 0;
+      let profitSum = 0;
 
       snapshot.docs.forEach(doc => {
         const data = doc.data();
@@ -96,12 +99,25 @@ export default function ReportsAnalyticsScreen() {
             cardCount++;
             cardSum += amt;
           }
+
+          // Calculate real profit
+          let cost = 0;
+          let hasCostPrice = false;
+          (data.items || []).forEach((item: any) => {
+            if (item.cost_price !== undefined && item.cost_price > 0) {
+               hasCostPrice = true;
+               cost += (parseFloat(item.cost_price) * item.qty);
+            }
+          });
+          if (hasCostPrice) {
+             profitSum += (amt - cost);
+          }
         }
       });
 
       setTotalSales(totalSalesVal);
       setGstCollected(gstSum);
-      setNetProfit(0); /* Replace fake profit with calculated one if possible */
+      setNetProfit(Math.round(profitSum));
       setPaymentStats({ upi: upiCount, cash: cashCount, card: cardCount });
       setPaymentAmts({ upi: upiSum, cash: cashSum, card: cardSum });
     } catch (e: any) {

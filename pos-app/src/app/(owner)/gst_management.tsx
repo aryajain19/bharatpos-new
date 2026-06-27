@@ -34,9 +34,11 @@ export default function GSTManagementScreen() {
   const [storeName, setStoreName] = useState('BharatPOS');
 
   useEffect(() => {
-    loadSettings();
-    fetchSales();
-  }, []);
+    if (!authLoading && tenantId) {
+      loadSettings();
+      fetchSales();
+    }
+  }, [authLoading, tenantId]);
 
   const loadSettings = async () => {
     // Load from localStorage first for fast display

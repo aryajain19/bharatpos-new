@@ -19,8 +19,10 @@ export default function ProductsManagementScreen() {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchProducts();
+    }
+  }, [authLoading, tenantId]);
 
   const fetchProducts = async () => {
     if (!isFirebaseConfigured) return;

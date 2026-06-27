@@ -42,8 +42,10 @@ export default function VendorPerformanceScreen() {
   };
 
   useEffect(() => {
-    fetchSales();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchSales();
+    }
+  }, [authLoading, tenantId]);
 
   const vendors = useMemo(() => {
     const stats: Record<string, { id: string, name: string, sales: number, color: string, initials: string }> = {};

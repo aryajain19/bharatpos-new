@@ -18,12 +18,14 @@ export default function ProductDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addToCart } = useCart();
-  const { tenantId } = useAuth();
+  const { tenantId, loading: authLoading } = useAuth();
   const theme = useTheme();
 
   useEffect(() => {
-    if (barcode) fetchProduct(barcode as string);
-  }, [barcode]);
+    if (!authLoading && tenantId && barcode) {
+      fetchProduct(barcode as string);
+    }
+  }, [barcode, tenantId, authLoading]);
 
   const fetchProduct = async (code: string) => {
     if (!isFirebaseConfigured) {

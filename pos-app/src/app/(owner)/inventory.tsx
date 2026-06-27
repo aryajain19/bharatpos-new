@@ -24,12 +24,16 @@ export default function InventoryManagementScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    fetchProducts();
-    const unsubscribe = navigation.addListener('focus', () => {
+    if (!authLoading && tenantId) {
       fetchProducts();
+    }
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (!authLoading && tenantId) {
+        fetchProducts();
+      }
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, authLoading, tenantId]);
 
   const fetchProducts = async () => {
     let baseProducts: any[] = [];

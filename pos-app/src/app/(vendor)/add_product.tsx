@@ -64,7 +64,7 @@ export default function AddProductVendorScreen() {
         selling_price: parseFloat(sellingPrice),
         stock_qty: parseInt(stockQty) || 0,
         gst_pct: parseFloat(gstPct) || 0,
-        tenant_id: auth.currentUser?.uid || 'anonymous',
+        tenant_id: tenantId || 'anonymous',
         created_at: new Date().toISOString()
       });
       setLoading(false);

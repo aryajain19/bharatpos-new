@@ -105,8 +105,10 @@ export default function DayBookScreen() {
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchTransactions();
+    }
+  }, [authLoading, tenantId]);
 
   // ── Filtered transactions ────────────────────────────────────────
   const transactions = useMemo(() => {

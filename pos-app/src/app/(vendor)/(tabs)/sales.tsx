@@ -27,7 +27,7 @@ export default function SalesHistoryScreen() {
 
   const { isDarkMode, toggleTheme } = useAppTheme();
 
-  const { user, tenantId } = useAuth();
+  const { user, tenantId, loading: authLoading } = useAuth();
   const [sales, setSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -15,7 +15,7 @@ export default function LowStockScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { tenantId } = useAuth();
+  const { tenantId, loading: authLoading } = useAuth();
   const theme = useTheme();
 
   useEffect(() => {

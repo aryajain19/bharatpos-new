@@ -24,8 +24,10 @@ export default function SalesReportScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchSalesData();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchSalesData();
+    }
+  }, [authLoading, tenantId]);
 
   const fetchSalesData = async () => {
     if (!isFirebaseConfigured) {

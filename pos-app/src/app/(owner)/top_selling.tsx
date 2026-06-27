@@ -42,8 +42,10 @@ export default function TopSellingProductsScreen() {
   };
 
   useEffect(() => {
-    fetchSales();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchSales();
+    }
+  }, [authLoading, tenantId]);
 
   const topProducts = useMemo(() => {
     const productStats: Record<string, { id: string, name: string, category: string, sold: number, revenue: number }> = {};

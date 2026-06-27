@@ -42,8 +42,10 @@ export default function BalanceSheetScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchFinancialData();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchFinancialData();
+    }
+  }, [authLoading, tenantId]);
 
   const fetchFinancialData = async () => {
     if (!isFirebaseConfigured) {

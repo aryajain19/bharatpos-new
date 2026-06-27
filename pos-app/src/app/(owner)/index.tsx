@@ -507,7 +507,7 @@ export default function AdminDashboard() {
                 )}
               </View>
               <View style={{ flex: 1, minWidth: 200, backgroundColor: appTheme.colors.surface, borderWidth: 1, borderColor: appTheme.colors.outline, borderRadius: 10, padding: 12, justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 13, fontWeight: 'bold', color: appTheme.colors.primary }}>{workersList.length + 1} Active Devices</Text>
+                <Text style={{ fontSize: 13, fontWeight: 'bold', color: appTheme.colors.primary }}>{workersList.length} Registered Workers</Text>
                 <Text style={{ fontSize: 11, fontWeight: 'bold', color: appTheme.colors.onSurface, textTransform: 'uppercase' }}>Terminal Permissions</Text>
                 <Text style={{ fontSize: 12, color: appTheme.colors.onSurface, marginTop: 4 }}>Staff are restricted from accessing reports or inventory settings.</Text>
                 <TouchableOpacity onPress={() => router.push('/(owner)/vendors' as any)} style={{ marginTop: 8 }}>

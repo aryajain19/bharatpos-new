@@ -66,8 +66,10 @@ export default function CashBankBookScreen() {
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchTransactions();
+    }
+  }, [authLoading, tenantId]);
 
   const isCash = activeTab === 'cash';
   const openingBalance = isCash ? CASH_OPENING : BANK_OPENING;

@@ -53,8 +53,10 @@ export default function ProfitLossScreen() {
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchTransactions();
+    }
+  }, [authLoading, tenantId]);
 
   const { revenueItems, dynamicCogs, operatingExpenses } = useMemo(() => {
     let salesRevenue = 0;

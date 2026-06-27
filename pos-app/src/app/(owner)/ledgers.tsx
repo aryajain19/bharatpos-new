@@ -154,8 +154,10 @@ export default function LedgersScreen() {
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchTransactions();
+    }
+  }, [authLoading, tenantId]);
 
   const dynamicAccountGroups = useMemo(() => {
     let cashChange = 0;

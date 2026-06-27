@@ -98,8 +98,10 @@ export default function JournalEntryScreen() {
   };
 
   useEffect(() => {
-    loadTransactions();
-  }, []);
+    if (!authLoading && tenantId) {
+      loadTransactions();
+    }
+  }, [authLoading, tenantId]);
 
   const voucherNumber = useMemo(() => {
     const prefixMap: Record<VoucherType, string> = {

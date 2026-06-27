@@ -59,8 +59,10 @@ export default function POSBillingScreen() {
   const scanBarcodeParam = params.scanBarcode;
   
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchProducts();
+    }
+  }, [authLoading, tenantId]);
 
   // Handle incoming deep link barcode scans on mount / parameter changes
   useEffect(() => {
@@ -1013,10 +1015,9 @@ export default function POSBillingScreen() {
                         // Attempt database check if firebase is configured
                         if (isFirebaseConfigured) {
                           try {
-                            const tenantId = auth.currentUser?.uid || 'anonymous';
                             const q = query(
                               collection(db, 'products'),
-                              where('tenant_id', '==', tenantId),
+                              where('tenant_id', '==', tenantId || 'anonymous'),
                               where('barcode', '==', cleanBarcode)
                             );
                             const snapshot = await getDocs(q);

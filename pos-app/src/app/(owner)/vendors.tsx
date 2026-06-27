@@ -161,11 +161,38 @@ export default function VendorManagementScreen() {
     setModalVisible(true);
   };
 
+  const handleDeleteVendor = async (vendorId: string, name: string) => {
+    Alert.alert(
+      'Confirm Delete',
+      `Are you sure you want to delete worker ${name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            if (!isFirebaseConfigured) return;
+            setLoading(true);
+            try {
+              const { deleteDoc } = await import('../../lib/firestore_adapter');
+              await deleteDoc(doc(db, 'users', vendorId));
+              Alert.alert('Success', 'Worker successfully deleted.');
+              fetchVendors();
+            } catch (err: any) {
+              Alert.alert('Error deleting worker', err.message);
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const savePermissions = async () => {
     if (!editingVendor) return;
 
     if (!isFirebaseConfigured) {
-      Alert.alert('Error', 'Vendor addition requires backend functions which are currently simulated in this demo. For a real app, this would create an Auth user and a Firestore document.');
+      Alert.alert('Error', 'Firebase is not configured.');
       setModalVisible(false);
       return;
     }
@@ -303,9 +330,8 @@ export default function VendorManagementScreen() {
                 {vendors.map((vendor) => {
                   const isSmallPlan = false;
                   
-                  const handleMockDelete = () => {
-                    setVendors(vendors.filter((v: any) => v.id !== vendor.id));
-                    Alert.alert('Deleted', 'Vendor removed (simulated).');
+                  const handleDelete = () => {
+                    handleDeleteVendor(vendor.id, vendor.full_name || 'Unnamed');
                   };
 
                   return (
@@ -327,7 +353,7 @@ export default function VendorManagementScreen() {
                         )}
                       </DataTable.Cell>
                       <DataTable.Cell numeric>
-                        <IconButton icon="delete-outline" size={20} iconColor="#EF4444" onPress={handleMockDelete} />
+                        <IconButton icon="delete-outline" size={20} iconColor="#EF4444" onPress={handleDelete} />
                       </DataTable.Cell>
                     </DataTable.Row>
                   );

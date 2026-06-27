@@ -231,11 +231,13 @@ export default function BarcodeGeneratorScreen() {
   const [previewPageIdx, setPreviewPageIdx] = useState(0);
 
   useEffect(() => {
-    fetchProducts();
-    fetchShopName();
-    loadTemplates();
-    loadPrintQueue();
-  }, []);
+    if (!authLoading && tenantId) {
+      fetchProducts();
+      fetchShopName();
+      loadTemplates();
+      loadPrintQueue();
+    }
+  }, [authLoading, tenantId]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {

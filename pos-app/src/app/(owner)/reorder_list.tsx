@@ -22,12 +22,16 @@ export default function ReorderProductsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchReorderItems();
-    const unsubscribe = navigation.addListener('focus', () => {
+    if (!authLoading && tenantId) {
       fetchReorderItems();
+    }
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (!authLoading && tenantId) {
+        fetchReorderItems();
+      }
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, authLoading, tenantId]);
 
   const fetchReorderItems = async () => {
     if (!isFirebaseConfigured) {

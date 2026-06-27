@@ -38,7 +38,7 @@ export default function ProductsScreen() {
   const theme = useTheme();
   const { cart, addToCart, removeFromCart, updateQty } = useCart();
   const navigation = useNavigation();
-  const { tenantId } = useAuth();
+  const { tenantId, loading: authLoading } = useAuth();
 
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
