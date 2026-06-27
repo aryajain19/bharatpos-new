@@ -334,6 +334,48 @@ export default function POSBillingScreen() {
             console.error("Failed to update stock for item", item.id, error);
           }
         }));
+
+        // Webhook Trigger
+        const savedWebhookUrl = Platform.OS === 'web' && typeof window !== 'undefined' ? window.localStorage.getItem('webhookUrl') : '';
+        if (savedWebhookUrl) {
+          fetch(savedWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              event: 'sale_completed',
+              tenant_id: tenantId,
+              bill_no: activeBillNo,
+              total_amount: finalTotal,
+              payment_method: payMethod,
+              timestamp: dateObj.toISOString(),
+              items: cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                qty: item.qty
+              }))
+            })
+          }).catch(err => console.warn("Webhook delivery failed:", err));
+        }
+
+        // Low Stock Alert
+        const checkLowStockSetting = Platform.OS === 'web' && typeof window !== 'undefined' ? window.localStorage.getItem('lowStockEmailNotif') !== 'false' : true;
+        if (checkLowStockSetting) {
+          const lowStockItems = cart.filter(item => {
+            const currentProduct = products.find(p => p.id === item.id);
+            if (currentProduct) {
+              const remainingStock = currentProduct.stock_qty - item.qty;
+              return remainingStock < 5;
+            }
+            return false;
+          });
+          if (lowStockItems.length > 0) {
+            const itemNames = lowStockItems.map(item => `${item.name} (drops below 5)`).join(', ');
+            setTimeout(() => {
+              Alert.alert('Low Stock Automation Alert', `Stock is running low for: ${itemNames}. Reorder suggested.`);
+            }, 800);
+          }
+        }
       } catch (err) {
         console.error("Firestore sale write error:", err);
         Alert.alert("Error", "Failed to complete sale. Please try again.");

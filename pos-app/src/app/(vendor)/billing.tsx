@@ -132,6 +132,46 @@ export default function PaymentScreen() {
       }
     }));
 
+    // Webhook Trigger
+    const savedWebhookUrl = Platform.OS === 'web' && typeof window !== 'undefined' ? window.localStorage.getItem('webhookUrl') : '';
+    if (savedWebhookUrl) {
+      fetch(savedWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'sale_completed',
+          tenant_id: tenantId,
+          bill_no: billNo,
+          total_amount: total,
+          payment_method: paymentMethod,
+          timestamp: new Date().toISOString(),
+          items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.qty
+          }))
+        })
+      }).catch(err => console.warn("Webhook delivery failed:", err));
+    }
+
+    // Low Stock Alert
+    const checkLowStockSetting = Platform.OS === 'web' && typeof window !== 'undefined' ? window.localStorage.getItem('lowStockEmailNotif') !== 'false' : true;
+    if (checkLowStockSetting) {
+      const lowStockItems = cart.filter(item => {
+        const currentStockStr = window.localStorage.getItem(`stock_${item.id}`);
+        const currentStock = currentStockStr ? parseInt(currentStockStr) : 15;
+        const remainingStock = currentStock - item.qty;
+        return remainingStock < 5;
+      });
+      if (lowStockItems.length > 0) {
+        const itemNames = lowStockItems.map(item => `${item.name}`).join(', ');
+        setTimeout(() => {
+          Alert.alert('Low Stock Automation Alert', `Stock is running low for: ${itemNames}. Reorder suggested.`);
+        }, 800);
+      }
+    }
+
     const totalAmountString = total.toFixed(2);
     setLoading(false);
     clearCart();

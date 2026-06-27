@@ -224,6 +224,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (data.storeAddress || data.store_address) {
             window.localStorage.setItem('storeAddress', data.storeAddress || data.store_address || '');
           }
+          const lowStockNotif = data.low_stock_notif !== undefined ? data.low_stock_notif : true;
+          window.localStorage.setItem('lowStockEmailNotif', String(lowStockNotif));
+          const webhookUrl = data.webhook_url || '';
+          window.localStorage.setItem('webhookUrl', webhookUrl);
+          const autoOutOfStock = data.auto_out_of_stock !== undefined ? data.auto_out_of_stock : true;
+          window.localStorage.setItem('autoOutOfStock', String(autoOutOfStock));
           // Dispatch custom event to notify other layouts
           window.dispatchEvent(new Event('storeNameUpdated'));
         }

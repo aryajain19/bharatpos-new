@@ -49,6 +49,26 @@ export default function AdminSettingsScreen() {
     return 'Mobile Only';
   });
   const [emailNotifs, setEmailNotifs] = useState(true);
+  const [lowStockNotif, setLowStockNotif] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const val = window.localStorage.getItem('lowStockEmailNotif');
+      return val !== 'false';
+    }
+    return true;
+  });
+  const [webhookUrl, setWebhookUrl] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return window.localStorage.getItem('webhookUrl') || '';
+    }
+    return '';
+  });
+  const [autoOutOfStock, setAutoOutOfStock] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const val = window.localStorage.getItem('autoOutOfStock');
+      return val !== 'false';
+    }
+    return true;
+  });
   
   const { tenantId } = useAuth();
   const [backupLoading, setBackupLoading] = useState(false);
@@ -202,6 +222,9 @@ export default function AdminSettingsScreen() {
       window.localStorage.setItem('gstNumber', gstNumber);
       window.localStorage.setItem('isGstRegistered', String(businessType === 'GST'));
       window.localStorage.setItem('shopMode', shopMode);
+      window.localStorage.setItem('lowStockEmailNotif', String(lowStockNotif));
+      window.localStorage.setItem('webhookUrl', webhookUrl);
+      window.localStorage.setItem('autoOutOfStock', String(autoOutOfStock));
       
       // Dispatch custom event to notify other components (e.g. sidebar)
       window.dispatchEvent(new Event('storeNameUpdated'));
@@ -215,7 +238,10 @@ export default function AdminSettingsScreen() {
           store_address: address,
           gst_number: gstNumber,
           is_gst_registered: businessType === 'GST',
-          shop_mode: shopMode
+          shop_mode: shopMode,
+          low_stock_notif: lowStockNotif,
+          webhook_url: webhookUrl,
+          auto_out_of_stock: autoOutOfStock
         });
       } catch (err) {
         console.error("Error updating user profile in Firestore:", err);
@@ -334,6 +360,42 @@ export default function AdminSettingsScreen() {
               </View>
               <Switch value={emailNotifs} onValueChange={setEmailNotifs} color="#10B981" />
             </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.iconTitleBox}>
+                <Icon name="lightning-bolt-outline" size={20} color="#F59E0B" />
+                <Text style={styles.sectionTitle}>Workflow Automations (Zoho POS)</Text>
+              </View>
+            </View>
+
+            <View style={styles.switchRow}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={styles.switchLabel}>Low Stock Alerts</Text>
+                <Text style={styles.switchDesc}>Get real-time alerts when catalog stock falls below 5 units.</Text>
+              </View>
+              <Switch value={lowStockNotif} onValueChange={setLowStockNotif} color="#10B981" />
+            </View>
+
+            <View style={styles.switchRow}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={styles.switchLabel}>Auto Out-of-Stock Lock</Text>
+                <Text style={styles.switchDesc}>Automatically prevent billing checkout of products when stock drops to 0.</Text>
+              </View>
+              <Switch value={autoOutOfStock} onValueChange={setAutoOutOfStock} color="#10B981" />
+            </View>
+
+            <TextInput
+              label="Real-time Sales Webhook URL"
+              value={webhookUrl}
+              onChangeText={setWebhookUrl}
+              mode="outlined"
+              style={styles.input}
+              outlineColor="#EEF0F6"
+              activeOutlineColor="#10B981"
+              placeholder="e.g. https://api.mycompany.com/sales-sync"
+            />
 
             <View style={styles.divider} />
 
