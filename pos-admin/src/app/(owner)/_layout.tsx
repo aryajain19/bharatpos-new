@@ -637,6 +637,8 @@ const styles = StyleSheet.create({
     height: 64, backgroundColor: '#fff', flexDirection: 'row',
     alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    zIndex: 1000,
+    elevation: 5,
   },
   topBarLeft: { flexDirection: 'row', alignItems: 'center' },
   topBarRight: { flexDirection: 'row', alignItems: 'center' },

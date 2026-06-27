@@ -720,9 +720,8 @@ export default function POSBillingScreen() {
           </View>
         </FadeIn>
 
-        {/* ── Right Pane: Summary + Actions ─────────────────────── */}
         <FadeIn delay={200} style={{ flex: 1 }}>
-          <ScrollView style={styles.rightPane} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+          <View style={styles.rightPane}>
             {/* Payment Summary Card */}
             <Surface style={styles.summaryCard} elevation={0}>
               <View style={styles.summaryHeader}>
@@ -852,36 +851,7 @@ export default function POSBillingScreen() {
                 </TouchableOpacity>
               </View>
             </Surface>
-
-            {/* Weighing Scale Calculator Button */}
-            <TouchableOpacity
-              style={styles.weighScaleBtn}
-              onPress={() => setShowWeighModal(true)}
-              activeOpacity={0.7}
-            >
-              <Icon name="scale" size={20} color="#fff" />
-              <Text style={styles.weighScaleBtnText}>Weighing Scale Calculator</Text>
-            </TouchableOpacity>
-
-            {/* Quick Add Products */}
-            <Surface style={styles.quickAddCard} elevation={0}>
-              <Text style={styles.quickAddTitle}>Quick Add</Text>
-              <View style={styles.quickAddGrid}>
-                {products.slice(0, 6).map(p => (
-                  <TouchableOpacity
-                    key={p.id}
-                    style={styles.quickAddItem}
-                    onPress={() => handleAddProduct(p)}
-                    activeOpacity={0.6}
-                  >
-                    <View style={[styles.quickAddDot, { backgroundColor: categoryColors[cleanAndMapCategory(p.category || '').cleanName] || '#666' }]} />
-                    <Text style={styles.quickAddName} numberOfLines={1}>{p.name.split(' ').slice(0, 2).join(' ')}</Text>
-                    <Text style={styles.quickAddPrice}>₹{p.price}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </Surface>
-          </ScrollView>
+          </View>
         </FadeIn>
       </View>
 
