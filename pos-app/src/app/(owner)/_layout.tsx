@@ -120,6 +120,7 @@ export default function OwnerLayout() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const formatAlertTime = (createdAt: any) => {
     if (!createdAt) return '';
@@ -475,20 +476,65 @@ export default function OwnerLayout() {
 
             {screenWidth > 600 && <View style={styles.topBarDivider} />}
 
-            {/* User Avatar */}
-            <View style={styles.userContainer}>
-              {screenWidth > 600 && (
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{userName}</Text>
-                  <Text style={styles.userRole}>Owner</Text>
-                </View>
+            {/* User Avatar Menu Anchor */}
+            <View style={{ position: 'relative' }}>
+              <TouchableOpacity 
+                style={styles.userContainer} 
+                onPress={() => setShowProfileMenu(!showProfileMenu)}
+                activeOpacity={0.7}
+              >
+                {screenWidth > 600 && (
+                  <View style={styles.userInfo}>
+                    <Text style={styles.userName}>{userName}</Text>
+                    <Text style={styles.userRole}>Owner</Text>
+                  </View>
+                )}
+                <Avatar.Text
+                  size={36}
+                  label={initial}
+                  style={{ backgroundColor: '#10B981' }}
+                  labelStyle={{ fontSize: 14, fontWeight: '700' }}
+                />
+                <Icon name={showProfileMenu ? "chevron-up" : "chevron-down"} size={16} color="#64748B" style={{ marginLeft: 4 }} />
+              </TouchableOpacity>
+
+              {/* Shop Management Profile Dropdown Menu */}
+              {showProfileMenu && (
+                <Surface style={styles.profileDropdown} elevation={4}>
+                  <View style={styles.dropdownHeader}>
+                    <Text style={styles.dropdownUser}>{userName}</Text>
+                    <Text style={styles.dropdownRole}>Store Owner</Text>
+                  </View>
+                  <Divider style={{ backgroundColor: '#F1F5F9' }} />
+                  
+                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/vendors' as any); }}>
+                    <Icon name="account-group" size={18} color="#64748B" />
+                    <Text style={styles.dropdownText}>Worker Mgmt</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/reports' as any); }}>
+                    <Icon name="file-chart" size={18} color="#64748B" />
+                    <Text style={styles.dropdownText}>Reports Center</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/upgrade' as any); }}>
+                    <Icon name="arrow-up-bold-circle" size={18} color="#64748B" />
+                    <Text style={styles.dropdownText}>Subscription</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.dropdownItem} onPress={() => { setShowProfileMenu(false); router.push('/(owner)/settings' as any); }}>
+                    <Icon name="cog" size={18} color="#64748B" />
+                    <Text style={styles.dropdownText}>Settings</Text>
+                  </TouchableOpacity>
+                  
+                  <Divider style={{ backgroundColor: '#F1F5F9' }} />
+                  
+                  <TouchableOpacity style={[styles.dropdownItem, { paddingVertical: 12 }]} onPress={async () => { setShowProfileMenu(false); await handleLogout(); }}>
+                    <Icon name="logout" size={18} color="#EF4444" />
+                    <Text style={[styles.dropdownText, { color: '#EF4444', fontWeight: 'bold' }]}>Logout</Text>
+                  </TouchableOpacity>
+                </Surface>
               )}
-              <Avatar.Text
-                size={36}
-                label={initial}
-                style={{ backgroundColor: '#10B981' }}
-                labelStyle={{ fontSize: 14, fontWeight: '700' }}
-              />
             </View>
           </View>
         </Surface>
@@ -710,6 +756,47 @@ const styles = StyleSheet.create({
   userInfo: { marginRight: 12, alignItems: 'flex-end' },
   userName: { fontSize: 13, fontWeight: '700', color: '#333' },
   userRole: { fontSize: 11, color: '#999', marginTop: 1 },
+  profileDropdown: {
+    position: 'absolute',
+    top: 48,
+    right: 0,
+    width: 220,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingVertical: 4,
+    zIndex: 9999,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  dropdownHeader: {
+    padding: 12,
+  },
+  dropdownUser: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  dropdownRole: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 12,
+  },
+  dropdownText: {
+    fontSize: 13,
+    color: '#334155',
+  },
 
   // Content
   contentArea: { flex: 1, overflow: 'hidden' },
