@@ -43,6 +43,7 @@ export default function POSBillingScreen() {
   const [weighProduct, setWeighProduct] = useState<any>(null);
   const [weighWeight, setWeighWeight] = useState('1000');
   const [showWeighModal, setShowWeighModal] = useState(false);
+  const [showSessionModal, setShowSessionModal] = useState(false);
   
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -558,7 +559,7 @@ export default function POSBillingScreen() {
             </View>
           </View>
           <View style={styles.headerRight}>
-            <Chip icon="receipt" mode="outlined" textStyle={styles.chipText} style={styles.chip}>
+            <Chip icon="receipt" mode="outlined" onPress={() => setShowSessionModal(true)} textStyle={styles.chipText} style={styles.chip}>
               Active Session
             </Chip>
             <Chip icon="cart" mode="flat" textStyle={[styles.chipText, { color: appTheme.colors.onSurface }]} style={[styles.chip, { backgroundColor: appTheme.colors.surface }]}>
@@ -721,7 +722,7 @@ export default function POSBillingScreen() {
 
         {/* ── Right Pane: Summary + Actions ─────────────────────── */}
         <FadeIn delay={200} style={{ flex: 1 }}>
-          <View style={styles.rightPane}>
+          <ScrollView style={styles.rightPane} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Payment Summary Card */}
             <Surface style={styles.summaryCard} elevation={0}>
               <View style={styles.summaryHeader}>
@@ -796,11 +797,23 @@ export default function POSBillingScreen() {
 
               {/* Action Buttons */}
               <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.holdBtn} onPress={() => Alert.alert('Held', 'Bill put on hold.')} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.holdBtn} onPress={() => {
+                  if (cart.length === 0) {
+                    Alert.alert('Empty Cart', 'Add items to the cart before holding a bill.');
+                  } else {
+                    Alert.alert('Bill Held', 'Current cart put on hold.');
+                  }
+                }} activeOpacity={0.7}>
                   <Icon name="pause-circle-outline" size={18} color="#10B981" />
                   <Text style={styles.holdBtnText}>Hold</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.clearBtn} onPress={clearCart} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.clearBtn} onPress={() => {
+                  if (cart.length === 0) {
+                    Alert.alert('Empty Cart', 'Cart is already empty.');
+                  } else {
+                    clearCart();
+                  }
+                }} activeOpacity={0.7}>
                   <Icon name="delete-outline" size={18} color="#EF4444" />
                   <Text style={styles.clearBtnText}>Clear</Text>
                 </TouchableOpacity>
@@ -868,7 +881,7 @@ export default function POSBillingScreen() {
                 ))}
               </View>
             </Surface>
-          </View>
+          </ScrollView>
         </FadeIn>
       </View>
 
