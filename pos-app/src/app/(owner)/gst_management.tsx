@@ -335,7 +335,7 @@ export default function GSTManagementScreen() {
           </Card.Content>
         </Card>
 
-        <Card style={[styles.card, { marginTop: 20, backgroundColor: appTheme.colors.surface }]} elevation={1}>
+        <Card style={[styles.card, { marginTop: 20, backgroundColor: appTheme.colors.primary }]} elevation={1}>
           <Card.Content>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Icon name="currency-inr" size={22} color="rgba(255,255,255,0.85)" />
