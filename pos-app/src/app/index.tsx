@@ -147,6 +147,21 @@ export default function Index() {
   };
 
   const handleDemoBooking = () => {
+    try {
+      const isWeb = Platform.OS === 'web';
+      const apiHost = isWeb ? '' : 'https://bharatpos-new.vercel.app';
+      fetch(`${apiHost}/api/send-support-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'support@bharatpos.systems',
+          message: 'Requesting product walkthrough demo from BharatPOS landing page.',
+          type: 'demo'
+        })
+      });
+    } catch (e) {
+      console.warn("Mail dispatch error:", e);
+    }
     alert('Thank you! Our retail product experts will reach out to you within 2 hours to set up your personal walkthrough.');
     setShowDemoModal(false);
   };
@@ -575,7 +590,23 @@ export default function Index() {
                   
                   onPress={() => {
                     if (!contactName || !contactEmail) { alert('Please enter your name and email.'); return; }
-                    alert('Message received! Our customer success team will email you shortly.');
+                    try {
+                      const isWeb = Platform.OS === 'web';
+                      const apiHost = isWeb ? '' : 'https://bharatpos-new.vercel.app';
+                      fetch(`${apiHost}/api/send-support-email`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          name: contactName,
+                          email: contactEmail,
+                          message: contactMsg || 'No message provided',
+                          type: 'support'
+                        })
+                      });
+                    } catch (e) {
+                      console.warn("Mail dispatch error:", e);
+                    }
+                    alert('Message received! Our customer success team will email you at ' + contactEmail + ' shortly.');
                     setContactName(''); setContactEmail(''); setContactMsg('');
                   }}
                 >
