@@ -193,6 +193,28 @@ export default function Index() {
     { q: "Can I upgrade or renew my plan anytime?", a: "Yes. You can upgrade, renew, or add devices to your active plan from the 'Upgrade' screen in your Owner Settings menu instantly." }
   ];
 
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('pos-admin') || hostname.includes('admin')) {
+      if (loading) {
+        return (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+            <ActivityIndicator size="large" color="#10B981" />
+            <Text style={{ marginTop: 12, color: 'gray', fontSize: 14 }}>Loading Business Portal...</Text>
+          </View>
+        );
+      }
+      if (!user) {
+        return (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+            <ActivityIndicator size="large" color="#10B981" />
+            <Text style={{ marginTop: 12, color: 'gray', fontSize: 14 }}>Redirecting to Login...</Text>
+          </View>
+        );
+      }
+    }
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: appTheme.colors.background }]}>
       {/* 1. STICKY HEADER/NAVBAR */}
