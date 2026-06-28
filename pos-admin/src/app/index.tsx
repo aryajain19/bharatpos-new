@@ -54,6 +54,23 @@ export default function Index() {
     }
   }, [signup]);
 
+  React.useEffect(() => {
+    if (!loading) {
+      if (user) {
+        if (role === 'admin') router.replace('/(admin)' as any);
+        else if (role === 'owner') router.replace('/(owner)' as any);
+        else router.replace('/(vendor)/(tabs)' as any);
+      } else {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          const hostname = window.location.hostname;
+          if (hostname.includes('pos-admin') || hostname.includes('admin')) {
+            router.replace('/(auth)/login' as any);
+          }
+        }
+      }
+    }
+  }, [user, loading, role]);
+
   const toggleFaq = (idx: number) => {
     setExpandedFaq(expandedFaq === idx ? null : idx);
   };
