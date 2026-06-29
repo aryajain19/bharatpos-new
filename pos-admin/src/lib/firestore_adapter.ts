@@ -12,11 +12,8 @@ export function collection(dbInstance: any, pathStr: string, ...segments: string
 }
 
 export async function setDoc(docRef: any, data: any, options?: { merge?: boolean }) {
-  if (options?.merge) {
-    await update(docRef.ref, data);
-  } else {
-    await set(docRef.ref, data);
-  }
+  // Simple set, ignores merge for now as this is a basic shim
+  await set(docRef.ref, data);
 }
 
 export async function addDoc(collectionRef: any, data: any) {
@@ -50,8 +47,10 @@ export function serverTimestamp() {
   return rtdbServerTimestamp();
 }
 
+// Minimal shim for query
 export function query(collectionRef: any, ...constraints: any[]) {
   let qRef = collectionRef.ref;
+  // Note: True compound queries require client-side filtering in RTDB
   return { ref: qRef, path: collectionRef.path, constraints };
 }
 
@@ -63,20 +62,8 @@ export function orderBy(fieldPath: string, directionStr?: string) {
   return { type: 'orderBy', fieldPath, directionStr };
 }
 
-export function limit(num: number) {
-  return { type: 'limit', value: num };
-}
-
 export async function getDocs(queryRef: any) {
-  let qRef = queryRef.ref;
-  if (queryRef.constraints) {
-    const tenantConstraint = queryRef.constraints.find((c: any) => c.type === 'where' && c.fieldPath === 'tenant_id' && c.opStr === '==');
-    if (tenantConstraint) {
-      qRef = rtdbQuery(queryRef.ref, orderByChild('tenant_id'), equalTo(tenantConstraint.value));
-    }
-  }
-
-  const snapshot = await get(qRef);
+  const snapshot = await get(queryRef.ref);
   let results: any[] = [];
   if (snapshot.exists()) {
     snapshot.forEach((childSnap) => {
@@ -87,6 +74,7 @@ export async function getDocs(queryRef: any) {
     });
   }
   
+  // Apply client-side filtering for 'where' constraints if present
   if (queryRef.constraints) {
     for (const c of queryRef.constraints) {
       if (c.type === 'where') {
@@ -103,26 +91,6 @@ export async function getDocs(queryRef: any) {
         });
       }
     }
-
-    const orderByConstraint = queryRef.constraints.find((c: any) => c.type === 'orderBy');
-    if (orderByConstraint) {
-      const field = orderByConstraint.fieldPath;
-      const dir = orderByConstraint.directionStr || 'asc';
-      results.sort((a, b) => {
-        const valA = a.data()[field];
-        const valB = b.data()[field];
-        if (valA === undefined || valB === undefined) return 0;
-        if (typeof valA === 'string' && typeof valB === 'string') {
-          return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-        }
-        return dir === 'asc' ? valA - valB : valB - valA;
-      });
-    }
-
-    const limitConstraint = queryRef.constraints.find((c: any) => c.type === 'limit');
-    if (limitConstraint) {
-      results = results.slice(0, limitConstraint.value);
-    }
   }
 
   return {
@@ -133,15 +101,7 @@ export async function getDocs(queryRef: any) {
 }
 
 export function onSnapshot(queryRef: any, callback: Function) {
-  let qRef = queryRef.ref;
-  if (queryRef.constraints) {
-    const tenantConstraint = queryRef.constraints.find((c: any) => c.type === 'where' && c.fieldPath === 'tenant_id' && c.opStr === '==');
-    if (tenantConstraint) {
-      qRef = rtdbQuery(queryRef.ref, orderByChild('tenant_id'), equalTo(tenantConstraint.value));
-    }
-  }
-
-  return onValue(qRef, (snapshot) => {
+  return onValue(queryRef.ref, (snapshot) => {
     let results: any[] = [];
     if (snapshot.exists()) {
       snapshot.forEach((childSnap) => {
@@ -167,26 +127,6 @@ export function onSnapshot(queryRef: any, callback: Function) {
             return true;
           });
         }
-      }
-
-      const orderByConstraint = queryRef.constraints.find((c: any) => c.type === 'orderBy');
-      if (orderByConstraint) {
-        const field = orderByConstraint.fieldPath;
-        const dir = orderByConstraint.directionStr || 'asc';
-        results.sort((a, b) => {
-          const valA = a.data()[field];
-          const valB = b.data()[field];
-          if (valA === undefined || valB === undefined) return 0;
-          if (typeof valA === 'string' && typeof valB === 'string') {
-            return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-          }
-          return dir === 'asc' ? valA - valB : valB - valA;
-        });
-      }
-
-      const limitConstraint = queryRef.constraints.find((c: any) => c.type === 'limit');
-      if (limitConstraint) {
-        results = results.slice(0, limitConstraint.value);
       }
     }
 

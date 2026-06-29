@@ -11,10 +11,13 @@ const firebaseConfig = {
   databaseURL: "https://smartpos-476ce-default-rtdb.firebaseio.com"
 };
 
+console.log("INITIALIZING FIREBASE WITH:", firebaseConfig);
+
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const auth = getAuth(app);
 export const db = getDatabase(app);
+
 
 // Secondary App for User Provisioning
 const secondaryApp = getApps().find(a => a.name === 'admin-provisioning') || initializeApp(firebaseConfig, 'admin-provisioning');
@@ -52,5 +55,4 @@ if (Platform.OS === 'web') {
     }
   };
 }
-
 
