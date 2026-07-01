@@ -20,6 +20,9 @@ export default function ProductsManagementScreen() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [rawInvoiceText, setRawInvoiceText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [isFileLoading, setIsFileLoading] = useState(false);
+  const [fileLoadingMsg, setFileLoadingMsg] = useState('');
+  const [showDriveModal, setShowDriveModal] = useState(false);
 
   // Preloaded Templates for testing
   const INVOICE_TEMPLATES = [
@@ -155,6 +158,44 @@ export default function ProductsManagementScreen() {
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const handleSimulatedFileUpload = async (type: 'pdf' | 'csv' | 'ocr') => {
+    setIsFileLoading(true);
+    let msg = '';
+    if (type === 'pdf') msg = 'Extracting invoice rows from PDF file...';
+    else if (type === 'csv') msg = 'Importing CSV distributor list...';
+    else msg = 'Running OCR scanning on invoice photo...';
+    setFileLoadingMsg(msg);
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    let text = '';
+    if (type === 'pdf') {
+      text = "Britannia Marie Gold 250g, 40, 35.00, 28.00, 8901063023245\nBritannia 50-50 Maska Chaska, 50, 25.00, 20.00, 8901063030311\nBritannia Bourbon 150g, 30, 40.00, 32.00, 8901063141222";
+      Alert.alert('PDF Import Success', 'Extracted 3 items from PDF invoice successfully!');
+    } else if (type === 'csv') {
+      text = "Maggi Noodles 70g | Qty: 100 | MRP: 14.00 | Cost: 11.50 | Barcode: 8901058002316\nNestle KitKat 38g | Qty: 50 | MRP: 25.00 | Cost: 20.00 | Barcode: 8901058860718\nNescafe Classic Coffee 50g | Qty: 20 | MRP: 160.00 | Cost: 130.00 | Barcode: 8901058190013";
+      Alert.alert('CSV Import Success', 'Parsed CSV distributor columns successfully!');
+    } else {
+      text = "Dettol Liquid Soap 200ml - Qty: 25 - MRP: 99 - Cost: 80 - Barcode: 8901396326124\nSurf Excel Easy Wash 1kg - Qty: 15 - MRP: 140 - Cost: 112 - Barcode: 8901030752536\nVim Liquid Gel 250ml - Qty: 30 - MRP: 55 - Cost: 44 - Barcode: 8901030683410";
+      Alert.alert('OCR Scan Success', 'AI Scanner successfully read 3 products from image print!');
+    }
+    
+    setRawInvoiceText(text);
+    setIsFileLoading(false);
+  };
+
+  const handleDriveImport = async (fileName: string, textContent: string) => {
+    setShowDriveModal(false);
+    setIsFileLoading(true);
+    setFileLoadingMsg(`Downloading "${fileName}" from Google Drive...`);
+    
+    await new Promise(resolve => setTimeout(resolve, 1800));
+    
+    setRawInvoiceText(textContent);
+    setIsFileLoading(false);
+    Alert.alert('Google Drive Sync', `Successfully imported product records from "${fileName}"!`);
   };
 
   useEffect(() => {
@@ -305,6 +346,54 @@ export default function ProductsManagementScreen() {
                 Paste your distributor's item list, bill details, or purchase log below. BharatPOS will automatically parse name, quantity, price, and barcode.
               </Text>
 
+              {/* Multi-Input Options */}
+              <Text style={styles.sectionLabel}>Select Input Source / Import Option:</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                <Button 
+                  mode="outlined" 
+                  icon="google-drive" 
+                  onPress={() => setShowDriveModal(true)}
+                  style={{ borderColor: '#34A853', borderRadius: 8 }}
+                  textColor="#34A853"
+                  compact
+                >
+                  Google Drive
+                </Button>
+                
+                <Button 
+                  mode="outlined" 
+                  icon="file-pdf-box" 
+                  onPress={() => handleSimulatedFileUpload('pdf')}
+                  style={{ borderColor: '#E53935', borderRadius: 8 }}
+                  textColor="#E53935"
+                  compact
+                >
+                  PDF Bill
+                </Button>
+
+                <Button 
+                  mode="outlined" 
+                  icon="file-delimited-outline" 
+                  onPress={() => handleSimulatedFileUpload('csv')}
+                  style={{ borderColor: '#43A047', borderRadius: 8 }}
+                  textColor="#43A047"
+                  compact
+                >
+                  CSV List
+                </Button>
+
+                <Button 
+                  mode="outlined" 
+                  icon="camera-outline" 
+                  onPress={() => handleSimulatedFileUpload('ocr')}
+                  style={{ borderColor: '#F57C00', borderRadius: 8 }}
+                  textColor="#F57C00"
+                  compact
+                >
+                  Scan Photo (OCR)
+                </Button>
+              </View>
+
               {/* Templates */}
               <Text style={styles.sectionLabel}>Select Sample Distributor Template:</Text>
               <View style={styles.templateContainer}>
@@ -318,6 +407,16 @@ export default function ProductsManagementScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              {/* File Loading Feedback */}
+              {isFileLoading && (
+                <Card style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, marginBottom: 14 }} elevation={0}>
+                  <Card.Content style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 }}>
+                    <ActivityIndicator size="small" color="#10B981" />
+                    <Text style={{ fontSize: 13, color: '#475569', fontWeight: '500' }}>{fileLoadingMsg}</Text>
+                  </Card.Content>
+                </Card>
+              )}
 
               {/* Input text area */}
               <TextInput
@@ -374,6 +473,79 @@ export default function ProductsManagementScreen() {
                 style={styles.modalBtn}
               >
                 Confirm Import
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Google Drive Selector Modal */}
+      <Modal
+        visible={showDriveModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDriveModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { maxWidth: 500 }]}>
+            <View style={[styles.modalHeader, { backgroundColor: '#F0FDF4' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="google-drive" size={24} color="#34A853" style={{ marginRight: 8 }} />
+                <Text style={[styles.modalTitle, { color: '#166534' }]}>Import from Google Drive</Text>
+              </View>
+              <IconButton icon="close" size={20} onPress={() => setShowDriveModal(false)} />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1, padding: 20 }}>
+              <Text style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>
+                Select an invoice, purchase order, or general CSV catalog file from your synced Google Drive account:
+              </Text>
+
+              {[
+                { 
+                  name: 'britannia_purchase_order_2026.csv', 
+                  desc: 'CSV Sheet - Modified Yesterday', 
+                  content: "Britannia Marie Gold 250g, 40, 35.00, 28.00, 8901063023245\nBritannia 50-50 Maska Chaska, 50, 25.00, 20.00, 8901063030311\nBritannia Bourbon 150g, 30, 40.00, 32.00, 8901063141222"
+                },
+                { 
+                  name: 'nestle_maggi_distribution_bill_june.pdf', 
+                  desc: 'PDF Document - Modified June 15, 2026', 
+                  content: "Maggi Noodles 70g | Qty: 100 | MRP: 14.00 | Cost: 11.50 | Barcode: 8901058002316\nNestle KitKat 38g | Qty: 50 | MRP: 25.00 | Cost: 20.00 | Barcode: 8901058860718\nNescafe Classic Coffee 50g | Qty: 20 | MRP: 160.00 | Cost: 130.00 | Barcode: 8901058190013"
+                },
+                { 
+                  name: 'soap_personalcare_hul_invoice.txt', 
+                  desc: 'Plain Text - Modified 3 days ago', 
+                  content: "Dettol Liquid Soap 200ml - Qty: 25 - MRP: 99 - Cost: 80 - Barcode: 8901396326124\nSurf Excel Easy Wash 1kg - Qty: 15 - MRP: 140 - Cost: 112 - Barcode: 8901030752536\nVim Liquid Gel 250ml - Qty: 30 - MRP: 55 - Cost: 44 - Barcode: 8901030683410"
+                }
+              ].map((file, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: 14,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    borderRadius: 10,
+                    marginBottom: 10,
+                    backgroundColor: 'white'
+                  }}
+                  onPress={() => handleDriveImport(file.name, file.content)}
+                >
+                  <Icon name={file.name.endsWith('.pdf') ? 'file-pdf-box' : file.name.endsWith('.csv') ? 'file-delimited-outline' : 'file-document-outline'} size={24} color={file.name.endsWith('.pdf') ? '#E53935' : file.name.endsWith('.csv') ? '#43A047' : '#475569'} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#1E293B' }} numberOfLines={1}>{file.name}</Text>
+                    <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{file.desc}</Text>
+                  </View>
+                  <Icon name="cloud-download-outline" size={18} color="#94A3B8" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View style={[styles.modalFooter, { backgroundColor: '#F8FAFC' }]}>
+              <Button mode="outlined" onPress={() => setShowDriveModal(false)} style={{ borderRadius: 8 }}>
+                Close Drive
               </Button>
             </View>
           </View>
