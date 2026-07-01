@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, FlatList, Platform, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, FlatList, Platform, Animated, ActivityIndicator } from 'react-native';
 import { 
   Text, Card, Button, DataTable, IconButton, Portal, Dialog, 
   TextInput, Switch, Searchbar, Checkbox, Divider, List, Badge, SegmentedButtons
@@ -10,6 +10,8 @@ import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { db, isFirebaseConfigured, secondaryAuth, auth } from '../lib/firebase';
 import { collection, getDocs, query, where, doc, setDoc, serverTimestamp, addDoc, onSnapshot, deleteDoc } from '../lib/firestore_adapter';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { useAuth } from '../providers/AuthProvider';
+import AdminLoginScreen from './(auth)/login';
 
 // ---------------------------------------------------------
 // DATA SEEDING (REMOVED)
@@ -106,7 +108,34 @@ const EmptyState = ({ icon, title, subtitle }: { icon: string; title: string; su
 // ---------------------------------------------------------
 // COMPONENT MAIN
 // ---------------------------------------------------------
-export default function SuperAdminDashboard() {
+export default function IndexPage() {
+  const { user, loading } = useAuth();
+  const [isDemoBypass, setIsDemoBypass] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const bypass = window.localStorage.getItem('adminBypass') === 'true';
+      setIsDemoBypass(bypass);
+    }
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0D0E1A', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#818CF8" />
+        <Text style={{ color: '#fff', marginTop: 12 }}>Loading Command Center...</Text>
+      </View>
+    );
+  }
+
+  if (!user && !isDemoBypass) {
+    return <AdminLoginScreen />;
+  }
+
+  return <SuperAdminDashboard />;
+}
+
+export function SuperAdminDashboard() {
   const { tab, darkMode } = useLocalSearchParams();
   const currentTab = (tab || 'overview') as string;
   const isDark = darkMode === 'true';

@@ -426,9 +426,7 @@ function AuthGuard() {
     if (loading) return;
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!user && !inAuthGroup && !isDemoBypass) {
-      router.replace('/(auth)/login' as any);
-    } else if ((user || isDemoBypass) && inAuthGroup) {
+    if ((user || isDemoBypass) && inAuthGroup) {
       router.replace('/' as any);
     }
   }, [user, loading, segments, isDemoBypass]);
