@@ -109,26 +109,9 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useAppTheme = () => useContext(ThemeContext);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemColorScheme = useColorScheme();
-  const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
-
-  useEffect(() => {
-    // Load saved preference
-    AsyncStorage.getItem('theme_preference').then(val => {
-      if (val === 'dark') setIsDarkMode(true);
-      else if (val === 'light') setIsDarkMode(false);
-    });
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDarkMode(prev => {
-      const newMode = !prev;
-      AsyncStorage.setItem('theme_preference', newMode ? 'dark' : 'light');
-      return newMode;
-    });
-  };
-
-  const currentTheme = isDarkMode ? MonoDarkTheme : MonoLightTheme;
+  const isDarkMode = false;
+  const toggleTheme = () => {};
+  const currentTheme = MonoLightTheme;
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>

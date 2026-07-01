@@ -321,23 +321,7 @@ function AdminLayout() {
           <View style={styles.sidebarDivider} />
           
           <View style={styles.sidebarFooter}>
-            {/* Dark Mode Toggle */}
-            <TouchableOpacity 
-              style={styles.themeToggle} 
-              onPress={() => {
-                setIsDarkMode(!isDarkMode);
-                router.setParams({ darkMode: (!isDarkMode).toString() });
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.themeToggleIconWrap, { backgroundColor: isDarkMode ? 'rgba(255,193,7,0.15)' : 'rgba(94,53,177,0.2)' }]}>
-                <Icon name={isDarkMode ? 'weather-sunny' : 'weather-night'} size={16} color={isDarkMode ? '#FFC107' : '#B39DDB'} />
-              </View>
-              <Text style={styles.footerText}>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</Text>
-              <View style={[styles.toggleSwitch, isDarkMode && styles.toggleSwitchActive]}>
-                <View style={[styles.toggleKnob, isDarkMode && styles.toggleKnobActive]} />
-              </View>
-            </TouchableOpacity>
+
 
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
               <View style={styles.logoutIconWrap}>
