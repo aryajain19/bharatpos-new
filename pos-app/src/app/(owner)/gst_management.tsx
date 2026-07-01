@@ -3,7 +3,7 @@ import { useAppTheme } from '../../providers/ThemeProvider';
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator, Alert, Platform } from 'react-native';
-import { Text, useTheme, Card, DataTable, Button, Surface, Divider, TextInput } from 'react-native-paper';
+import { Text, useTheme, Card, DataTable, Button, Surface, Divider, TextInput, Portal, Dialog } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, getDocs, query, orderBy, where, doc, getDoc, setDoc } from '../../lib/firestore_adapter';
@@ -12,7 +12,7 @@ import * as Print from 'expo-print';
 // Dynamic GST summaries are computed from actual sales data.
 const fmt = (n: number) => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
-type TabType = 'overview' | 'gstr1' | 'gstr3b';
+type TabType = 'overview' | 'gstr1' | 'gstr3b' | 'einvoice';
 
 export default function GSTManagementScreen() {
   const { tenantId, loading: authLoading } = useAuth();
@@ -32,6 +32,17 @@ export default function GSTManagementScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [storeName, setStoreName] = useState('BharatPOS');
+
+  // E-Invoice & E-Way states
+  const [selectedSaleForEinvoice, setSelectedSaleForEinvoice] = useState<any>(null);
+  const [generatingEinvoice, setGeneratingEinvoice] = useState(false);
+  const [showEinvoiceModal, setShowEinvoiceModal] = useState(false);
+  
+  const [showEwayModal, setShowEwayModal] = useState(false);
+  const [ewayTransporter, setEwayTransporter] = useState('DTDC Logistics');
+  const [ewayDistance, setEwayDistance] = useState('120');
+  const [ewayVehicle, setEwayVehicle] = useState('DL-1AA-1234');
+  const [generatingEway, setGeneratingEway] = useState(false);
 
   useEffect(() => {
     if (!authLoading && tenantId) {
@@ -121,6 +132,7 @@ export default function GSTManagementScreen() {
     { key: 'overview', label: 'Overview', icon: 'view-dashboard-outline' },
     { key: 'gstr1', label: 'GSTR-1', icon: 'file-document-outline' },
     { key: 'gstr3b', label: 'GSTR-3B', icon: 'file-chart-outline' },
+    { key: 'einvoice', label: 'E-Way & E-Invoice', icon: 'qrcode' },
   ];
 
   const { b2bSupplies, b2cSmallSupplies, hsnSummary, outwardSupplies, eligibleITC, paymentOfTax, b2bTotals, cgstTot, sgstTot } = React.useMemo(() => {
@@ -723,6 +735,157 @@ export default function GSTManagementScreen() {
     </View>
   );
 
+  const handleGenerateEinvoice = async (sale: any) => {
+    setGeneratingEinvoice(true);
+    try {
+      // Simulate API call to IRP
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const irn = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      const ackNo = String(Math.floor(100000000000000 + Math.random() * 900000000000000));
+      
+      const { updateDoc, doc } = await import('../../lib/firestore_adapter');
+      const { db } = await import('../../lib/firebase');
+      const saleRef = doc(db, 'sales', sale.id);
+      await updateDoc(saleRef, {
+        einvoice_irn: irn,
+        einvoice_ack: ackNo,
+        einvoice_date: new Date().toISOString()
+      });
+      
+      Alert.alert('Success', 'E-Invoice IRN successfully generated from IRP Portal!');
+      setSelectedSaleForEinvoice({ ...sale, einvoice_irn: irn, einvoice_ack: ackNo });
+      setShowEinvoiceModal(true);
+      fetchSales();
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to generate E-Invoice: ' + e.message);
+    } finally {
+      setGeneratingEinvoice(false);
+    }
+  };
+
+  const handleGenerateEway = async () => {
+    if (!selectedSaleForEinvoice || !ewayTransporter || !ewayDistance || !ewayVehicle) {
+      Alert.alert('Error', 'Please fill all details.');
+      return;
+    }
+    setGeneratingEway(true);
+    try {
+      // Simulate API call to E-Way Portal
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const ewayBillNo = String(Math.floor(100000000000 + Math.random() * 900000000000));
+      
+      const { updateDoc, doc } = await import('../../lib/firestore_adapter');
+      const { db } = await import('../../lib/firebase');
+      const saleRef = doc(db, 'sales', selectedSaleForEinvoice.id);
+      await updateDoc(saleRef, {
+        eway_bill_no: ewayBillNo,
+        eway_transporter: ewayTransporter,
+        eway_vehicle: ewayVehicle,
+        eway_distance: ewayDistance,
+        eway_date: new Date().toISOString()
+      });
+      
+      Alert.alert('Success', 'E-Way Bill successfully generated!');
+      setShowEwayModal(false);
+      fetchSales();
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to generate E-Way bill: ' + e.message);
+    } finally {
+      setGeneratingEway(false);
+    }
+  };
+
+  const renderEinvoice = () => {
+    const b2bSales = sales.filter(s => s.customer_gstin && s.customer_gstin.length >= 15);
+
+    return (
+      <View>
+        <Card style={[styles.card, { marginBottom: 20 }]} elevation={1}>
+          <Card.Content>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <Icon name="qrcode" size={20} color="#10B981" />
+              <Text variant="titleMedium" style={styles.sectionTitle}>E-Invoicing & E-Way Bill Control</Text>
+            </View>
+            <Text style={styles.helperText}>Simulate bulk or single generation of GST e-invoices and transporter e-way bills for B2B supplies.</Text>
+          </Card.Content>
+        </Card>
+
+        <Card style={styles.card} elevation={1}>
+          <Card.Content style={{ padding: 0 }}>
+            <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+              <DataTable style={{ minWidth: 900 }}>
+                <DataTable.Header>
+                  <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.colHead}>Customer GSTIN</Text></DataTable.Title>
+                  <DataTable.Title style={{ flex: 1.2 }}><Text style={styles.colHead}>Invoice No</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHead}>Total Value</Text></DataTable.Title>
+                  <DataTable.Title style={{ flex: 2 }}><Text style={styles.colHead}>IRN Status / E-Way Status</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ flex: 2 }}><Text style={styles.colHead}>Generate Actions</Text></DataTable.Title>
+                </DataTable.Header>
+
+                {b2bSales.length === 0 ? (
+                  <DataTable.Row>
+                    <DataTable.Cell><Text style={{ fontStyle: 'italic', color: '#94A3B8' }}>No B2B sales invoices recorded for this period.</Text></DataTable.Cell>
+                  </DataTable.Row>
+                ) : (
+                  b2bSales.map((sale: any, idx: number) => {
+                    const totalVal = (sale.total_amount || 0);
+                    return (
+                      <DataTable.Row key={sale.id || idx} style={{ minHeight: 60 }}>
+                        <DataTable.Cell style={{ flex: 1.5 }}><Text style={{ fontSize: 12, fontFamily: 'monospace' }}>{sale.customer_gstin}</Text></DataTable.Cell>
+                        <DataTable.Cell style={{ flex: 1.2 }}><Text style={styles.cellText}>{sale.bill_no || '—'}</Text></DataTable.Cell>
+                        <DataTable.Cell numeric style={{ flex: 1 }}><Text style={{ fontWeight: 'bold' }}>{fmt(totalVal)}</Text></DataTable.Cell>
+                        <DataTable.Cell style={{ flex: 2 }}>
+                          <View style={{ gap: 4, paddingVertical: 8 }}>
+                            <Text style={{ fontSize: 11, color: sale.einvoice_irn ? '#10B981' : '#E65100', fontWeight: 'bold' }}>
+                              IRN: {sale.einvoice_irn ? 'ACTIVE' : 'NOT GENERATED'}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: sale.eway_bill_no ? '#10B981' : '#37474F', fontWeight: 'bold' }}>
+                              E-Way: {sale.eway_bill_no ? 'GENERATED' : 'NOT GENERATED'}
+                            </Text>
+                          </View>
+                        </DataTable.Cell>
+                        <DataTable.Cell numeric style={{ flex: 2 }}>
+                          <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'flex-end', paddingVertical: 8 }}>
+                            <Button 
+                              mode="contained" 
+                              compact 
+                              disabled={!!sale.einvoice_irn} 
+                              buttonColor="#10B981"
+                              onPress={() => handleGenerateEinvoice(sale)}
+                              loading={generatingEinvoice && selectedSaleForEinvoice?.id === sale.id}
+                              labelStyle={{ fontSize: 10 }}
+                            >
+                              IRN
+                            </Button>
+                            <Button 
+                              mode="contained" 
+                              compact 
+                              disabled={!sale.einvoice_irn || !!sale.eway_bill_no} 
+                              buttonColor="#6366F1"
+                              onPress={() => {
+                                setSelectedSaleForEinvoice(sale);
+                                setShowEwayModal(true);
+                              }}
+                              labelStyle={{ fontSize: 10 }}
+                            >
+                              E-Way
+                            </Button>
+                          </View>
+                        </DataTable.Cell>
+                      </DataTable.Row>
+                    );
+                  })
+                )}
+              </DataTable>
+            </ScrollView>
+          </Card.Content>
+        </Card>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: appTheme.colors.background }}>
@@ -772,8 +935,110 @@ export default function GSTManagementScreen() {
       {activeTab === 'overview' && renderOverview()}
       {activeTab === 'gstr1' && renderGSTR1()}
       {activeTab === 'gstr3b' && renderGSTR3B()}
+      {activeTab === 'einvoice' && renderEinvoice()}
 
       <View style={{ height: 40 }} />
+
+      {/* Overlays */}
+      <Portal>
+        {/* E-Invoice Viewer Dialog */}
+        <Dialog visible={showEinvoiceModal} onDismiss={() => setShowEinvoiceModal(false)} style={{ backgroundColor: 'white', borderRadius: 16, maxWidth: 600, alignSelf: 'center', width: '90%' }}>
+          <Dialog.Title><Text style={{ fontWeight: 'bold' }}>IRN E-Invoice Statement</Text></Dialog.Title>
+          <Dialog.Content style={{ gap: 14 }}>
+            <View style={{ alignItems: 'center', marginVertical: 12 }}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                <Icon name="check-circle" size={40} color="#10B981" />
+              </View>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: '#10B981' }}>E-Invoice Registered</Text>
+            </View>
+
+            <Divider />
+
+            {selectedSaleForEinvoice && (
+              <View style={{ gap: 6, paddingVertical: 8 }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748B' }}>INVOICE REFERENCE NUMBER (IRN):</Text>
+                <Text style={{ fontSize: 12, fontFamily: 'monospace', color: '#0F172A', backgroundColor: '#F8FAFC', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }} numberOfLines={3}>
+                  {selectedSaleForEinvoice.einvoice_irn}
+                </Text>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                  <Text style={{ fontSize: 12, color: '#64748B' }}>Ack No:</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700' }}>{selectedSaleForEinvoice.einvoice_ack}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 12, color: '#64748B' }}>Date:</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700' }}>{selectedSaleForEinvoice.einvoice_date ? new Date(selectedSaleForEinvoice.einvoice_date).toLocaleDateString('en-IN') : '—'}</Text>
+                </View>
+
+                {/* Mock QR Code representation */}
+                <View style={{ alignItems: 'center', marginTop: 16, padding: 12, backgroundColor: '#F8FAFC', borderRadius: 8, borderWidth: 1, borderColor: '#EEF0F6' }}>
+                  <Icon name="qrcode-scan" size={80} color="#334155" />
+                  <Text style={{ fontSize: 10, color: '#64748B', marginTop: 8 }}>NIC E-Invoice Signed QR Code</Text>
+                </View>
+              </View>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowEinvoiceModal(false)} textColor="#10B981">Close</Button>
+            <Button 
+              mode="contained" 
+              buttonColor="#10B981" 
+              icon="printer" 
+              onPress={() => Alert.alert('Print IRN', 'E-Invoice QR Code and IRN printed on receipt.')}
+              style={{ borderRadius: 8 }}
+            >
+              Print QR Code
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        {/* E-Way Bill Input Dialog */}
+        <Dialog visible={showEwayModal} onDismiss={() => setShowEwayModal(false)} style={{ backgroundColor: 'white', borderRadius: 16, maxWidth: 500, alignSelf: 'center', width: '90%' }}>
+          <Dialog.Title><Text style={{ fontWeight: 'bold' }}>Generate E-Way Bill</Text></Dialog.Title>
+          <Dialog.Content style={{ gap: 16 }}>
+            <Text style={{ color: '#64748B', fontSize: 13 }}>Enter transportation details to register the E-Way bill on the NIC Portal.</Text>
+            
+            <TextInput
+              label="Vehicle Number"
+              value={ewayVehicle}
+              onChangeText={setEwayVehicle}
+              mode="outlined"
+              activeOutlineColor="#6366F1"
+              style={{ backgroundColor: 'white' }}
+              placeholder="e.g. DL-1AA-1234"
+            />
+            <TextInput
+              label="Transporter Name"
+              value={ewayTransporter}
+              onChangeText={setEwayTransporter}
+              mode="outlined"
+              activeOutlineColor="#6366F1"
+              style={{ backgroundColor: 'white' }}
+            />
+            <TextInput
+              label="Distance (in KM)"
+              value={ewayDistance}
+              onChangeText={setEwayDistance}
+              keyboardType="numeric"
+              mode="outlined"
+              activeOutlineColor="#6366F1"
+              style={{ backgroundColor: 'white' }}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowEwayModal(false)} textColor="#64748B">Cancel</Button>
+            <Button 
+              mode="contained" 
+              onPress={handleGenerateEway} 
+              loading={generatingEway} 
+              buttonColor="#6366F1"
+              style={{ borderRadius: 8 }}
+            >
+              Generate Bill
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }
@@ -794,11 +1059,15 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: 10,
     borderWidth: 1.5,
+    borderColor: '#5E35B1',
     backgroundColor: 'transparent',
   },
-  tabBtnActive: { },
-  tabText: { fontSize: 14, fontWeight: '600', },
-  tabTextActive: { },
+  tabBtnActive: {
+    backgroundColor: '#5E35B1',
+    borderColor: '#5E35B1',
+  },
+  tabText: { fontSize: 14, fontWeight: '600', color: '#5E35B1' },
+  tabTextActive: { color: '#FFF' },
 
   // Layout
   contentRow: { gap: 24, flexWrap: 'wrap' },
