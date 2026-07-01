@@ -19,18 +19,7 @@ export default function AdminLoginScreen() {
     setLoading(true);
     
     // Quick Demo Bypass
-    if ((email === 'aryajain1906@gmail.com' && (password === 'aryajain' || password === '@Aryajain19')) || email.includes('admin') || email === '0000000000') {
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('adminBypass', 'true');
-        }
-        setLoading(false);
-        router.replace('/' as any);
-      }, 400);
-      return;
-    }
-
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || email === '0000000000') {
       setTimeout(() => {
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('adminBypass', 'true');
@@ -43,6 +32,9 @@ export default function AdminLoginScreen() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('adminBypass');
+      }
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userSnap = await getDoc(userDocRef);
       
