@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     borderWidth: 1.5,
     backgroundColor: 'transparent',
   },
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
     },
 
   // Cards
-  card: { backgroundColor: 'white', borderRadius: 12 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
   topRow: { gap: 16 },
   openingCard: { flex: 1 },
   closingCard: { flex: 1 },
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   balanceIcon: {
     width: 42,
     height: 42,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
   balancePeriod: { fontSize: 11, },
 
   // Date inputs
-  dateInput: { flex: 1, backgroundColor: 'white' },
+  dateInput: { flex: 1, backgroundColor: DS.colors.cardBg },
 
   // Summary cards
   summaryRow: { gap: 16, marginTop: 20 },
@@ -424,8 +425,8 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 18,
     paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: 'white',
+    borderRadius: DS.radius.md,
+    backgroundColor: DS.colors.cardBg,
     borderLeftWidth: 4,
   },
   summaryLabel: { fontSize: 12, fontWeight: '500' },
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
   voucherBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: DS.radius.sm,
   },
 
   footerNote: {

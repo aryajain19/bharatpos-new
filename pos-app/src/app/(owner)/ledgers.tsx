@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -536,33 +537,33 @@ const styles = StyleSheet.create({
   header: { paddingVertical: 24, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 12 },
   title: { fontWeight: 'bold', },
   subtitle: { fontSize: 13, marginTop: 2 },
-  addBtn: { borderRadius: 10, paddingHorizontal: 8 },
+  addBtn: { borderRadius: DS.radius.md, paddingHorizontal: 8 },
 
-  card: { backgroundColor: 'white', borderRadius: 12 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 14, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: 'white', borderRadius: 12, borderLeftWidth: 4 },
+  statCard: { flex: 1, backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md, borderLeftWidth: 4 },
   statContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  statIcon: { width: 44, height: 44, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  statIcon: { width: 44, height: 44, borderRadius: DS.radius.md, justifyContent: 'center', alignItems: 'center' },
   statLabel: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
   statValue: { fontSize: 18, fontWeight: '800', marginTop: 2 },
 
   // Form
   formRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'center' },
-  formInput: { flex: 1, minWidth: 180, backgroundColor: 'white' },
-  typeToggle: { flexDirection: 'row', borderRadius: 8, overflow: 'hidden', borderWidth: 1.5, },
+  formInput: { flex: 1, minWidth: 180, backgroundColor: DS.colors.cardBg },
+  typeToggle: { flexDirection: 'row', borderRadius: DS.radius.sm, overflow: 'hidden', borderWidth: 1.5, },
   typeBtn: { paddingHorizontal: 18, paddingVertical: 10 },
   typeBtnText: { fontWeight: '700', fontSize: 13, },
   typeBtnActiveDr: { },
   typeBtnActiveCr: { },
-  saveBtn: { borderRadius: 8, paddingHorizontal: 8 },
+  saveBtn: { borderRadius: DS.radius.sm, paddingHorizontal: 8 },
 
   // Group card
-  groupCard: { backgroundColor: 'white', borderRadius: 12, marginBottom: 16, overflow: 'hidden' },
+  groupCard: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md, marginBottom: 16, overflow: 'hidden' },
   groupHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 18 },
   groupHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  groupIconWrap: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  groupIconWrap: { width: 44, height: 44, borderRadius: DS.radius.md, justifyContent: 'center', alignItems: 'center' },
   groupName: { fontSize: 17, fontWeight: '800' },
   groupCount: { fontSize: 12, marginTop: 2 },
   groupHeaderRight: { flexDirection: 'row', alignItems: 'center' },
@@ -577,7 +578,7 @@ const styles = StyleSheet.create({
   ledgerName: { fontSize: 14, fontWeight: '500' },
   ledgerBalanceWrap: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   ledgerBalance: { fontSize: 14, fontWeight: '700' },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: DS.radius.sm },
   typeBadgeText: { fontSize: 11, fontWeight: '800' },
 
   // Empty

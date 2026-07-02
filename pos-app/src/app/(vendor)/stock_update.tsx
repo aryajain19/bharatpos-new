@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import { Text, Button, useTheme, Surface, TextInput } from 'react-native-paper';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
@@ -131,13 +132,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, },
   scroll: { padding: 20, paddingBottom: 100 },
   label: { fontSize: 13, color: 'gray', marginBottom: 4, marginTop: 12 },
-  input: { backgroundColor: 'white', marginBottom: 8, height: 45 },
+  input: { backgroundColor: DS.colors.cardBg, marginBottom: 8, height: 45 },
   productCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.sm,
     marginBottom: 20,
   },
   productImage: { width: 40, height: 40, marginRight: 16, borderRadius: 4 },
@@ -149,5 +150,5 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     },
-  saveBtn: { borderRadius: 8 },
+  saveBtn: { borderRadius: DS.radius.sm },
 });

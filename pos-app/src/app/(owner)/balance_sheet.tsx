@@ -1,8 +1,9 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, useWindowDimensions, ActivityIndicator, Platform, Alert } from 'react-native';
 import { Text, useTheme, Card, Button, Divider, Surface, TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -251,7 +252,19 @@ export default function BalanceSheetScreen() {
               outlineStyle={{ borderRadius: 4 }}
             />
           </View>
-          <Button mode="contained" onPress={() => {}} style={styles.printBtn} labelStyle={{ color: 'white' }} compact>
+           <Button 
+            mode="contained" 
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                window.print();
+              } else {
+                Alert.alert("Print", "Statement printing is available on the Web interface.");
+              }
+            }} 
+            style={styles.printBtn} 
+            labelStyle={{ color: 'white' }} 
+            compact
+          >
             Print Statement
           </Button>
         </View>
@@ -309,8 +322,8 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 16 },
   fieldLabel: { fontSize: 11, fontWeight: '600', marginBottom: 4 },
   printBtn: { borderRadius: 4, marginBottom: 2 },
-  balanceStatus: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
-  sheetCard: { backgroundColor: '#FFFFFF', padding: 32, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2, minHeight: 600, marginBottom: 40 },
+  balanceStatus: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: DS.radius.sm, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  sheetCard: { backgroundColor: '#FFFFFF', padding: 32, borderRadius: DS.radius.sm, borderWidth: 0, ...DS.shadow.sm, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2, minHeight: 600, marginBottom: 40 },
   sheetHeader: { alignItems: 'center', marginBottom: 32 },
   sheetTitle: { fontSize: 18, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, color: '#1E293B' },
   sheetSubtitle: { fontSize: 16, marginTop: 4, color: '#1E293B' },

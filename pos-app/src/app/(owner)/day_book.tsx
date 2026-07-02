@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
   title: { fontWeight: 'bold', },
   subtitle: { fontSize: 13, marginTop: 2 },
 
-  card: { backgroundColor: 'white', borderRadius: 12 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
 
   // Date row
   dateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' },
@@ -353,16 +354,16 @@ const styles = StyleSheet.create({
 
   // Summary cards
   summaryRow: { flexDirection: 'row', gap: 16 },
-  summaryCard: { flex: 1, backgroundColor: 'white', borderRadius: 12 },
+  summaryCard: { flex: 1, backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
   summaryContent: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  summaryIcon: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  summaryIcon: { width: 48, height: 48, borderRadius: DS.radius.md, justifyContent: 'center', alignItems: 'center' },
   summaryLabel: { fontSize: 12, marginBottom: 4 },
   summaryAmount: { fontSize: 20, fontWeight: '800' },
 
   // Table
   tableHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sectionTitle: { fontWeight: 'bold', },
-  txCount: { fontSize: 13, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  txCount: { fontSize: 13, paddingHorizontal: 10, paddingVertical: 4, borderRadius: DS.radius.md },
   colHeader: { fontWeight: 'bold', fontSize: 12, textTransform: 'uppercase' },
   dtHeader: { borderBottomWidth: 2, borderBottomColor: '#E8E8F0' },
   dtRow: { borderBottomWidth: 1, borderBottomColor: '#F0F0F5' },
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
   cellRunning: { fontSize: 13, fontWeight: '700' },
 
   // Badge
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: DS.radius.md },
   badgeText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
 
   // Totals

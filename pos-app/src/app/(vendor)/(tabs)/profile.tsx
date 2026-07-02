@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { DS } from '../../../constants/designTokens';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert, Switch, Platform } from 'react-native';
 import { Text, Surface, Divider, useTheme, TextInput } from 'react-native-paper';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'white',
+    backgroundColor: DS.colors.cardBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
     right: 4,
     width: 16,
     height: 16,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     borderWidth: 3,
     },
   userName: { color: 'white', fontSize: 22, fontWeight: 'bold', marginBottom: 3 },
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
 
   // --- Store Card ---
   storeCard: {
-    backgroundColor: 'white',
+    backgroundColor: DS.colors.cardBg,
     borderRadius: 18,
     padding: 20,
     marginTop: 16,
@@ -421,8 +422,8 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 10, marginTop: 20 },
   statCardWrapper: { flex: 1 },
   statCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
     paddingVertical: 18,
     paddingHorizontal: 8,
     alignItems: 'center',
@@ -431,13 +432,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
   },
-  statIconBg: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  statIconBg: { width: 40, height: 40, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   statValue: { fontSize: 18, fontWeight: 'bold', marginBottom: 2 },
   statLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3 },
 
   // --- Settings ---
   settingsCard: {
-    backgroundColor: 'white',
+    backgroundColor: DS.colors.cardBg,
     borderRadius: 18,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
   settingsIconBg: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -470,7 +471,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: DS.radius.lg,
     marginTop: 28,
     gap: 8,
     shadowColor: '#F44336',

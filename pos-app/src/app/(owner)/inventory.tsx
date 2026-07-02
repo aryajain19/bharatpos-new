@@ -7,6 +7,7 @@ import { db, isFirebaseConfigured } from '../../lib/firebase';
 import { collection, getDocs, query, orderBy, where, doc, getDoc, setDoc, updateDoc } from '../../lib/firestore_adapter';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from 'expo-router';
+import { DS } from '../../constants/designTokens';
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface Product {
@@ -516,44 +517,44 @@ const MetricCard = ({ title, value, icon, color, bgColor }: any) => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24 },
-  header: { paddingVertical: 24 },
-  title: { fontWeight: '800', fontSize: 22 },
+  container: { flex: 1, paddingHorizontal: DS.space.lg, backgroundColor: DS.colors.surfaceBg },
+  header: { paddingVertical: DS.space.lg },
+  title: { fontWeight: '800', fontSize: 22, color: DS.colors.text },
   metricsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   metricCard: {
     flex: 1,
     minWidth: 160,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#EEF0F6'
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
+    borderWidth: 0,
+    ...DS.shadow.sm
   },
   metricCardContent: { padding: 16, minHeight: 120, justifyContent: 'space-between' },
   metricCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   iconWrapper: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  metricValue: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
-  metricLabel: { fontSize: 13, marginTop: 4, fontWeight: '600', color: '#64748B' },
-  card: { backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#EEF0F6', marginBottom: 40 },
-  colHeader: { fontWeight: 'bold', color: '#475569' },
+  metricValue: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5, color: DS.colors.text },
+  metricLabel: { fontSize: 13, marginTop: 4, fontWeight: '600', color: DS.colors.textSecondary },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg, borderWidth: 0, ...DS.shadow.sm, marginBottom: 40 },
+  colHeader: { fontWeight: 'bold', color: DS.colors.textSecondary },
   transferProductCard: {
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
+    borderColor: DS.colors.border,
+    borderRadius: DS.radius.md,
     width: 140,
-    backgroundColor: 'white'
+    backgroundColor: DS.colors.cardBg
   },
   locSelectItem: {
     padding: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderRadius: 6,
+    borderRadius: DS.radius.sm,
     marginVertical: 2
   }
 });

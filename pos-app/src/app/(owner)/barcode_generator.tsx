@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { Text, Card, Button, useTheme, TextInput, DataTable, IconButton, Checkbox, Portal, Dialog, Searchbar, HelperText, SegmentedButtons } from 'react-native-paper';
@@ -929,7 +930,7 @@ export default function BarcodeGeneratorScreen() {
     }
   };
 
-  if (role !== 'admin' && permissions && !permissions.barcode_generation) {
+  if (role !== 'admin' && role !== 'owner' && permissions && !permissions.barcode_generation) {
     return (
       <View style={styles.accessDenied}>
         <Icon name="lock" size={64} color="#666" />
@@ -1536,15 +1537,15 @@ const styles = StyleSheet.create({
   contentRow: { flexDirection: 'row', gap: 20, flexWrap: 'wrap' },
   leftPane: { flex: 1, minWidth: 340 },
   rightPane: { flex: 1.1, minWidth: 360 },
-  card: { backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#EEF0F6' },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg, borderWidth: 0, ...DS.shadow.sm },
   sectionHeading: { fontSize: 15, fontWeight: '700', color: '#1E293B' },
   labelTitle: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', color: '#64748B', marginBottom: 6, letterSpacing: 0.5 },
-  input: { marginBottom: 12, backgroundColor: 'white', height: 45 },
+  input: { marginBottom: 12, backgroundColor: DS.colors.cardBg, height: 45 },
   colHeader: { fontWeight: 'bold', fontSize: 11, color: '#64748B' },
   
   // Templates Grid
   templatesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10, marginBottom: 4 },
-  templateChip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#F8FAFC' },
+  templateChip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: DS.radius.sm, borderWidth: 0, ...DS.shadow.sm, backgroundColor: DS.colors.surfaceBg },
   templateChipSelected: { borderColor: '#2563EB', backgroundColor: '#EFF6FF' },
   templateChipText: { fontSize: 12, fontWeight: '600', color: '#475569' },
   templateChipTextSelected: { color: '#2563EB' },
@@ -1555,9 +1556,9 @@ const styles = StyleSheet.create({
   checkboxLabel: { fontSize: 12, fontWeight: '500', color: '#475569', marginLeft: 4 },
 
   // Segmented Buttons
-  segmentedButtonsContainer: { flexDirection: 'row', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 3, backgroundColor: '#F8FAFC', marginBottom: 16 },
-  segmentedTab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 6 },
-  segmentedTabActive: { backgroundColor: 'white', ...Platform.select({ web: { boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }, default: { elevation: 1 } }) },
+  segmentedButtonsContainer: { flexDirection: 'row', borderWidth: 0, ...DS.shadow.sm, borderRadius: DS.radius.sm, padding: 3, backgroundColor: DS.colors.surfaceBg, marginBottom: 16 },
+  segmentedTab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: DS.radius.sm },
+  segmentedTabActive: { backgroundColor: DS.colors.cardBg, ...Platform.select({ web: { boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }, default: { elevation: 1 } }) },
   segmentedTabText: { fontSize: 12, fontWeight: '600', color: '#64748B' },
   segmentedTabTextActive: { color: '#2563EB', fontWeight: '700' },
 
@@ -1568,18 +1569,17 @@ const styles = StyleSheet.create({
   dropdownContainerSelect: { marginVertical: 4 },
   dropdownItemSelect: { padding: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', borderRadius: 4 },
   dropdownItemSelectActive: { backgroundColor: '#EFF6FF' },
-  variantSizeBox: { width: 34, height: 34, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center' },
+  variantSizeBox: { width: 34, height: 34, borderRadius: DS.radius.sm, borderWidth: 0, ...DS.shadow.sm, backgroundColor: DS.colors.surfaceBg, justifyContent: 'center', alignItems: 'center' },
   variantSizeBoxActive: { backgroundColor: '#2563EB', borderColor: '#2563EB' },
 
   // A4 Preview
   previewHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 12 },
-  noPreviewBox: { width: '100%', height: 620, backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#CBD5E1', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  noPreviewBox: { width: '100%', height: 620, backgroundColor: DS.colors.surfaceBg, borderRadius: DS.radius.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: '#CBD5E1', justifyContent: 'center', alignItems: 'center', padding: 24 },
   previewA4Page: {
     width: 440,
     height: 620,
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: DS.colors.cardBg,
+    borderWidth: 0, ...DS.shadow.sm,
     padding: 12,
     alignSelf: 'center',
     justifyContent: 'space-between',
@@ -1596,7 +1596,7 @@ const styles = StyleSheet.create({
   previewGrid: { flex: 1, justifyContent: 'space-between', gap: 4 },
   previewRow: { flexDirection: 'row', flex: 1, gap: 4 },
   previewCol: { flex: 1 },
-  previewLabelEmpty: { flex: 1, borderStyle: 'dashed', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 4 },
+  previewLabelEmpty: { flex: 1, borderStyle: 'dashed', borderWidth: 0, ...DS.shadow.sm, borderRadius: 4 },
   previewLabel: {
     flex: 1,
     borderWidth: 1,

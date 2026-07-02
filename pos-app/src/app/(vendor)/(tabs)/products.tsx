@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../../providers/ThemeProvider';
+import { DS } from '../../../constants/designTokens';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Animated, RefreshControl, Platform, ActivityIndicator } from 'react-native';
 import { Text, Surface, useTheme, TextInput, Card, Button } from 'react-native-paper';
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, },
 
   // --- Header ---
-  header: { paddingHorizontal: 20, paddingTop: 52, paddingBottom: 12, backgroundColor: 'white', borderBottomLeftRadius: 24, borderBottomRightRadius: 24, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
+  header: { paddingHorizontal: 20, paddingTop: 52, paddingBottom: 12, backgroundColor: DS.colors.cardBg, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 2 },
   headerSubtitle: { fontSize: 13, marginBottom: 16 },
 
@@ -376,8 +377,8 @@ const styles = StyleSheet.create({
 
   // --- Product Card ---
   productCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
     marginBottom: 12,
     shadowColor: '#10B981',
     shadowOpacity: 0.04,
@@ -407,7 +408,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#10B981',
@@ -416,9 +417,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 3,
   },
-  qtyController: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, overflow: 'hidden' },
+  qtyController: { flexDirection: 'row', alignItems: 'center', borderRadius: DS.radius.md, overflow: 'hidden' },
   qtyBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  qtyBtnPlus: { borderRadius: 8, margin: 2 },
+  qtyBtnPlus: { borderRadius: DS.radius.sm, margin: 2 },
   qtyText: { width: 28, textAlign: 'center', fontWeight: 'bold', fontSize: 14, },
 
   // --- Empty State ---
@@ -445,10 +446,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   cartFloatLeft: { flexDirection: 'row', alignItems: 'center' },
-  cartBadge: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  cartBadge: { width: 32, height: 32, borderRadius: DS.radius.md, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   cartBadgeText: { color: 'white', fontWeight: 'bold', fontSize: 14 },
   cartItemsText: { color: 'rgba(255,255,255,0.8)', fontSize: 11 },
   cartTotalText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  cartViewBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, gap: 4 },
+  cartViewBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: DS.radius.md, gap: 4 },
   cartViewBtnText: { color: 'white', fontWeight: '600', fontSize: 13 },
 });

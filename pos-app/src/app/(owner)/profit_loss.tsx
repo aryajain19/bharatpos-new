@@ -1,8 +1,9 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, useWindowDimensions, Platform, ActivityIndicator, Alert } from 'react-native';
 import { Text, useTheme, Card, Button, Divider, Surface, TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -222,10 +223,28 @@ export default function ProfitLossScreen() {
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end', marginTop: isDesktop ? 18 : 12 }}>
-              <Button mode="contained" icon="refresh" onPress={() => {}} style={{ borderRadius: 8, backgroundColor: appTheme.colors.surface }} compact>
+              <Button 
+                mode="contained" 
+                icon="refresh" 
+                onPress={() => fetchTransactions()} 
+                style={{ borderRadius: 8 }} 
+                compact
+              >
                 Regenerate
               </Button>
-              <Button mode="outlined" icon="file-pdf-box" onPress={() => {}} style={{ borderRadius: 8, borderColor: appTheme.colors.outline }} compact>
+              <Button 
+                mode="outlined" 
+                icon="file-pdf-box" 
+                onPress={() => {
+                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    window.print();
+                  } else {
+                    Alert.alert("Export", "PDF Export is available on the Web interface.");
+                  }
+                }} 
+                style={{ borderRadius: 8 }} 
+                compact
+              >
                 Export PDF
               </Button>
             </View>
@@ -393,13 +412,13 @@ const styles = StyleSheet.create({
   header: { paddingTop: 24, paddingBottom: 16 },
   title: { fontWeight: 'bold', },
   subtitle: { fontSize: 13, marginTop: 2 },
-  card: { backgroundColor: 'white', borderRadius: 12 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
   fieldLabel: { fontSize: 11, fontWeight: 'bold', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
   dateRow: { gap: 16, alignItems: 'flex-start' },
   summaryRow: { gap: 12, marginTop: 16 },
   columnsRow: { gap: 16, marginTop: 16 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  sectionIcon: { borderRadius: 8, padding: 6 },
+  sectionIcon: { borderRadius: DS.radius.sm, padding: 6 },
   groupTitle: {
     fontSize: 12,
     fontWeight: 'bold',
@@ -414,7 +433,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 8,
-    borderRadius: 6,
+    borderRadius: DS.radius.sm,
   },
   lineLabel: { fontSize: 14, },
   lineAmount: { fontSize: 14, fontWeight: '600' },
@@ -424,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
   },
   netProfitRow: {
     flexDirection: 'row',
@@ -432,7 +451,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     marginVertical: 8,
   },
 });

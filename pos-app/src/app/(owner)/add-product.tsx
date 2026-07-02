@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
@@ -118,8 +119,8 @@ const styles = StyleSheet.create({
   },
   surface: {
     padding: 20,
-    borderRadius: 8,
-    backgroundColor: 'white',
+    borderRadius: DS.radius.sm,
+    backgroundColor: DS.colors.cardBg,
   },
   input: {
     marginBottom: 12,

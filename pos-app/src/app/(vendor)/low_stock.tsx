@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Divider, TextInput, Card, Button } from 'react-native-paper';
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14, 
     paddingHorizontal: 16 
   },
-  productImage: { width: 40, height: 40, borderRadius: 8, marginRight: 16 },
+  productImage: { width: 40, height: 40, borderRadius: DS.radius.sm, marginRight: 16 },
   productInfo: { flex: 1 },
   productName: { fontWeight: 'bold', fontSize: 14, },
   stockRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },

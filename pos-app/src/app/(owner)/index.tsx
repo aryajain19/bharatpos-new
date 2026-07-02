@@ -9,6 +9,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { useAuth } from '../../providers/AuthProvider';
 import { router } from 'expo-router';
+import { DS } from '../../constants/designTokens';
 
 // ── Animated Counter Hook ──────────────────────────────────────────────
 function useAnimatedCounter(target: number, duration: number = 1200) {
@@ -746,69 +747,70 @@ const GradientMetricCard = ({ config }: { config: MetricConfig }) => {
 
 // ── Styles ─────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, },
-  content: { padding: 24 },
+  container: { flex: 1, backgroundColor: DS.colors.surfaceBg },
+  content: { padding: DS.space.lg },
 
   // Greeting
-  greetingContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
-  greetingText: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
-  greetingSubtext: { fontSize: 14, marginTop: 4 },
-  greetingBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  greetingBadgeText: { marginLeft: 6, fontSize: 13, fontWeight: '600', },
+  greetingContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: DS.space.xl },
+  greetingText: { fontSize: DS.font.h1.fontSize, fontWeight: DS.font.h1.fontWeight, letterSpacing: DS.font.h1.letterSpacing, color: DS.colors.text },
+  greetingSubtext: { fontSize: DS.font.body.fontSize, marginTop: DS.space.xs, color: DS.colors.textSecondary },
+  greetingBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: DS.radius.full, backgroundColor: 'rgba(30, 58, 138, 0.08)' },
+  greetingBadgeText: { marginLeft: 6, fontSize: DS.font.caption.fontSize, fontWeight: DS.font.caption.fontWeight, color: DS.colors.brand },
 
   // Metrics Grid
-  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 24 },
+  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: DS.space.md, marginBottom: DS.space.lg },
   metricCardWrapper: { flexGrow: 1, flexBasis: '22%', minWidth: 220, maxWidth: 320 },
-  metricCard: { borderRadius: 16, borderWidth: 1, },
+  metricCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
   metricCardContent: { padding: 20, minHeight: 130, justifyContent: 'space-between' },
   metricCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  metricIconCircle: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  metricValue: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
-  metricTitle: { fontSize: 13, marginTop: 4, fontWeight: '600' },
+  metricIconCircle: { width: 42, height: 42, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center' },
+  metricValue: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5, color: DS.colors.text },
+  metricTitle: { fontSize: DS.font.caption.fontSize, marginTop: 4, fontWeight: '600', color: DS.colors.textSecondary },
 
   // Bottom Row
   bottomRow: { flexDirection: 'row', gap: 20, flexWrap: 'wrap' },
   rightColumn: { flex: 1, minWidth: 320, gap: 20 },
 
   // Chart
-  chartCard: { flex: 2, minWidth: 500, borderRadius: 16, borderWidth: 1, },
+  chartCard: { flex: 2, minWidth: 500, borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  chartTitle: { fontSize: 17, fontWeight: '700', },
-  chartSubtitle: { fontSize: 12, marginTop: 2 },
+  chartTitle: { fontSize: DS.font.h3.fontSize, fontWeight: DS.font.h3.fontWeight, color: DS.colors.text },
+  chartSubtitle: { fontSize: DS.font.caption.fontSize, marginTop: 2, color: DS.colors.textSecondary },
   chartLegend: { flexDirection: 'row', alignItems: 'center' },
-  legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 6 },
-  legendText: { fontSize: 12, },
+  legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 6, backgroundColor: DS.colors.brand },
+  legendText: { fontSize: DS.font.caption.fontSize, color: DS.colors.textSecondary },
 
   // Section Headers
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', },
+  sectionTitle: { fontSize: DS.font.h3.fontSize, fontWeight: DS.font.h3.fontWeight, color: DS.colors.text },
 
   // Activity Feed
-  activityCard: { borderRadius: 16, borderWidth: 1, },
+  activityCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
   activityItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 },
-  activityIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12, marginTop: 2 },
+  activityIcon: { width: 34, height: 34, borderRadius: DS.radius.sm, alignItems: 'center', justifyContent: 'center', marginRight: 12, marginTop: 2 },
   activityContent: { flex: 1 },
-  activityText: { fontSize: 13, lineHeight: 18 },
-  activityTime: { fontSize: 11, marginTop: 3 },
+  activityText: { fontSize: 13, lineHeight: 18, color: DS.colors.text },
+  activityTime: { fontSize: DS.font.caption.fontSize, marginTop: 3, color: DS.colors.textMuted },
+
   // Top Selling
-  topSellingCard: { borderRadius: 16, borderWidth: 1, },
-  tableHeader: { flexDirection: 'row', alignItems: 'center', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#F0F0F0', marginBottom: 4 },
-  tableHeaderText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  tableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#FAFAFA' },
-  rankBadge: { width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  rankText: { fontSize: 12, fontWeight: '700', },
-  tableCell: { fontSize: 13, },
+  topSellingCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
+  tableHeader: { flexDirection: 'row', alignItems: 'center', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: DS.colors.border, marginBottom: 4 },
+  tableHeaderText: { fontSize: DS.font.label.fontSize, fontWeight: DS.font.label.fontWeight, textTransform: 'uppercase', letterSpacing: DS.font.label.letterSpacing, color: DS.colors.textSecondary },
+  tableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: DS.colors.borderLight },
+  rankBadge: { width: 26, height: 26, borderRadius: DS.radius.sm, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  rankText: { fontSize: DS.font.caption.fontSize, fontWeight: '700' },
+  tableCell: { fontSize: 13, color: DS.colors.text },
 
   // Shop Mode Card styles
-  modeCard: { borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 24 },
+  modeCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, padding: 20, marginBottom: 24, ...DS.shadow.sm },
   modeCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  modeCardTitle: { fontSize: 16, fontWeight: '800', },
-  modeCardSubtitle: { fontSize: 11, fontWeight: '600', marginTop: 2 },
-  modeCardDesc: { fontSize: 13, lineHeight: 18, marginBottom: 16 },
+  modeCardTitle: { fontSize: 16, fontWeight: '800', color: DS.colors.text },
+  modeCardSubtitle: { fontSize: DS.font.label.fontSize, fontWeight: '600', marginTop: 2, color: DS.colors.textSecondary },
+  modeCardDesc: { fontSize: 13, lineHeight: 18, marginBottom: 16, color: DS.colors.textSecondary },
   modeActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  modeActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, },
-  modeActionText: { fontSize: 11, fontWeight: '700', },
-  syncRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#0284C7' },
-  syncText: { fontSize: 12, fontWeight: '700' },
-  modeIconCircle: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  modeActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: DS.radius.sm, borderWidth: 1, borderColor: DS.colors.border, backgroundColor: DS.colors.cardBg },
+  modeActionText: { fontSize: DS.font.label.fontSize, fontWeight: '700', color: DS.colors.textSecondary },
+  syncRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: DS.radius.md, borderLeftWidth: 4, borderLeftColor: DS.colors.brand, backgroundColor: DS.colors.brandLight },
+  syncText: { fontSize: 12, fontWeight: '700', color: DS.colors.brand },
+  modeIconCircle: { width: 42, height: 42, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center' },
 });

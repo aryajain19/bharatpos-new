@@ -4,11 +4,12 @@ import { useAuth } from '../../providers/AuthProvider';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Card, DataTable, Button, IconButton, TextInput } from 'react-native-paper';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
-import { collection, query, where, orderBy, getDocs, addDoc } from '../../lib/firestore_adapter';
+import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, deleteDoc } from '../../lib/firestore_adapter';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
+import { DS } from '../../constants/designTokens';
 
 export default function ProductsManagementScreen() {
   const { tenantId, loading: authLoading } = useAuth();
@@ -24,6 +25,17 @@ export default function ProductsManagementScreen() {
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [fileLoadingMsg, setFileLoadingMsg] = useState('');
   const [showDriveModal, setShowDriveModal] = useState(false);
+
+  // Editing state
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editBarcode, setEditBarcode] = useState('');
+  const [editMrp, setEditMrp] = useState('');
+  const [editSellingPrice, setEditSellingPrice] = useState('');
+  const [editStockQty, setEditStockQty] = useState('');
+  const [editGstPct, setEditGstPct] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Preloaded Templates for testing
   const INVOICE_TEMPLATES = [
@@ -318,6 +330,67 @@ export default function ProductsManagementScreen() {
     }
   };
 
+  const handleDeleteProduct = (product: any) => {
+    Alert.alert(
+      "Confirm Delete",
+      `Are you sure you want to delete ${product.name}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'products', product.id));
+              Alert.alert("Success", "Product deleted successfully");
+              fetchProducts();
+            } catch (err: any) {
+              Alert.alert("Error", err.message || "Failed to delete product");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const openEditModal = (product: any) => {
+    setEditingProduct(product);
+    setEditName(product.name || '');
+    setEditCategory(product.category || '');
+    setEditBarcode(product.barcode || '');
+    setEditMrp(String(product.mrp || ''));
+    setEditSellingPrice(String(product.selling_price || ''));
+    setEditStockQty(String(product.stock_qty || '0'));
+    setEditGstPct(String(product.gst_pct || '0'));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingProduct) return;
+    if (!editName.trim() || !editSellingPrice.trim()) {
+      Alert.alert("Validation Error", "Product Name and Selling Price are required");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      await updateDoc(doc(db, 'products', editingProduct.id), {
+        name: editName,
+        category: editCategory,
+        barcode: editBarcode,
+        mrp: parseFloat(editMrp) || parseFloat(editSellingPrice),
+        selling_price: parseFloat(editSellingPrice),
+        stock_qty: parseInt(editStockQty) || 0,
+        gst_pct: parseFloat(editGstPct) || 0
+      });
+      Alert.alert("Success", "Product updated successfully");
+      setEditingProduct(null);
+      fetchProducts();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to update product");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -397,16 +470,16 @@ export default function ProductsManagementScreen() {
                         </Text>
                       </View>
                     </DataTable.Cell>
-                    <DataTable.Cell numeric style={{ flex: 1 }}>
-                      <View style={styles.actionIcons}>
-                        <TouchableOpacity style={{ marginRight: 12 }}>
-                          <Icon name="pencil-outline" size={18} color="#2196F3" />
-                        </TouchableOpacity>
-                        <TouchableOpacity>
-                          <Icon name="trash-can-outline" size={18} color="#F44336" />
-                        </TouchableOpacity>
-                      </View>
-                    </DataTable.Cell>
+                     <DataTable.Cell numeric style={{ flex: 1 }}>
+                       <View style={styles.actionIcons}>
+                         <TouchableOpacity style={{ marginRight: 12 }} onPress={() => openEditModal(item)}>
+                           <Icon name="pencil-outline" size={18} color="#2196F3" />
+                         </TouchableOpacity>
+                         <TouchableOpacity onPress={() => handleDeleteProduct(item)}>
+                           <Icon name="trash-can-outline" size={18} color="#F44336" />
+                         </TouchableOpacity>
+                       </View>
+                     </DataTable.Cell>
                   </DataTable.Row>
                 );
               })}
@@ -621,40 +694,132 @@ export default function ProductsManagementScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Edit Product Modal */}
+      <Modal
+        visible={editingProduct !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setEditingProduct(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { maxWidth: 500 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Product</Text>
+              <IconButton icon="close" size={20} onPress={() => setEditingProduct(null)} />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 20 }}>
+              <TextInput
+                label="Product Name"
+                value={editName}
+                onChangeText={setEditName}
+                mode="outlined"
+                style={{ marginBottom: 12 }}
+              />
+              <TextInput
+                label="Category"
+                value={editCategory}
+                onChangeText={setEditCategory}
+                mode="outlined"
+                style={{ marginBottom: 12 }}
+              />
+              <TextInput
+                label="Barcode"
+                value={editBarcode}
+                onChangeText={setEditBarcode}
+                mode="outlined"
+                style={{ marginBottom: 12 }}
+              />
+              <TextInput
+                label="MRP"
+                value={editMrp}
+                onChangeText={setEditMrp}
+                keyboardType="numeric"
+                mode="outlined"
+                style={{ marginBottom: 12 }}
+              />
+              <TextInput
+                label="Selling Price"
+                value={editSellingPrice}
+                onChangeText={setEditSellingPrice}
+                keyboardType="numeric"
+                mode="outlined"
+                style={{ marginBottom: 12 }}
+              />
+              <TextInput
+                label="Stock Quantity"
+                value={editStockQty}
+                onChangeText={setEditStockQty}
+                keyboardType="numeric"
+                mode="outlined"
+                style={{ marginBottom: 12 }}
+              />
+              <TextInput
+                label="GST Percentage"
+                value={editGstPct}
+                onChangeText={setEditGstPct}
+                keyboardType="numeric"
+                mode="outlined"
+                style={{ marginBottom: 20 }}
+              />
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <Button
+                mode="outlined"
+                onPress={() => setEditingProduct(null)}
+                style={[styles.modalBtn, { marginRight: 8 }]}
+              >
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleSaveEdit}
+                loading={savingEdit}
+                disabled={savingEdit}
+                style={styles.modalBtn}
+              >
+                Save Changes
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  title: { fontSize: 16, fontWeight: 'bold' },
-  addBtn: { borderRadius: 6 },
-  card: { backgroundColor: 'white', borderRadius: 12, overflow: 'hidden', borderWidth: 1 },
-  tableHeader: { borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
-  colHeader: { fontWeight: 'bold', color: 'gray', fontSize: 12 },
-  tableRow: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
-  cellMainText: { fontWeight: '600', fontSize: 13 },
-  cellSubText: { color: 'gray', fontSize: 13 },
+  container: { flex: 1, padding: DS.space.lg, backgroundColor: DS.colors.surfaceBg },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: DS.space.md },
+  title: { fontSize: 18, fontWeight: 'bold', color: DS.colors.text },
+  addBtn: { borderRadius: DS.radius.sm },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg, overflow: 'hidden', borderWidth: 0, ...DS.shadow.sm },
+  tableHeader: { borderBottomWidth: 1, borderBottomColor: DS.colors.border },
+  colHeader: { fontWeight: 'bold', color: DS.colors.textSecondary, fontSize: 12 },
+  tableRow: { borderBottomWidth: 1, borderBottomColor: DS.colors.borderLight },
+  cellMainText: { fontWeight: '600', fontSize: 13, color: DS.colors.text },
+  cellSubText: { color: DS.colors.textSecondary, fontSize: 13 },
   statusContainer: { flexDirection: 'row', alignItems: 'center' },
   statusText: { fontSize: 12, fontWeight: 'bold', marginLeft: 4 },
   actionIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', width: '100%' },
   // Modal styles
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContainer: { backgroundColor: '#FFFFFF', width: '100%', maxWidth: 700, maxHeight: '85%', borderRadius: 16, overflow: 'hidden', elevation: 5 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#1E293B' },
-  modalDesc: { fontSize: 13, color: '#64748B', lineHeight: 18, marginBottom: 16 },
-  sectionLabel: { fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 8, marginTop: 8 },
+  modalContainer: { backgroundColor: DS.colors.cardBg, width: '100%', maxWidth: 700, maxHeight: '85%', borderRadius: DS.radius.lg, overflow: 'hidden', ...DS.shadow.lg },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: DS.colors.border },
+  modalTitle: { fontSize: 16, fontWeight: 'bold', color: DS.colors.text },
+  modalDesc: { fontSize: 13, color: DS.colors.textSecondary, lineHeight: 18, marginBottom: 16 },
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: DS.colors.text, marginBottom: 8, marginTop: 8 },
   templateContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  templateBadge: { backgroundColor: '#F1F5F9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0' },
-  templateText: { fontSize: 11, fontWeight: '600', color: '#475569' },
-  textArea: { backgroundColor: '#FCFDFE', fontSize: 13, minHeight: 120, textAlignVertical: 'top' },
-  previewCard: { borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 10, overflow: 'hidden', marginTop: 6, backgroundColor: '#FAFAFA' },
-  previewColHead: { fontSize: 11, fontWeight: '700', color: '#64748B' },
-  previewCellMain: { fontSize: 12, fontWeight: '600', color: '#1E293B' },
-  previewCellSub: { fontSize: 12, color: '#475569' },
-  previewCellBarcode: { fontSize: 11, fontFamily: 'monospace', color: '#64748B' },
-  modalFooter: { flexDirection: 'row', justifyContent: 'flex-end', padding: 16, borderTopWidth: 1, borderTopColor: '#F1F5F9', backgroundColor: '#F8FAFC' },
-  modalBtn: { borderRadius: 8 },
+  templateBadge: { backgroundColor: DS.colors.borderLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: DS.colors.border },
+  templateText: { fontSize: 11, fontWeight: '600', color: DS.colors.textSecondary },
+  textArea: { backgroundColor: DS.colors.surfaceBg, fontSize: 13, minHeight: 120, textAlignVertical: 'top' },
+  previewCard: { borderWidth: 1, borderColor: DS.colors.border, borderRadius: DS.radius.sm, overflow: 'hidden', marginTop: 6, backgroundColor: DS.colors.surfaceBg },
+  previewColHead: { fontSize: 11, fontWeight: '700', color: DS.colors.textSecondary },
+  previewCellMain: { fontSize: 12, fontWeight: '600', color: DS.colors.text },
+  previewCellSub: { fontSize: 12, color: DS.colors.textSecondary },
+  previewCellBarcode: { fontSize: 11, fontFamily: 'monospace', color: DS.colors.textMuted },
+  modalFooter: { flexDirection: 'row', justifyContent: 'flex-end', padding: 16, borderTopWidth: 1, borderTopColor: DS.colors.border, backgroundColor: DS.colors.surfaceBg },
+  modalBtn: { borderRadius: DS.radius.sm },
 });

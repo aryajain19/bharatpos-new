@@ -11,6 +11,7 @@ import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment } 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
 import { useLocalSearchParams, router } from 'expo-router';
+import { DS } from '../../constants/designTokens';
 
 // ── Category colors ────────────────────────────────────────────────────
 const categoryColors: Record<string, string> = {
@@ -1129,16 +1130,16 @@ export default function POSBillingScreen() {
 
 // ── Styles ─────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
+  container: { flex: 1, padding: DS.space.lg, backgroundColor: DS.colors.surfaceBg },
 
   // Header
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   headerIconBox: {
-    width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 14,
+    width: 42, height: 42, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
-  headerTitle: { fontSize: 20, fontWeight: '800', },
-  headerSubtitle: { fontSize: 12, marginTop: 2, fontWeight: '500' },
+  headerTitle: { fontSize: DS.font.h2.fontSize, fontWeight: DS.font.h2.fontWeight, color: DS.colors.text },
+  headerSubtitle: { fontSize: 12, marginTop: 2, fontWeight: '500', color: DS.colors.textSecondary },
   headerRight: { flexDirection: 'row', gap: 8 },
   chip: { },
   chipText: { fontSize: 12, fontWeight: '600', },
@@ -1147,66 +1148,66 @@ const styles = StyleSheet.create({
   contentRow: { flexDirection: 'row', gap: 24, flex: 1 },
 
   // Left Pane
-  leftPane: { flex: 2, borderRadius: 16, padding: 20, borderWidth: 1, },
+  leftPane: { flex: 2, borderRadius: DS.radius.lg, padding: 20, borderWidth: 0, backgroundColor: DS.colors.cardBg, ...DS.shadow.sm },
 
   // Search
   searchContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   searchIconBox: {
-    width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 10,
+    width: 44, height: 44, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center', marginRight: 10,
   },
-  searchInput: { flex: 1, height: 46, borderRadius: 10, fontSize: 14 },
+  searchInput: { flex: 1, height: 46, borderRadius: DS.radius.sm, fontSize: 14 },
 
   // Suggestions
   suggestionsDropdown: {
     position: 'absolute', top: 86, left: 20, right: 20, zIndex: 50,
-    borderRadius: 12, borderWidth: 1, overflow: 'hidden',
+    borderRadius: DS.radius.md, borderWidth: 0, backgroundColor: DS.colors.cardBg, ...DS.shadow.lg, overflow: 'hidden',
   },
   suggestionItem: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F8F9FC',
+    borderBottomWidth: 1, borderBottomColor: DS.colors.borderLight,
   },
   suggestionCategoryDot: { width: 8, height: 8, borderRadius: 4, marginRight: 12 },
   suggestionInfo: { flex: 1 },
-  suggestionName: { fontSize: 14, fontWeight: '600', },
-  suggestionMeta: { fontSize: 11, marginTop: 2 },
-  suggestionPrice: { fontSize: 15, fontWeight: '700', marginRight: 12 },
+  suggestionName: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  suggestionMeta: { fontSize: 11, marginTop: 2, color: DS.colors.textSecondary },
+  suggestionPrice: { fontSize: 15, fontWeight: '700', marginRight: 12, color: DS.colors.text },
   addIconCircle: {
     width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center',
   },
 
   // Cart Header
   cartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 12 },
-  cartHeaderTitle: { fontSize: 16, fontWeight: '700', },
-  cartItemCount: { fontSize: 12, },
+  cartHeaderTitle: { fontSize: 16, fontWeight: '700', color: DS.colors.text },
+  cartItemCount: { fontSize: 12, color: DS.colors.textSecondary },
 
   // Column Headers
-  columnHeaders: { flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, marginBottom: 8 },
-  colHeader: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  columnHeaders: { flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 8, borderRadius: DS.radius.sm, marginBottom: 8, backgroundColor: DS.colors.surfaceBg },
+  colHeader: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, color: DS.colors.textSecondary },
 
   // Cart List
   cartList: { flex: 1 },
-  cartItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, marginBottom: 4 },
-  itemName: { fontSize: 13, fontWeight: '700', },
-  itemSku: { fontSize: 10, marginTop: 2 },
-  itemPrice: { fontSize: 13, fontWeight: '500' },
-  itemGst: { fontSize: 12, },
-  itemTotal: { fontSize: 13, fontWeight: '700', },
+  cartItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderRadius: DS.radius.md, marginBottom: 4, backgroundColor: DS.colors.surfaceBg },
+  itemName: { fontSize: 13, fontWeight: '700', color: DS.colors.text },
+  itemSku: { fontSize: 10, marginTop: 2, color: DS.colors.textMuted },
+  itemPrice: { fontSize: 13, fontWeight: '500', color: DS.colors.text },
+  itemGst: { fontSize: 12, color: DS.colors.textSecondary },
+  itemTotal: { fontSize: 13, fontWeight: '700', color: DS.colors.text },
   deleteBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
 
   // Qty Controls
   qtyController: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  qtyBtn: { width: 24, height: 24, borderRadius: 6, borderWidth: 1, alignItems: 'center', justifyContent: 'center', },
+  qtyBtn: { width: 24, height: 24, borderRadius: DS.radius.xs, borderWidth: 1, borderColor: DS.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: DS.colors.cardBg },
   qtyBtnPlus: { },
   qtyDisplay: { minWidth: 20, alignItems: 'center' },
-  qtyText: { fontSize: 12, fontWeight: '700', },
+  qtyText: { fontSize: 12, fontWeight: '700', color: DS.colors.text },
 
   emptyCartContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
-  emptyCartTitle: { fontSize: 16, fontWeight: '700', marginTop: 12 },
-  emptyCartSubtitle: { fontSize: 12, marginTop: 4, textAlign: 'center', maxWidth: 280 },
+  emptyCartTitle: { fontSize: 16, fontWeight: '700', marginTop: 12, color: DS.colors.text },
+  emptyCartSubtitle: { fontSize: 12, marginTop: 4, textAlign: 'center', maxWidth: 280, color: DS.colors.textSecondary },
 
   // Right Pane
   rightPane: { flex: 1, gap: 20 },
-  summaryCard: { borderRadius: 16, padding: 20, borderWidth: 1, },
+  summaryCard: { borderRadius: DS.radius.lg, padding: 20, borderWidth: 0, backgroundColor: DS.colors.cardBg, ...DS.shadow.sm },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   summaryTitle: { fontSize: 16, fontWeight: '700', },
   summaryDivider: { marginVertical: 16 },
@@ -1250,46 +1251,46 @@ const styles = StyleSheet.create({
   secondaryBtnText: { fontSize: 12, fontWeight: '700', },
 
   // Quick Add
-  quickAddCard: { borderRadius: 16, padding: 16, borderWidth: 1, },
-  quickAddTitle: { fontSize: 14, fontWeight: '700', marginBottom: 12 },
+  quickAddCard: { borderRadius: DS.radius.lg, padding: 16, borderWidth: 0, backgroundColor: DS.colors.cardBg, ...DS.shadow.sm },
+  quickAddTitle: { fontSize: 14, fontWeight: '700', marginBottom: 12, color: DS.colors.text },
   quickAddGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  quickAddItem: { flexGrow: 1, flexBasis: '28%', padding: 10, borderRadius: 10, borderWidth: 1, alignItems: 'center' },
+  quickAddItem: { flexGrow: 1, flexBasis: '28%', padding: 10, borderRadius: DS.radius.sm, borderWidth: 1, borderColor: DS.colors.border, alignItems: 'center', backgroundColor: DS.colors.cardBg },
   quickAddDot: { width: 6, height: 6, borderRadius: 3, marginBottom: 6 },
-  quickAddName: { fontSize: 11, fontWeight: '600', },
-  quickAddPrice: { fontSize: 11, fontWeight: '700', marginTop: 2 },
+  quickAddName: { fontSize: 11, fontWeight: '600', color: DS.colors.text },
+  quickAddPrice: { fontSize: 11, fontWeight: '700', marginTop: 2, color: DS.colors.textSecondary },
 
   // Dialog Modals
-  dialog: { borderRadius: 20, backgroundColor: 'white' },
-  dialogTitle: { fontSize: 18, fontWeight: '800', flexDirection: 'row', alignItems: 'center' },
-  dialogLabel: { fontSize: 12, fontWeight: '600', marginBottom: 6, marginTop: 4 },
+  dialog: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg },
+  dialogTitle: { fontSize: 18, fontWeight: '800', flexDirection: 'row', alignItems: 'center', color: DS.colors.text },
+  dialogLabel: { fontSize: 12, fontWeight: '600', marginBottom: 6, marginTop: 4, color: DS.colors.textSecondary },
   dialogActions: { paddingHorizontal: 16, paddingBottom: 16, justifyContent: 'space-between' },
 
   // Receipt Preview
   receiptPreview: {
-    borderWidth: 1, borderStyle: 'dashed', borderRadius: 12,
-    padding: 16, maxHeight: 300, marginBottom: 16
+    borderWidth: 1, borderStyle: 'dashed', borderColor: DS.colors.border, borderRadius: DS.radius.sm,
+    padding: 16, maxHeight: 300, marginBottom: 16, backgroundColor: DS.colors.surfaceBg
   },
   receiptHeader: { alignItems: 'center', marginBottom: 12 },
-  receiptStoreName: { fontSize: 16, fontWeight: '800', },
-  receiptStoreMeta: { fontSize: 11, marginTop: 2 },
-  receiptCustomerBox: { marginTop: 8, padding: 8, borderRadius: 8 },
-  receiptCustomerText: { fontSize: 11, fontWeight: '600' },
+  receiptStoreName: { fontSize: 16, fontWeight: '800', color: DS.colors.text },
+  receiptStoreMeta: { fontSize: 11, marginTop: 2, color: DS.colors.textSecondary },
+  receiptCustomerBox: { marginTop: 8, padding: 8, borderRadius: DS.radius.xs, backgroundColor: DS.colors.cardBg },
+  receiptCustomerText: { fontSize: 11, fontWeight: '600', color: DS.colors.text },
   receiptItemRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 2 },
-  receiptItemName: { fontSize: 12, flex: 1 },
-  receiptItemTotal: { fontSize: 12, fontWeight: '700' },
+  receiptItemName: { fontSize: 12, flex: 1, color: DS.colors.text },
+  receiptItemTotal: { fontSize: 12, fontWeight: '700', color: DS.colors.text },
   receiptRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 2 },
-  receiptLabel: { fontSize: 11, },
-  receiptValue: { fontSize: 11, },
+  receiptLabel: { fontSize: 11, color: DS.colors.textSecondary },
+  receiptValue: { fontSize: 11, color: DS.colors.text },
   receiptFooter: { alignItems: 'center', marginTop: 14 },
-  receiptFooterText: { fontSize: 11, fontWeight: '700', },
-  smsAlertBox: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  receiptFooterText: { fontSize: 11, fontWeight: '700', color: DS.colors.text },
+  smsAlertBox: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: DS.radius.xs },
   smsAlertText: { fontSize: 10, fontWeight: '700' },
 
   // Sharing Option row
   sharingGrid: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 8 },
   shareOption: { alignItems: 'center' },
   shareIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  shareText: { fontSize: 11, fontWeight: '600', },
+  shareText: { fontSize: 11, fontWeight: '600', color: DS.colors.textSecondary },
 
   // Camera Barcode Scanner styles
   cameraModalContainer: {

@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
@@ -256,25 +257,24 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
     minWidth: 160,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#EEF0F6'
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
+    borderWidth: 0, ...DS.shadow.sm
   },
   metricCardContent: { padding: 16, minHeight: 120, justifyContent: 'space-between' },
   metricCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   iconWrapper: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   metricValue: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
   metricLabel: { fontSize: 13, marginTop: 4, fontWeight: '600', color: '#64748B' },
-  card: { backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#EEF0F6', marginBottom: 40 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg, borderWidth: 0, ...DS.shadow.sm, marginBottom: 40 },
   colHeader: { fontWeight: 'bold', fontSize: 11, color: '#64748B' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: DS.radius.sm },
   infoText: { textAlign: 'center', color: '#64748B', fontStyle: 'italic', paddingVertical: 24 },
   emptyState: { paddingVertical: 40, alignItems: 'center', justifyContent: 'center' },
   emptyText: { fontWeight: '700', fontSize: 15, color: '#10B981', marginTop: 12 },

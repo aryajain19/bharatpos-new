@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
 
   // Net Profit Card
   netProfitCard: {
-    borderRadius: 16,
+    borderRadius: DS.radius.lg,
     borderWidth: 1,
     marginBottom: 24,
   },
@@ -605,7 +606,7 @@ const styles = StyleSheet.create({
   profitIconBadge: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -637,7 +638,7 @@ const styles = StyleSheet.create({
   reportIconWrap: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -647,14 +648,14 @@ const styles = StyleSheet.create({
   downloadBtn: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   // Chart
   chartCard: {
-    borderRadius: 16,
+    borderRadius: DS.radius.lg,
     borderWidth: 1,
     padding: 16,
   },

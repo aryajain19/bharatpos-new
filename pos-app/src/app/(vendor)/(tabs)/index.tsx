@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { DS } from '../../../constants/designTokens';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Platform, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Surface, TextInput, Card, Button } from 'react-native-paper';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'white',
+    backgroundColor: DS.colors.cardBg,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -463,7 +464,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     gap: 4,
   },
   headerDateText: { color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: '600' },
@@ -478,8 +479,8 @@ const styles = StyleSheet.create({
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 16 },
   metricCardWrapper: { flexGrow: 1, flexBasis: '22%', minWidth: 200, maxWidth: 320 },
   metricCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
     padding: 20,
     borderWidth: 1,
     minHeight: 130,
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -499,8 +500,8 @@ const styles = StyleSheet.create({
 
   // Alert Card
   alertCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -512,14 +513,14 @@ const styles = StyleSheet.create({
   alertBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
   },
   alertBadgeText: { fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' },
 
   // --- Quick Actions ---
   actionsGrid: { flexDirection: 'row', gap: 10 },
   actionCard: {
-    backgroundColor: 'white',
+    backgroundColor: DS.colors.cardBg,
     paddingVertical: 18,
     borderRadius: 18,
     alignItems: 'center',
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
   actionIconBg: {
     width: 50,
     height: 50,
-    borderRadius: 16,
+    borderRadius: DS.radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -543,7 +544,7 @@ const styles = StyleSheet.create({
 
   // --- Transactions ---
   transactionsCard: {
-    backgroundColor: 'white',
+    backgroundColor: DS.colors.cardBg,
     borderRadius: 18,
     padding: 4,
     shadowColor: '#000',
@@ -560,7 +561,7 @@ const styles = StyleSheet.create({
   txnIconBg: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },

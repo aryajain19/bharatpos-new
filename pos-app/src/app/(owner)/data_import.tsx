@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, useWindowDimensions, Image } from 'react-native';
 import { Text, Card, Button, useTheme, TextInput, Divider, SegmentedButtons, DataTable, Surface, Switch } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -640,7 +641,7 @@ Total GST Collected: ₹2,154.00`;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: DS.colors.surfaceBg,
   },
   contentContainer: {
     padding: 24,
@@ -669,10 +670,9 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   card: {
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 0, ...DS.shadow.sm,
   },
   cardContent: {
     paddingVertical: 16,
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
   textArea: {
     fontSize: 12,
     lineHeight: 18,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: DS.colors.surfaceBg,
   },
   formRow: {
     flexDirection: 'row',
@@ -713,12 +713,12 @@ const styles = StyleSheet.create({
   },
   syncBtn: {
     marginTop: 8,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     paddingVertical: 4,
   },
   logBox: {
     backgroundColor: '#0F172A',
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     padding: 14,
     marginTop: 12,
   },
@@ -743,7 +743,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DCFCE7',
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     borderWidth: 1,
     borderColor: '#BBF7D0',
   },
@@ -754,9 +754,8 @@ const styles = StyleSheet.create({
   },
   table: {
     marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    borderRadius: 8,
+    borderWidth: 0, ...DS.shadow.sm,
+    borderRadius: DS.radius.sm,
   },
   tableFooterNote: {
     fontSize: 12,
@@ -768,7 +767,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   migrateBtn: {
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     paddingVertical: 4,
   },
 });

@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Dimensions } from 'react-native';
 import { Text, Card, Button, useTheme, TextInput } from 'react-native-paper';
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
   title: { fontWeight: 'bold', },
   subtitle: { fontSize: 16, color: 'gray', marginTop: 8 },
   pricingGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 24, paddingBottom: 60 },
-  pricingCard: { width: 320, backgroundColor: 'white', borderRadius: 16 },
+  pricingCard: { width: 320, backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg },
   popularCard: { borderWidth: 2, transform: [{ scale: 1.05 }] },
   popularBadge: { paddingVertical: 6, alignItems: 'center', borderTopLeftRadius: 14, borderTopRightRadius: 14 },
   popularBadgeText: { color: 'white', fontWeight: 'bold', fontSize: 12, letterSpacing: 1 },
@@ -124,6 +125,6 @@ const styles = StyleSheet.create({
   featureList: { width: '100%', marginBottom: 30 },
   featureItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   featureText: { marginLeft: 12, fontSize: 15, },
-  upgradeBtn: { width: '100%', borderRadius: 8, paddingVertical: 8, },
-  popularBtn: { width: '100%', borderRadius: 8, paddingVertical: 8, },
+  upgradeBtn: { width: '100%', borderRadius: DS.radius.sm, paddingVertical: 8, },
+  popularBtn: { width: '100%', borderRadius: DS.radius.sm, paddingVertical: 8, },
 });

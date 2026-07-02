@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, ScrollView, Alert, Platform, Share } from 'react-native';
 import { Text, Card, Button, Switch, useTheme, SegmentedButtons, TextInput, Portal, Dialog } from 'react-native-paper';
 import { auth, isFirebaseConfigured, db } from '../../lib/firebase';
@@ -614,22 +615,22 @@ export default function AdminSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, paddingHorizontal: 24, backgroundColor: DS.colors.surfaceBg },
   header: { paddingVertical: 24 },
   title: { fontWeight: '800', color: '#1E293B' },
   contentRow: { flexDirection: 'row', gap: 24, flexWrap: 'wrap', marginBottom: 40 },
-  card: { flex: 1, minWidth: 320, backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
+  card: { flex: 1, minWidth: 320, backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg, borderWidth: 0, ...DS.shadow.sm, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
   cardContent: { padding: 24 },
   sectionHeaderRow: { marginBottom: 20 },
   iconTitleBox: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sectionTitle: { fontWeight: '700', fontSize: 16, color: '#1E293B' },
-  input: { marginBottom: 16, backgroundColor: 'white' },
+  input: { marginBottom: 16, backgroundColor: DS.colors.cardBg },
   label: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 8, marginTop: 4 },
   segmentedBtn: { marginBottom: 20 },
-  saveBtn: { borderRadius: 10, marginTop: 12, paddingVertical: 4 },
+  saveBtn: { borderRadius: DS.radius.md, marginTop: 12, paddingVertical: 4 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 8 },
   switchLabel: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
   switchDesc: { fontSize: 12, color: '#64748B', marginTop: 3, lineHeight: 18, marginBottom: 14 },
   divider: { height: 1, backgroundColor: '#E2E8F0', marginVertical: 24 },
-  logoutBtn: { borderRadius: 10, marginTop: 8, borderColor: '#EF4444' },
+  logoutBtn: { borderRadius: DS.radius.md, marginTop: 8, borderColor: '#EF4444' },
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
 import { Text, useTheme, IconButton, RadioButton, TextInput } from 'react-native-paper';
 import { useCart } from '../../providers/CartProvider';
@@ -203,7 +204,6 @@ export default function PaymentScreen() {
       <View style={styles.header}>
         <IconButton icon="arrow-left" size={24} onPress={() => router.back()} style={{ marginLeft: -10 }} />
         <Text style={styles.headerTitle}>Payment</Text>
-        <IconButton icon="file-document-outline" size={24} onPress={() => {}} />
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
@@ -290,7 +290,7 @@ export default function PaymentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 10, backgroundColor: 'white' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 10, backgroundColor: DS.colors.cardBg },
   headerTitle: { fontSize: 18, fontWeight: 'bold' },
   content: { padding: 24 },
   totalLabel: { color: 'gray', fontSize: 13, marginBottom: 4 },
@@ -303,6 +303,6 @@ const styles = StyleSheet.create({
   changeLabel: { color: 'gray', fontSize: 14 },
   changeValue: { fontWeight: 'bold', fontSize: 16, },
   footer: { padding: 20 },
-  payButton: { paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  payButton: { paddingVertical: 16, borderRadius: DS.radius.md, alignItems: 'center' },
   payButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 });

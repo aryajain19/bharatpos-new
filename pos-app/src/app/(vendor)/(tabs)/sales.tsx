@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../../providers/ThemeProvider';
+import { DS } from '../../../constants/designTokens';
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Surface, TextInput, Card, Button } from 'react-native-paper';
@@ -238,8 +239,8 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   statCard: {
     flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
     paddingVertical: 16,
     paddingHorizontal: 10,
     alignItems: 'center',
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
   },
-  statIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  statIcon: { width: 36, height: 36, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   statValue: { fontSize: 16, fontWeight: 'bold', marginBottom: 2 },
   statLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3 },
 
@@ -260,8 +261,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: 'white',
+    borderRadius: DS.radius.md,
+    backgroundColor: DS.colors.cardBg,
     borderWidth: 1,
     },
   filterChipActive: { },
@@ -270,8 +271,8 @@ const styles = StyleSheet.create({
 
   // --- Sale Card ---
   saleCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.lg,
     padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
   saleCardBottom: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   saleMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   saleMetaText: { fontSize: 11, },
-  paymentBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4, marginLeft: 'auto' },
+  paymentBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: DS.radius.sm, gap: 4, marginLeft: 'auto' },
   paymentText: { fontSize: 10, fontWeight: '700' },
 
   // --- List ---

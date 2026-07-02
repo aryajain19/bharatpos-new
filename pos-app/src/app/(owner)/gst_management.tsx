@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect } from 'react';
@@ -1057,7 +1058,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 22,
     paddingVertical: 11,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     borderWidth: 1.5,
     borderColor: '#5E35B1',
     backgroundColor: 'transparent',
@@ -1075,11 +1076,11 @@ const styles = StyleSheet.create({
   rightCol: { flex: 1.5, minWidth: 400 },
 
   // Cards
-  card: { backgroundColor: 'white', borderRadius: 12 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
   sectionTitle: { fontWeight: 'bold', marginBottom: 0 },
   helperText: { color: 'gray', fontSize: 13, marginBottom: 20, marginTop: 4 },
-  input: { marginBottom: 16, backgroundColor: 'white' },
-  saveBtn: { borderRadius: 8, marginTop: 8, paddingVertical: 6 },
+  input: { marginBottom: 16, backgroundColor: DS.colors.cardBg },
+  saveBtn: { borderRadius: DS.radius.sm, marginTop: 8, paddingVertical: 6 },
 
   // Stats
   statsGrid: { gap: 16, flexWrap: 'wrap' },
@@ -1087,14 +1088,14 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 140,
     padding: 18,
-    borderRadius: 12,
-    backgroundColor: 'white',
+    borderRadius: DS.radius.md,
+    backgroundColor: DS.colors.cardBg,
     alignItems: 'center',
   },
   statIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: DS.radius.md,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -1104,14 +1105,14 @@ const styles = StyleSheet.create({
 
   // Filing Status
   filingRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: DS.radius.sm },
 
   // Section Headers
   sectionHeader: { marginBottom: 14 },
   sectionBadge: {
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1126,15 +1127,15 @@ const styles = StyleSheet.create({
   totalText: { fontSize: 13, fontWeight: 'bold', },
 
   // Rate badge
-  rateBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  rateBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: DS.radius.sm },
 
   // Payment grid
   paymentGrid: { gap: 16 },
   paymentCard: {
     flex: 1,
     padding: 20,
-    borderRadius: 12,
-    backgroundColor: 'white',
+    borderRadius: DS.radius.md,
+    backgroundColor: DS.colors.cardBg,
     alignItems: 'center',
   },
 });

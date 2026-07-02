@@ -1,4 +1,5 @@
 import React from 'react';
+import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, TouchableOpacity, Alert, Platform, Linking } from 'react-native';
 import { Text, useTheme, IconButton, TextInput } from 'react-native-paper';
 import * as Print from 'expo-print';
@@ -187,9 +188,9 @@ export default function BillPreviewScreen() {
     <View style={styles.container}>
       {/* Dark Purple Header */}
       <View style={styles.header}>
-        <IconButton icon="menu" iconColor="white" size={24} onPress={() => {}} style={{ marginLeft: -10 }} />
-        <Text style={styles.headerTitle}>Payment</Text>
-        <IconButton icon="tune" iconColor="white" size={24} onPress={() => {}} style={{ marginRight: -10 }} />
+        <IconButton icon="home" iconColor="white" size={24} onPress={() => router.replace('/(vendor)/(tabs)')} style={{ marginLeft: -10 }} />
+        <Text style={styles.headerTitle}>Receipt</Text>
+        <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.content}>
@@ -240,10 +241,10 @@ const styles = StyleSheet.create({
   headerTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
   content: { padding: 24, alignItems: 'center', marginTop: 40 },
   receiptCard: {
-    backgroundColor: 'white',
+    backgroundColor: DS.colors.cardBg,
     width: '100%',
     padding: 40,
-    borderRadius: 16,
+    borderRadius: DS.radius.lg,
     alignItems: 'center',
     elevation: 4,
     shadowColor: '#000',

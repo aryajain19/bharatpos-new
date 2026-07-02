@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, ScrollView, Alert, Modal, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Text, Card, DataTable, Button, useTheme, IconButton, Switch, TextInput, SegmentedButtons, Divider } from 'react-native-paper';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
@@ -720,23 +721,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24 },
   header: { paddingVertical: 24 },
   title: { fontWeight: 'bold', fontSize: 22 },
-  card: { backgroundColor: 'white', borderRadius: 12, borderWidth: 1, borderColor: '#EEF0F6' },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md, borderWidth: 0, ...DS.shadow.sm },
   colHeader: { fontWeight: 'bold', color: '#475569' },
   formRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'center' },
-  input: { flex: 1, minWidth: 200, backgroundColor: 'white' },
-  addBtn: { borderRadius: 8, backgroundColor: '#10B981' },
+  input: { flex: 1, minWidth: 200, backgroundColor: DS.colors.cardBg },
+  addBtn: { borderRadius: DS.radius.sm, backgroundColor: '#10B981' },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: 'white', padding: 30, borderRadius: 16, width: 400, maxWidth: '90%' },
+  modalContent: { backgroundColor: DS.colors.cardBg, padding: 30, borderRadius: DS.radius.lg, width: 400, maxWidth: '90%' },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   switchLabel: { fontSize: 16, },
   modalActions: { flexDirection: 'row', marginTop: 30 },
 
   slipCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: DS.colors.surfaceBg,
+    borderRadius: DS.radius.md,
+    borderWidth: 0, ...DS.shadow.sm,
     padding: 16
   }
 });

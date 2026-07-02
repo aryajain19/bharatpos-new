@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
@@ -93,7 +94,7 @@ export default function ScanScreen() {
       <View style={styles.header}>
         <IconButton icon="arrow-left" iconColor="white" size={24} onPress={() => router.back()} />
         <Text style={styles.headerTitle}>Scan Barcode</Text>
-        <IconButton icon="image-outline" iconColor="white" size={24} onPress={() => {}} />
+        <View style={{ width: 24 }} />
       </View>
 
       {/* Camera Preview */}
@@ -165,5 +166,5 @@ const styles = StyleSheet.create({
   laserLine: { height: 2, backgroundColor: 'red', width: '100%', position: 'absolute' },
   instructionText: { color: 'white', textAlign: 'center', marginTop: 30, fontSize: 14 },
   bottomActions: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', marginTop: 60, paddingHorizontal: 60 },
-  floatingButton: { width: 50, height: 50, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  floatingButton: { width: 50, height: 50, borderRadius: DS.radius.md, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
 });

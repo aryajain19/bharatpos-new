@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -137,6 +138,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24 },
   header: { paddingVertical: 24 },
   title: { fontWeight: 'bold' },
-  card: { backgroundColor: 'white', borderRadius: 12 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
   colHeader: { fontWeight: 'bold', color: 'gray' },
 });

@@ -1,10 +1,11 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
-import { Text, Button, Surface, useTheme, TextInput, Card } from 'react-native-paper';
+import { Text, Button, Surface, useTheme, TextInput, Card, Portal, Dialog } from 'react-native-paper';
 import { useLocalSearchParams, router } from 'expo-router';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
-import { collection, query, where, getDocs } from '../../lib/firestore_adapter';
+import { collection, query, where, getDocs, doc, updateDoc } from '../../lib/firestore_adapter';
 import { useCart } from '../../providers/CartProvider';
 import { useAuth } from '../../providers/AuthProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -20,6 +21,30 @@ export default function ProductDetailsScreen() {
   const { addToCart } = useCart();
   const { tenantId, loading: authLoading } = useAuth();
   const theme = useTheme();
+
+  const [showEditPrice, setShowEditPrice] = useState(false);
+  const [newPrice, setNewPrice] = useState('');
+  const [savingPrice, setSavingPrice] = useState(false);
+
+  const handleUpdatePrice = async () => {
+    if (!newPrice || isNaN(parseFloat(newPrice))) {
+      Alert.alert('Validation Error', 'Please enter a valid price.');
+      return;
+    }
+    setSavingPrice(true);
+    try {
+      await updateDoc(doc(db, 'products', product.id), {
+        selling_price: parseFloat(newPrice),
+      });
+      Alert.alert('Success', 'Product selling price updated successfully.');
+      setProduct((prev: any) => ({ ...prev, selling_price: parseFloat(newPrice) }));
+      setShowEditPrice(false);
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to update price.');
+    } finally {
+      setSavingPrice(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && tenantId && barcode) {
@@ -138,7 +163,7 @@ export default function ProductDetailsScreen() {
               ₹{product.selling_price}
             </Text>
           </View>
-          <Button icon="pencil" mode="text" onPress={() => {}}>Edit Price</Button>
+          <Button icon="pencil" mode="text" onPress={() => { setNewPrice(String(product.selling_price || '')); setShowEditPrice(true); }}>Edit Price</Button>
         </View>
 
         <View style={styles.divider} />
@@ -158,6 +183,36 @@ export default function ProductDetailsScreen() {
       >
         ADD TO CART
       </Button>
+
+      {/* Edit Price Modal */}
+      <Portal>
+        <Dialog visible={showEditPrice} onDismiss={() => setShowEditPrice(false)} style={{ borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg }}>
+          <Dialog.Title style={{ color: DS.colors.text }}>Update Selling Price</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="New Selling Price (₹)"
+              value={newPrice}
+              onChangeText={setNewPrice}
+              keyboardType="numeric"
+              mode="outlined"
+              style={{ backgroundColor: DS.colors.cardBg }}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowEditPrice(false)} textColor={DS.colors.textSecondary}>Cancel</Button>
+            <Button 
+              mode="contained" 
+              onPress={handleUpdatePrice} 
+              loading={savingPrice} 
+              disabled={savingPrice}
+              buttonColor={DS.colors.brand}
+              style={{ borderRadius: DS.radius.sm }}
+            >
+              Save
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
@@ -186,7 +241,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
   },
   buttonContent: { paddingVertical: 8 },
 });

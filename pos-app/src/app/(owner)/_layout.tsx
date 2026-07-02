@@ -7,6 +7,7 @@ import { auth, isFirebaseConfigured, db } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '../../providers/AuthProvider';
 import { collection, query, onSnapshot } from '../../lib/firestore_adapter';
+import { DS } from '../../constants/designTokens';
 
 const menuSections = [
 {
@@ -58,7 +59,7 @@ const MenuItem = ({ item, isActive, onPress }: { item: any; isActive: boolean; o
 
   const backgroundColor = bgAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(255,255,255,0)', 'rgba(16, 185, 129, 0.1)'],
+    outputRange: ['rgba(255,255,255,0)', 'rgba(30, 58, 138, 0.08)'],
   });
 
   return (
@@ -78,9 +79,9 @@ const MenuItem = ({ item, isActive, onPress }: { item: any; isActive: boolean; o
       >
         <View style={[
           styles.menuIconContainer,
-          isActive && { backgroundColor: 'rgba(16, 185, 129, 0.2)' },
+          isActive && { backgroundColor: 'rgba(30, 58, 138, 0.15)' },
         ]}>
-          <Icon name={item.icon} size={17} color={isActive ? '#10B981' : '#64748B'} />
+          <Icon name={item.icon} size={17} color={isActive ? '#1E3A8A' : '#64748B'} />
         </View>
         <Text style={[styles.menuText, isActive && styles.menuTextActive]}>{item.name}</Text>
         {isActive && <View style={styles.activeIndicator} />}
@@ -328,7 +329,7 @@ export default function OwnerLayout() {
       ]}>
         {/* Logo Area */}
         <View style={styles.logoContainer}>
-          <View style={[styles.logoIconContainer, { backgroundColor: '#10B981' }]}>
+          <View style={[styles.logoIconContainer, { backgroundColor: '#1E3A8A' }]}>
             <Icon name="store" size={22} color="#fff" />
           </View>
           <View style={styles.logoTextContainer}>
@@ -382,7 +383,7 @@ export default function OwnerLayout() {
             {screenWidth > 480 && (
               <>
                 <View style={styles.topBarDivider} />
-                <Icon name="store-outline" size={18} color="#10B981" />
+                <Icon name="store-outline" size={18} color="#1E3A8A" />
                 <Text style={styles.storeName}>Main Branch</Text>
               </>
             )}
@@ -565,7 +566,7 @@ const styles = StyleSheet.create({
   },
   logoIconContainer: {
     width: 42, height: 42, borderRadius: 12,
-    backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#1E3A8A', alignItems: 'center', justifyContent: 'center',
   },
   logoTextContainer: { marginLeft: 14 },
   logoText: { color: '#1E293B', fontWeight: '800', fontSize: 18, letterSpacing: -0.3 },
@@ -590,7 +591,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10, marginBottom: 2, borderRadius: 10,
   },
   menuItemActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: 'rgba(30, 58, 138, 0.08)',
   },
   menuItemHover: {
     backgroundColor: '#F8FAFC',
@@ -603,10 +604,10 @@ const styles = StyleSheet.create({
   menuText: {
     color: '#475569', marginLeft: 12, fontSize: 13.5, fontWeight: '500',
   },
-  menuTextActive: { color: '#10B981', fontWeight: '700' },
+  menuTextActive: { color: '#1E3A8A', fontWeight: '700' },
   activeIndicator: {
-    position: 'absolute', right: 0, top: '25%',
-    width: 3, height: '50%', backgroundColor: '#10B981', borderRadius: 2,
+    position: 'absolute', left: 0, top: '25%',
+    width: 3, height: '50%', backgroundColor: '#1E3A8A', borderRadius: 2,
   },
 
   // Logout

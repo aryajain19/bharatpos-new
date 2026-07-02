@@ -1,4 +1,5 @@
 import { useAppTheme } from '../../providers/ThemeProvider';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -490,13 +491,13 @@ const styles = StyleSheet.create({
   header: { paddingTop: 24, paddingBottom: 16 },
   title: { fontWeight: 'bold', },
   subtitle: { fontSize: 13, marginTop: 4, marginLeft: 38 },
-  card: { backgroundColor: 'white', borderRadius: 12 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.md },
   typeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     borderWidth: 1.5,
   },
   headerRow: { gap: 16 },
@@ -507,7 +508,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     gap: 8,
   },
   readonlyText: { fontSize: 14, fontWeight: '600' },
@@ -516,26 +517,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     marginBottom: 8,
   },
   lineHeaderText: { fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 0.5 },
   lineRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, marginBottom: 8 },
   lineIndex: { fontSize: 13, fontWeight: 'bold', textAlign: 'center' },
-  lineInput: { backgroundColor: 'white', height: 38, fontSize: 13 },
+  lineInput: { backgroundColor: DS.colors.cardBg, height: 38, fontSize: 13 },
   removeBtn: { padding: 4 },
   totalsRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
   totalLabel: { fontWeight: 'bold', fontSize: 13, letterSpacing: 1 },
-  totalBox: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, marginRight: 0 },
+  totalBox: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: DS.radius.sm, borderWidth: 1, marginRight: 0 },
   totalValue: { fontWeight: 'bold', fontSize: 14, textAlign: 'right' },
   balanceIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: DS.radius.md,
     marginTop: 16,
   },
-  typeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  typeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: DS.radius.sm },
   tableHead: { fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
 });

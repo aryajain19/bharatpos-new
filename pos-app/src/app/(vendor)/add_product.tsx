@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DS } from '../../constants/designTokens';
 
 import { useAuth } from '../../providers/AuthProvider';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: 100,
     height: 100,
-    borderRadius: 8,
+    borderRadius: DS.radius.sm,
     borderWidth: 1,
     borderStyle: 'dashed',
     justifyContent: 'center',
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     },
   label: { fontSize: 12, color: 'gray', marginBottom: 4 },
-  input: { backgroundColor: 'white', marginBottom: 16, height: 45 },
+  input: { backgroundColor: DS.colors.cardBg, marginBottom: 16, height: 45 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   half: { width: '48%' },
   bottomSection: {
@@ -154,5 +155,5 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     },
-  saveBtn: { borderRadius: 8 },
+  saveBtn: { borderRadius: DS.radius.sm },
 });

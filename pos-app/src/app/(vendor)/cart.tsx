@@ -1,4 +1,5 @@
 import React from 'react';
+import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { Text, useTheme, IconButton, TextInput } from 'react-native-paper';
 import { useCart } from '../../providers/CartProvider';
@@ -88,18 +89,18 @@ export default function CartScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 10, backgroundColor: 'white' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 10, backgroundColor: DS.colors.cardBg },
   headerTitle: { fontSize: 18, fontWeight: 'bold' },
   clearText: { fontWeight: 'bold', fontSize: 12 },
   listContainer: { padding: 16 },
   separator: { height: 1, marginVertical: 12 },
   emptyText: { textAlign: 'center', marginTop: 40, color: 'gray' },
   cartItem: { flexDirection: 'row', alignItems: 'center' },
-  itemImage: { width: 50, height: 50, borderRadius: 8, marginRight: 16 },
+  itemImage: { width: 50, height: 50, borderRadius: DS.radius.sm, marginRight: 16 },
   itemDetails: { flex: 1 },
   itemName: { fontWeight: 'bold', fontSize: 14, },
   itemMeta: { color: 'gray', fontSize: 10, marginTop: 2, marginBottom: 8 },
-  qtyController: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 6, width: 80, alignSelf: 'flex-start' },
+  qtyController: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: DS.radius.sm, width: 80, alignSelf: 'flex-start' },
   qtyBtn: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
   qtyBtnText: { fontSize: 14, fontWeight: 'bold' },
   qtyText: { flex: 1, textAlign: 'center', fontWeight: 'bold', fontSize: 12 },
@@ -112,6 +113,6 @@ const styles = StyleSheet.create({
   totalRow: { borderTopWidth: 1, borderTopColor: '#E0E0E0', paddingTop: 12, marginTop: 4 },
   totalLabel: { fontWeight: 'bold', fontSize: 16, },
   totalValue: { fontWeight: 'bold', fontSize: 16, },
-  payButton: { paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
+  payButton: { paddingVertical: 16, borderRadius: DS.radius.md, alignItems: 'center', marginTop: 20 },
   payButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 });
