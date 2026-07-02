@@ -209,7 +209,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           window.localStorage.setItem('cachedIsTrialExpired', String(expired));
           
           if (data.storeName || data.store_name) {
-            window.localStorage.setItem('storeName', data.storeName || data.store_name || 'BharatPOS');
+            window.localStorage.setItem('storeName', data.storeName || data.store_name || '');
           }
           if (data.isGstRegistered !== undefined || data.is_gst_registered !== undefined) {
             const isGst = data.isGstRegistered !== undefined ? data.isGstRegistered : data.is_gst_registered;

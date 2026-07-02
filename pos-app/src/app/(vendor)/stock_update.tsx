@@ -90,7 +90,13 @@ export default function StockUpdateScreen() {
         ) : (
           <View>
             <Surface style={styles.productCard} elevation={1}>
-              <Image source={{ uri: product.image_url || 'https://via.placeholder.com/50' }} style={styles.productImage} />
+              {product.image_url ? (
+                <Image source={{ uri: product.image_url }} style={styles.productImage} />
+              ) : (
+                <View style={[styles.productImage, { backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }]}>
+                  <Text style={{ fontSize: 18 }}>📦</Text>
+                </View>
+              )}
               <View>
                 <Text style={styles.productName}>{product.name}</Text>
                 <Text style={styles.productStock}>Current Stock: {product.stock_qty} PCS</Text>

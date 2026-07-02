@@ -127,7 +127,7 @@ export default function PaymentScreen() {
       // Deduct in localStorage (web-only backup/mock catalog support)
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const currentStockStr = window.localStorage.getItem(`stock_${item.id}`);
-        const currentStock = currentStockStr ? parseInt(currentStockStr) : 15;
+        const currentStock = currentStockStr ? parseInt(currentStockStr) : 0;
         window.localStorage.setItem(`stock_${item.id}`, String(Math.max(0, currentStock - item.qty)));
       }
     }));
@@ -160,7 +160,7 @@ export default function PaymentScreen() {
     if (checkLowStockSetting) {
       const lowStockItems = cart.filter(item => {
         const currentStockStr = window.localStorage.getItem(`stock_${item.id}`);
-        const currentStock = currentStockStr ? parseInt(currentStockStr) : 15;
+        const currentStock = currentStockStr ? parseInt(currentStockStr) : 0;
         const remainingStock = currentStock - item.qty;
         return remainingStock < 5;
       });

@@ -201,8 +201,8 @@ export default function VendorDashboard() {
       return '';
     }
   };
-  const userName = user?.email?.split('@')[0] || 'Ramesh';
-  const userInitial = (user?.email?.[0] || 'R').toUpperCase();
+  const userName = user?.email?.split('@')[0] || 'User';
+  const userInitial = (user?.email?.[0] || 'U').toUpperCase();
   const greeting = getGreeting();
 
   // --- Metric card data ---

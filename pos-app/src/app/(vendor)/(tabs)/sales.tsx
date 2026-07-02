@@ -13,7 +13,8 @@ type DateFilter = 'today' | 'week' | 'month';
 // --- Payment modes ---
 
 
-// --- Demo sales data ---
+
+
 
 
 export default function SalesHistoryScreen() {

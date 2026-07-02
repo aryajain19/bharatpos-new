@@ -32,7 +32,7 @@ export default function ProfileScreen() {
 
   // Profile and Store Information States
   const [profileName, setProfileName] = useState(() => {
-    return user?.email?.split('@')[0] || 'Ramesh';
+    return user?.email?.split('@')[0] || 'User';
   });
   const [storeNameText, setStoreNameText] = useState(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -40,8 +40,8 @@ export default function ProfileScreen() {
     }
     return 'BharatPOS';
   });
-  const [shiftTiming, setShiftTiming] = useState('9:00 AM – 6:00 PM');
-  const [storeIdText, setStoreIdText] = useState('SGS-BLR-042');
+  const [shiftTiming, setShiftTiming] = useState('');
+  const [storeIdText, setStoreIdText] = useState('');
 
   // Real Stats States
   const [totalSales, setTotalSales] = useState(0);
@@ -140,8 +140,8 @@ export default function ProfileScreen() {
   };
 
   const userName = profileName;
-  const userInitial = (profileName?.[0] || 'R').toUpperCase();
-  const userEmail = user?.email || 'ramesh@store.com';
+  const userInitial = (profileName?.[0] || 'U').toUpperCase();
+  const userEmail = user?.email || 'Not set';
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {

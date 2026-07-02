@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { Text, Button, Card, Divider, useTheme, Avatar, Portal, Dialog, TextInput, SegmentedButtons } from 'react-native-paper';
 import { useAppTheme } from '../providers/ThemeProvider';
 import { router, useLocalSearchParams } from 'expo-router';

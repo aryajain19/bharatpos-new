@@ -13,13 +13,16 @@ export default function CartScreen() {
 
   const renderCartItem = ({ item }: any) => (
     <View style={styles.cartItem}>
-      <Image 
-        source={{ uri: item.image_url || 'https://via.placeholder.com/50' }} 
-        style={styles.itemImage} 
-      />
+      {item.image_url ? (
+        <Image source={{ uri: item.image_url }} style={styles.itemImage} />
+      ) : (
+        <View style={[styles.itemImage, { backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ fontSize: 18 }}>📦</Text>
+        </View>
+      )}
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemMeta}>Size: {item.size || 'M'}</Text>
+        {item.category ? <Text style={styles.itemMeta}>{item.category}</Text> : null}
         <View style={styles.qtyController}>
           <TouchableOpacity onPress={() => updateQty(item.id, -1)} style={styles.qtyBtn}>
             <Text style={styles.qtyBtnText}>-</Text>

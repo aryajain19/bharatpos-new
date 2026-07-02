@@ -22,8 +22,15 @@ export default function ProfitLossScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width > 800;
 
-  const [fromDate, setFromDate] = useState('01/04/2026');
-  const [toDate, setToDate] = useState('13/06/2026');
+  const [fromDate, setFromDate] = useState(() => {
+    const now = new Date();
+    const fyStart = now.getMonth() >= 3 ? new Date(now.getFullYear(), 3, 1) : new Date(now.getFullYear() - 1, 3, 1);
+    return `${String(fyStart.getDate()).padStart(2, '0')}/${String(fyStart.getMonth() + 1).padStart(2, '0')}/${fyStart.getFullYear()}`;
+  });
+  const [toDate, setToDate] = useState(() => {
+    const now = new Date();
+    return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+  });
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -19,7 +19,7 @@ export default function ReportsAnalyticsScreen() {
 
   const [isGstRegistered, setIsGstRegistered] = useState(true);
   const [shopMode, setShopMode] = useState('Mobile Only');
-  const [storeName, setStoreName] = useState('My Store');
+  const [storeName, setStoreName] = useState('');
   const [netProfit, setNetProfit] = useState(0);
   const [paymentStats, setPaymentStats] = useState({ upi: 0, cash: 0, card: 0 });
   const [paymentAmts, setPaymentAmts] = useState({ upi: 0, cash: 0, card: 0 });

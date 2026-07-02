@@ -106,11 +106,17 @@ export default function ProductDetailsScreen() {
   return (
     <View style={styles.container}>
       <Surface style={styles.imageContainer} elevation={1}>
-        <Image 
-          source={{ uri: product.image_url || 'https://via.placeholder.com/150' }} 
-          style={styles.image} 
-          resizeMode="contain"
-        />
+        {product.image_url ? (
+          <Image 
+            source={{ uri: product.image_url }} 
+            style={styles.image} 
+            resizeMode="contain"
+          />
+        ) : (
+          <View style={[styles.image, { backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ fontSize: 48 }}>📦</Text>
+          </View>
+        )}
       </Surface>
 
       <View style={styles.detailsContainer}>

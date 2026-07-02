@@ -31,7 +31,7 @@ export default function InventoryManagementScreen() {
   // ── State ────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<'stock' | 'locations' | 'transfers'>('stock');
   const [products, setProducts] = useState<Product[]>([]);
-  const [locations, setLocations] = useState<string[]>(['Main Shop', 'Godown Sector 5', 'Basement Warehouse']);
+  const [locations, setLocations] = useState<string[]>(['Main Shop']);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +44,7 @@ export default function InventoryManagementScreen() {
   const [showTransfer, setShowTransfer] = useState(false);
   const [selectedProd, setSelectedProd] = useState<Product | null>(null);
   const [fromLoc, setFromLoc] = useState('Main Shop');
-  const [toLoc, setToLoc] = useState('Godown Sector 5');
+  const [toLoc, setToLoc] = useState('');
   const [transferQty, setTransferQty] = useState('');
   const [savingTransfer, setSavingTransfer] = useState(false);
 
@@ -68,20 +68,24 @@ export default function InventoryManagementScreen() {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch Locations list
-      const locRef = doc(db, 'settings', `inventory_locations_${tenantId}`);
-      const locSnap = await getDoc(locRef);
-      if (locSnap.exists() && locSnap.data()?.list) {
-        setLocations(locSnap.data().list);
-      } else {
-        setLocations(['Main Shop', 'Godown Sector 5', 'Basement Warehouse']);
+      // 1. Fetch Locations list (fail silently if permission denied)
+      try {
+        const locRef = doc(db, 'settings', tenantId);
+        const locSnap = await getDoc(locRef);
+        if (locSnap.exists() && locSnap.data()?.locations) {
+          setLocations(locSnap.data().locations);
+        } else {
+          setLocations(['Main Shop']);
+        }
+      } catch (locErr) {
+        console.warn("Could not fetch inventory locations, using defaults:", locErr);
+        setLocations(['Main Shop']);
       }
 
-      // 2. Fetch Products
+      // 2. Fetch Products (tenant filter only; sorting done client-side)
       const q = query(
         collection(db, 'products'),
-        where('tenant_id', '==', tenantId),
-        orderBy('stock_qty', 'asc')
+        where('tenant_id', '==', tenantId)
       );
       const snapshot = await getDocs(q);
       const fetchedProds: Product[] = snapshot.docs.map(dSnap => {
@@ -100,6 +104,8 @@ export default function InventoryManagementScreen() {
           location_stocks: p.location_stocks || { 'Main Shop': stockVal }
         };
       });
+      // Client-side sort by stock_qty ascending
+      fetchedProds.sort((a, b) => a.stock_qty - b.stock_qty);
       setProducts(fetchedProds);
     } catch (err: any) {
       console.error("Error fetching inventory data:", err);
@@ -110,6 +116,7 @@ export default function InventoryManagementScreen() {
   };
 
   const handleAddLocation = async () => {
+    if (!tenantId) return;
     if (!newLocName.trim()) {
       Alert.alert('Error', 'Please enter a valid warehouse/godown name.');
       return;
@@ -121,8 +128,8 @@ export default function InventoryManagementScreen() {
     setSavingLoc(true);
     try {
       const updated = [...locations, newLocName.trim()];
-      const locRef = doc(db, 'settings', `inventory_locations_${tenantId}`);
-      await setDoc(locRef, { list: updated });
+      const locRef = doc(db, 'settings', tenantId);
+      await setDoc(locRef, { locations: updated }, { merge: true });
       setLocations(updated);
       setNewLocName('');
       setShowAddLoc(false);

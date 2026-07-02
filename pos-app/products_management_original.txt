@@ -1,0 +1,133 @@
+Created At: 2026-06-13T07:33:36Z
+Completed At: 2026-06-13T07:33:36Z
+File Path: `file:///C:/Users/hp200/.gemini/antigravity/scratch/pos-app/src/app/%28admin%29/products_management.tsx`
+Total Lines: 125
+Total Bytes: 6312
+Showing lines 1 to 125
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import React, { useState, useEffect } from 'react';
+2: import { View, StyleSheet, ScrollView } from 'react-native';
+3: import { Text, Card, DataTable, Button, IconButton } from 'react-native-paper';
+4: import { supabase } from '../../lib/supabase';
+5: import { router } from 'expo-router';
+6: import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+7: 
+8: export default function ProductsManagementScreen() {
+9:   const [products, setProducts] = useState<any[]>([]);
+10: 
+11:   useEffect(() => {
+12:     fetchProducts();
+13:   }, []);
+14: 
+15:   const fetchProducts = async () => {
+16:     if (!supabase) return;
+17:     const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+18:     if (data) setProducts(data);
+19:   };
+20: 
+21:   return (
+22:     <View style={styles.container}>
+23:       <View style={styles.header}>
+24:         <Text style={styles.title}>Products</Text>
+25:         <Button 
+26:           mode="contained" 
+27:           onPress={() => router.push('/(vendor)/add_product')} 
+28:           style={styles.addBtn}
+29:           contentStyle={{ paddingHorizontal: 8 }}
+30:         >
+31:           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+32:             <Icon name="plus" size={16} color="white" style={{ marginRight: 4 }} />
+33:             <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 13 }}>Add Product</Text>
+34:           </View>
+35:         </Button>
+36:       </View>
+37: 
+38:       <Card style={styles.card} elevation={1}>
+39:         <ScrollView horizontal>
+40:           <View style={{ minWidth: 1000, width: '100%' }}>
+41:             <DataTable>
+42:               <DataTable.Header style={styles.tableHeader}>
+43:                 <DataTable.Title style={{ flex: 3 }}><Text style={styles.colHeader}>Product</Text></DataTable.Title>
+44:                 <DataTable.Title style={{ flex: 2 }}><Text style={styles.colHeader}>Category</Text></DataTable.Title>
+45:                 <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.colHeader}>MRP</Text></DataTable.Title>
+46:                 <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.colHeader}>Selling Price</Text></DataTable.Title>
+47:                 <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHeader}>Stock</Text></DataTable.Title>
+48:                 <DataTable.Title style={{ flex: 1.5, justifyContent: 'center' }}><Text style={styles.colHeader}>Status</Text></DataTable.Title>
+49:                 <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHeader}>Action</Text></DataTable.Title>
+50:               </DataTable.Header>
+51: 
+52:               {products.map((item) => {
+53:                 const isOutOfStock = item.stock_qty <= 0;
+54:                 return (
+55:                   <DataTable.Row key={item.id} style={styles.tableRow}>
+56:                     <DataTable.Cell style={{ flex: 3 }}>
+57:                       <Text style={styles.cellMainText}>{item.name}</Text>
+58:                     </DataTable.Cell>
+59:                     <DataTable.Cell style={{ flex: 2 }}>
+60:                       <Text style={styles.cellSubText}>{item.category || 'N/A'}</Text>
+61:                     </DataTable.Cell>
+62:                     <DataTable.Cell numeric style={{ flex: 1.5 }}>
+63:                       <Text style={styles.cellSubText}>₹{item.mrp.toFixed(2)}</Text>
+64:                     </DataTable.Cell>
+65:                     <DataTable.Cell numeric style={{ flex: 1.5 }}>
+66:                       <Text style={styles.cellMainText}>₹{item.selling_price.toFixed(2)}</Text>
+67:                     </DataTable.Cell>
+68:                     <DataTable.Cell numeric style={{ flex: 1 }}>
+69:                       <Text style={styles.cellSubText}>{item.stock_qty}</Text>
+70:                     </DataTable.Cell>
+71:                     <DataTable.Cell style={{ flex: 1.5, justifyContent: 'center' }}>
+72:                       <View style={styles.statusContainer}>
+73:                         <Icon 
+74:                           name={isOutOfStock ? "close-circle-outline" : "check-circle-outline"} 
+75:                           size={14} 
+76:                           color={isOutOfStock ? '#F44336' : '#4CAF50'} 
+77:                         />
+78:                         <Text style={[styles.statusText, { color: isOutOfStock ? '#F44336' : '#4CAF50' }]}>
+79:                           {isOutOfStock ? 'Out of Stock' : 'In Stock'}
+80:                         </Text>
+81:                       </View>
+82:                     </DataTable.Cell>
+83:                     <DataTable.Cell numeric style={{ flex: 1 }}>
+84:                       <View style={styles.actionIcons}>
+85:                         <TouchableOpacity style={{ marginRight: 12 }}>
+86:                           <Icon name="pencil-outline" size={18} color="#2196F3" />
+87:                         </TouchableOpacity>
+88:                         <TouchableOpacity>
+89:                           <Icon name="trash-can-outline" size={18} color="#F44336" />
+90:                         </TouchableOpacity>
+91:                       </View>
+92:                     </DataTable.Cell>
+93:                   </DataTable.Row>
+94:                 );
+95:               })}
+96: 
+97:               {products.length === 0 && (
+98:                 <View style={{ padding: 40, alignItems: 'center' }}>
+99:                   <Text style={{ color: 'gray' }}>No products found.</Text>
+100:                 </View>
+101:               )}
+102:             </DataTable>
+103:           </View>
+104:         </ScrollView>
+105:       </Card>
+106:     </View>
+107:   );
+108: }
+109: 
+110: const styles = StyleSheet.create({
+111:   container: { flex: 1, backgroundColor: '#F5F6FA', padding: 24 },
+112:   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+113:   title: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+114:   addBtn: { borderRadius: 6, backgroundColor: '#2196F3' },
+115:   card: { backgroundColor: 'white', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#E0E0E0' },
+116:   tableHeader: { backgroundColor: '#FAFAFA', borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
+117:   colHeader: { fontWeight: 'bold', color: 'gray', fontSize: 12 },
+118:   tableRow: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+119:   cellMainText: { fontWeight: '600', color: '#333', fontSize: 13 },
+120:   cellSubText: { color: 'gray', fontSize: 13 },
+121:   statusContainer: { flexDirection: 'row', alignItems: 'center' },
+122:   statusText: { fontSize: 12, fontWeight: 'bold', marginLeft: 4 },
+123:   actionIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', width: '100%' },
+124: });
+125: 
+The above content shows the entire, complete file contents of the requested file.

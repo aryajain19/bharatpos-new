@@ -39,9 +39,9 @@ export default function GSTManagementScreen() {
   const [showEinvoiceModal, setShowEinvoiceModal] = useState(false);
   
   const [showEwayModal, setShowEwayModal] = useState(false);
-  const [ewayTransporter, setEwayTransporter] = useState('DTDC Logistics');
-  const [ewayDistance, setEwayDistance] = useState('120');
-  const [ewayVehicle, setEwayVehicle] = useState('DL-1AA-1234');
+  const [ewayTransporter, setEwayTransporter] = useState('');
+  const [ewayDistance, setEwayDistance] = useState('');
+  const [ewayVehicle, setEwayVehicle] = useState('');
   const [generatingEway, setGeneratingEway] = useState(false);
 
   useEffect(() => {

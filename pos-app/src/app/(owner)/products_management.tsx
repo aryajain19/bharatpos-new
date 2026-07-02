@@ -19,6 +19,7 @@ export default function ProductsManagementScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const [showImportModal, setShowImportModal] = useState(false);
   const [rawInvoiceText, setRawInvoiceText] = useState('');
+  const [driveUrl, setDriveUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [fileLoadingMsg, setFileLoadingMsg] = useState('');
@@ -153,49 +154,145 @@ export default function ProductsManagementScreen() {
       setShowImportModal(false);
       setRawInvoiceText('');
       fetchProducts();
-    } catch (e) {
+    } catch (e: any) {
       Alert.alert('Import Failed', e.message || 'An error occurred during import.');
     } finally {
       setIsImporting(false);
     }
   };
 
-  const handleSimulatedFileUpload = async (type: 'pdf' | 'csv' | 'ocr') => {
-    setIsFileLoading(true);
-    let msg = '';
-    if (type === 'pdf') msg = 'Extracting invoice rows from PDF file...';
-    else if (type === 'csv') msg = 'Importing CSV distributor list...';
-    else msg = 'Running OCR scanning on invoice photo...';
-    setFileLoadingMsg(msg);
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    let text = '';
-    if (type === 'pdf') {
-      text = "Britannia Marie Gold 250g, 40, 35.00, 28.00, 8901063023245\nBritannia 50-50 Maska Chaska, 50, 25.00, 20.00, 8901063030311\nBritannia Bourbon 150g, 30, 40.00, 32.00, 8901063141222";
-      Alert.alert('PDF Import Success', 'Extracted 3 items from PDF invoice successfully!');
-    } else if (type === 'csv') {
-      text = "Maggi Noodles 70g | Qty: 100 | MRP: 14.00 | Cost: 11.50 | Barcode: 8901058002316\nNestle KitKat 38g | Qty: 50 | MRP: 25.00 | Cost: 20.00 | Barcode: 8901058860718\nNescafe Classic Coffee 50g | Qty: 20 | MRP: 160.00 | Cost: 130.00 | Barcode: 8901058190013";
-      Alert.alert('CSV Import Success', 'Parsed CSV distributor columns successfully!');
-    } else {
-      text = "Dettol Liquid Soap 200ml - Qty: 25 - MRP: 99 - Cost: 80 - Barcode: 8901396326124\nSurf Excel Easy Wash 1kg - Qty: 15 - MRP: 140 - Cost: 112 - Barcode: 8901030752536\nVim Liquid Gel 250ml - Qty: 30 - MRP: 55 - Cost: 44 - Barcode: 8901030683410";
-      Alert.alert('OCR Scan Success', 'AI Scanner successfully read 3 products from image print!');
-    }
-    
-    setRawInvoiceText(text);
-    setIsFileLoading(false);
+  // Dynamic PDF.js worker loading for real PDF parsing
+  const loadPdfJS = () => {
+    return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined') {
+        reject(new Error('Window is not defined.'));
+        return;
+      }
+      if ((window as any).pdfjsLib) {
+        resolve((window as any).pdfjsLib);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+      script.onload = () => {
+        const pdfjsLib = (window as any).pdfjsLib;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        resolve(pdfjsLib);
+      };
+      script.onerror = () => reject(new Error('Failed to load PDF.js script.'));
+      document.body.appendChild(script);
+    });
   };
 
-  const handleDriveImport = async (fileName: string, textContent: string) => {
+  const handleRealFileUpload = async (accept: string) => {
+    if (typeof document === 'undefined') return;
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = accept;
+    
+    fileInput.onchange = async (e: any) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+
+      setIsFileLoading(true);
+      setFileLoadingMsg(`Reading file "${file.name}"...`);
+
+      try {
+        if (file.name.toLowerCase().endsWith('.pdf')) {
+          setFileLoadingMsg(`Parsing PDF text content...`);
+          const reader = new FileReader();
+          reader.onload = async (evt: any) => {
+            try {
+              const arrayBuffer = evt.target.result as ArrayBuffer;
+              const pdfjsLib: any = await loadPdfJS();
+              const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+              
+              let extractedText = '';
+              for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                extractedText += pageText + '\n';
+              }
+
+              if (!extractedText.trim()) {
+                throw new Error('No readable text found in PDF. Make sure it is not a scanned image.');
+              }
+
+              setRawInvoiceText(extractedText);
+              Alert.alert('PDF Parsing Success', `Extracted text from "${file.name}" successfully!`);
+            } catch (err: any) {
+              Alert.alert('PDF Parsing Error', err.message || 'Failed to extract text from the PDF file.');
+            } finally {
+              setIsFileLoading(false);
+            }
+          };
+          reader.readAsArrayBuffer(file);
+        } else {
+          // Standard CSV / Text files
+          const reader = new FileReader();
+          reader.onload = (evt: any) => {
+            const text = evt.target.result;
+            setRawInvoiceText(text);
+            setIsFileLoading(false);
+            Alert.alert('File Upload Success', `Loaded "${file.name}" successfully!`);
+          };
+          reader.readAsText(file);
+        }
+      } catch (err: any) {
+        Alert.alert('File Upload Error', err.message || 'Failed to read the file.');
+        setIsFileLoading(false);
+      }
+    };
+
+    fileInput.click();
+  };
+
+  const handleDriveImport = async (driveUrl: string) => {
+    if (!driveUrl.trim()) {
+      Alert.alert('Error', 'Please enter a valid Google Drive file/sheet share link.');
+      return;
+    }
+
+    let fileId = '';
+    const sheetMatch = driveUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    const idMatch = driveUrl.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+    if (sheetMatch) {
+      fileId = sheetMatch[1];
+    } else if (idMatch) {
+      fileId = idMatch[1];
+    } else {
+      fileId = driveUrl.trim(); // assume direct file ID
+    }
+
     setShowDriveModal(false);
     setIsFileLoading(true);
-    setFileLoadingMsg(`Downloading "${fileName}" from Google Drive...`);
-    
-    await new Promise(resolve => setTimeout(resolve, 1800));
-    
-    setRawInvoiceText(textContent);
-    setIsFileLoading(false);
-    Alert.alert('Google Drive Sync', `Successfully imported product records from "${fileName}"!`);
+    setFileLoadingMsg(`Downloading file from Google Drive...`);
+
+    try {
+      // 1. Try fetching as exported Google Sheet (CSV format)
+      const exportUrl = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=csv`;
+      const response = await fetch(exportUrl);
+      if (!response.ok) {
+        // 2. Fallback to direct raw file download
+        const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        const resp2 = await fetch(directUrl);
+        if (!resp2.ok) {
+          throw new Error('Failed to retrieve Google Drive file. Ensure the file is shared publicly as "Anyone with link".');
+        }
+        const text = await resp2.text();
+        setRawInvoiceText(text);
+      } else {
+        const csvText = await response.text();
+        setRawInvoiceText(csvText);
+      }
+      Alert.alert('Google Drive Sync Success', 'Successfully fetched and imported file content!');
+    } catch (e: any) {
+      Alert.alert('Google Drive Error', e.message || 'Failed to fetch the file.');
+    } finally {
+      setIsFileLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -334,10 +431,7 @@ export default function ProductsManagementScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Icon name="file-import" size={24} color={appTheme.colors.primary} style={{ marginRight: 8 }} />
-                <Text style={styles.modalTitle}>Auto-Import from Bill / Invoice</Text>
-              </View>
+              <Text style={styles.modalTitle}>Auto-Import Product List</Text>
               <IconButton icon="close" size={20} onPress={() => setShowImportModal(false)} />
             </View>
 
@@ -357,35 +451,32 @@ export default function ProductsManagementScreen() {
                   textColor="#34A853"
                   compact
                 >
-                  Google Drive
+                  Google Drive Link
                 </Button>
-                
                 <Button 
                   mode="outlined" 
                   icon="file-pdf-box" 
-                  onPress={() => handleSimulatedFileUpload('pdf')}
+                  onPress={() => handleRealFileUpload('.pdf')}
                   style={{ borderColor: '#E53935', borderRadius: 8 }}
                   textColor="#E53935"
                   compact
                 >
                   PDF Bill
                 </Button>
-
                 <Button 
                   mode="outlined" 
                   icon="file-delimited-outline" 
-                  onPress={() => handleSimulatedFileUpload('csv')}
+                  onPress={() => handleRealFileUpload('.csv,.txt')}
                   style={{ borderColor: '#43A047', borderRadius: 8 }}
                   textColor="#43A047"
                   compact
                 >
                   CSV List
                 </Button>
-
                 <Button 
                   mode="outlined" 
                   icon="camera-outline" 
-                  onPress={() => handleSimulatedFileUpload('ocr')}
+                  onPress={() => handleRealFileUpload('image/*')}
                   style={{ borderColor: '#F57C00', borderRadius: 8 }}
                   textColor="#F57C00"
                   compact
@@ -427,7 +518,7 @@ export default function ProductsManagementScreen() {
                 multiline
                 numberOfLines={6}
                 style={styles.textArea}
-                placeholder="Format example:\nBritannia Marie Gold 250g, 40, 35.00, 28.00, 8901063023245\nOR\nMaggi Noodles 70g | Qty: 100 | MRP: 14.00 | Cost: 11.50 | Barcode: 8901058002316"
+                placeholder={"Format example:\nBritannia Marie Gold 250g, 40, 35.00, 28.00, 8901063023245\nOR\nMaggi Noodles 70g | Qty: 100 | MRP: 14.00 | Cost: 11.50 | Barcode: 8901058002316"}
               />
 
               {/* Parser Real-time Preview */}
@@ -443,12 +534,12 @@ export default function ProductsManagementScreen() {
                         <DataTable.Title numeric style={{ flex: 1.2 }}><Text style={styles.previewColHead}>Barcode</Text></DataTable.Title>
                       </DataTable.Header>
 
-                      {parsedItems.map((item, idx) => (
+                      {parsedItems.map((pItem, idx) => (
                         <DataTable.Row key={idx}>
-                          <DataTable.Cell style={{ flex: 2 }}><Text style={styles.previewCellMain}>{item.name}</Text></DataTable.Cell>
-                          <DataTable.Cell numeric style={{ flex: 0.8 }}><Text style={styles.previewCellSub}>{item.qty}</Text></DataTable.Cell>
-                          <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.previewCellSub}>₹{item.mrp.toFixed(2)}</Text></DataTable.Cell>
-                          <DataTable.Cell numeric style={{ flex: 1.2 }}><Text style={styles.previewCellBarcode} numberOfLines={1}>{item.barcode || 'Auto-Gen'}</Text></DataTable.Cell>
+                          <DataTable.Cell style={{ flex: 2 }}><Text style={styles.previewCellMain}>{pItem.name}</Text></DataTable.Cell>
+                          <DataTable.Cell numeric style={{ flex: 0.8 }}><Text style={styles.previewCellSub}>{pItem.qty}</Text></DataTable.Cell>
+                          <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.previewCellSub}>₹{pItem.mrp.toFixed(2)}</Text></DataTable.Cell>
+                          <DataTable.Cell numeric style={{ flex: 1.2 }}><Text style={styles.previewCellBarcode} numberOfLines={1}>{pItem.barcode || 'Auto-Gen'}</Text></DataTable.Cell>
                         </DataTable.Row>
                       ))}
                     </DataTable>
@@ -472,14 +563,14 @@ export default function ProductsManagementScreen() {
                 disabled={isImporting || parsedItems.length === 0}
                 style={styles.modalBtn}
               >
-                Confirm Import
+                Add {parsedItems.length} Products to Catalog
               </Button>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Google Drive Selector Modal */}
+      {/* Google Drive Link Input Modal */}
       <Modal
         visible={showDriveModal}
         transparent={true}
@@ -496,56 +587,35 @@ export default function ProductsManagementScreen() {
               <IconButton icon="close" size={20} onPress={() => setShowDriveModal(false)} />
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1, padding: 20 }}>
-              <Text style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>
-                Select an invoice, purchase order, or general CSV catalog file from your synced Google Drive account:
+            <View style={{ padding: 20 }}>
+              <Text style={{ fontSize: 13, color: '#475569', lineHeight: 18, marginBottom: 12 }}>
+                Enter the shareable link of a public Google Spreadsheet or text file. Make sure the file is set to "Anyone with link" can view.
               </Text>
 
-              {[
-                { 
-                  name: 'britannia_purchase_order_2026.csv', 
-                  desc: 'CSV Sheet - Modified Yesterday', 
-                  content: "Britannia Marie Gold 250g, 40, 35.00, 28.00, 8901063023245\nBritannia 50-50 Maska Chaska, 50, 25.00, 20.00, 8901063030311\nBritannia Bourbon 150g, 30, 40.00, 32.00, 8901063141222"
-                },
-                { 
-                  name: 'nestle_maggi_distribution_bill_june.pdf', 
-                  desc: 'PDF Document - Modified June 15, 2026', 
-                  content: "Maggi Noodles 70g | Qty: 100 | MRP: 14.00 | Cost: 11.50 | Barcode: 8901058002316\nNestle KitKat 38g | Qty: 50 | MRP: 25.00 | Cost: 20.00 | Barcode: 8901058860718\nNescafe Classic Coffee 50g | Qty: 20 | MRP: 160.00 | Cost: 130.00 | Barcode: 8901058190013"
-                },
-                { 
-                  name: 'soap_personalcare_hul_invoice.txt', 
-                  desc: 'Plain Text - Modified 3 days ago', 
-                  content: "Dettol Liquid Soap 200ml - Qty: 25 - MRP: 99 - Cost: 80 - Barcode: 8901396326124\nSurf Excel Easy Wash 1kg - Qty: 15 - MRP: 140 - Cost: 112 - Barcode: 8901030752536\nVim Liquid Gel 250ml - Qty: 30 - MRP: 55 - Cost: 44 - Barcode: 8901030683410"
-                }
-              ].map((file, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: 14,
-                    borderWidth: 1,
-                    borderColor: '#E2E8F0',
-                    borderRadius: 10,
-                    marginBottom: 10,
-                    backgroundColor: 'white'
-                  }}
-                  onPress={() => handleDriveImport(file.name, file.content)}
-                >
-                  <Icon name={file.name.endsWith('.pdf') ? 'file-pdf-box' : file.name.endsWith('.csv') ? 'file-delimited-outline' : 'file-document-outline'} size={24} color={file.name.endsWith('.pdf') ? '#E53935' : file.name.endsWith('.csv') ? '#43A047' : '#475569'} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#1E293B' }} numberOfLines={1}>{file.name}</Text>
-                    <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{file.desc}</Text>
-                  </View>
-                  <Icon name="cloud-download-outline" size={18} color="#94A3B8" />
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+              <TextInput
+                label="Public Google Drive Share Link / File ID"
+                placeholder="https://docs.google.com/spreadsheets/d/.../edit?usp=sharing"
+                value={driveUrl}
+                onChangeText={setDriveUrl}
+                mode="outlined"
+                style={{ marginBottom: 16 }}
+              />
+
+              <Button 
+                mode="contained" 
+                onPress={() => handleDriveImport(driveUrl)}
+                loading={isFileLoading}
+                disabled={isFileLoading || !driveUrl.trim()}
+                style={{ borderRadius: 8, backgroundColor: '#34A853', paddingVertical: 4 }}
+                contentStyle={{ height: 44 }}
+              >
+                Sync & Download
+              </Button>
+            </View>
 
             <View style={[styles.modalFooter, { backgroundColor: '#F8FAFC' }]}>
               <Button mode="outlined" onPress={() => setShowDriveModal(false)} style={{ borderRadius: 8 }}>
-                Close Drive
+                Cancel
               </Button>
             </View>
           </View>
@@ -558,9 +628,9 @@ export default function ProductsManagementScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  title: { fontSize: 16, fontWeight: 'bold', },
-  addBtn: { borderRadius: 6, },
-  card: { backgroundColor: 'white', borderRadius: 12, overflow: 'hidden', borderWidth: 1, },
+  title: { fontSize: 16, fontWeight: 'bold' },
+  addBtn: { borderRadius: 6 },
+  card: { backgroundColor: 'white', borderRadius: 12, overflow: 'hidden', borderWidth: 1 },
   tableHeader: { borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
   colHeader: { fontWeight: 'bold', color: 'gray', fontSize: 12 },
   tableRow: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },

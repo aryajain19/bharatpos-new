@@ -28,7 +28,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Personal Care': 'face-man-shimmer',
 };
 
-// --- 18 Realistic Indian products ---
+
 
 
 export default function ProductsScreen() {
@@ -85,7 +85,7 @@ export default function ProductsScreen() {
           id: p.id,
           name: p.name,
           selling_price: p.selling_price || p.price,
-          stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 15),
+          stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 0),
           category: p.category || 'Grocery',
           gst_pct: p.gst_pct || 0,
           hsn: p.hsn || '',

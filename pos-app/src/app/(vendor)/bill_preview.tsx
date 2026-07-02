@@ -94,7 +94,7 @@ export default function BillPreviewScreen() {
             <div class="receipt-box">
               <div class="header">
                 <h1 class="store-name">${storeName}</h1>
-                <p class="store-subtitle">${address || 'BharatPOS Merchant Store'}</p>
+                <p class="store-subtitle">${address || ''}</p>
                 ${isGstRegistered && gstNum ? `<div class="gstin">GSTIN: ${gstNum}</div>` : ''}
               </div>
               <div class="invoice-details">

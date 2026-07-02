@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Modal, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Text, Card, DataTable, Button, useTheme, IconButton, Switch, TextInput, SegmentedButtons } from 'react-native-paper';
+import { Text, Card, DataTable, Button, useTheme, IconButton, Switch, TextInput, SegmentedButtons, Divider } from 'react-native-paper';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, addDoc, getDoc } from '../../lib/firestore_adapter';
 import { useAuth } from '../../providers/AuthProvider';

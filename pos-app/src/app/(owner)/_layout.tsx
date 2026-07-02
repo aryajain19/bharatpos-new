@@ -491,7 +491,7 @@ export default function OwnerLayout() {
                     activeOpacity={1}
                   />
                   <View style={[styles.profileDropdown, { top: 60, right: 20 }]}>
-                    <View style={styles.dropdownHeader}>
+                    <View style={styles.profileDropdownHeader}>
                       <Text style={styles.dropdownUser}>{userName}</Text>
                       <Text style={styles.dropdownRole}>Store Owner</Text>
                     </View>
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
-  dropdownHeader: {
+  profileDropdownHeader: {
     padding: 12,
   },
   dropdownUser: {
