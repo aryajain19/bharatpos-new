@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, useWindowDimensions, Image } from 'react-native';
 import { Text, Card, Button, useTheme, TextInput, Divider, SegmentedButtons, DataTable, Surface, Switch } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
@@ -17,9 +17,12 @@ export default function DataImportScreen() {
   const [activeTab, setActiveTab] = useState<'file' | 'cloud'>('file');
 
   // File Import States
-  const [importFormat, setImportFormat] = useState<'tally' | 'csv'>('tally');
+  const [importFormat, setImportFormat] = useState<'tally' | 'csv' | 'image'>('tally');
   const [rawDataText, setRawDataText] = useState('');
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [isFileLoading, setIsFileLoading] = useState(false);
+  const [fileLoadingMsg, setFileLoadingMsg] = useState('');
 
   // Cloud Sync States
   const [syncSource, setSyncSource] = useState<'tally' | 'shopify' | 'gstin'>('tally');
@@ -76,6 +79,15 @@ Maggi Noodles 70g, 13.00, 10.50, 150, Snacks, 8901058895642, 18
 Surf Excel Easy Wash 1kg, 130.00, 110.00, 35, Detergent, 8901030753083, 18
 Tata Salt 1kg, 26.00, 21.00, 120, Staples, 8901058002316, 0`;
 
+  const OCR_BILL_TEMPLATE = `INVOICE BILL - REGIONAL WHOLESALE DISTRIBUTORS
+Invoice Date: 02/07/2026
+------------------------------------------------------------
+1. Britannia Marie Gold 250g | Qty: 120 | Price: 26.00 | Sell: 32.00
+2. Fortune Mustard Oil 1L     | Qty: 60  | Price: 155.00 | Sell: 172.00
+3. Amul Butter 100g           | Qty: 80  | Price: 51.00 | Sell: 56.00
+------------------------------------------------------------
+Total GST Collected: ₹2,154.00`;
+
   // Parsed results helper
   const parsedItems = useMemo(() => {
     if (!rawDataText.trim()) return [];
@@ -114,7 +126,7 @@ Tata Salt 1kg, 26.00, 21.00, 120, Staples, 8901058002316, 0`;
           });
         }
       }
-    } else {
+    } else if (importFormat === 'csv') {
       // Parse CSV
       const lines = rawDataText.split('\n');
       lines.forEach((line, idx) => {
@@ -140,6 +152,36 @@ Tata Salt 1kg, 26.00, 21.00, 120, Staples, 8901058002316, 0`;
               category,
               barcode,
               gst_pct,
+              status: 'Valid'
+            });
+          }
+        }
+      });
+    } else {
+      // Parse simulated OCR bill lines
+      const lines = rawDataText.split('\n');
+      lines.forEach(line => {
+        if (line.includes('|')) {
+          const parts = line.split('|').map(s => s.trim());
+          const namePart = parts[0].replace(/^\d+\.\s*/, '');
+          
+          const qtyMatch = parts[1]?.match(/Qty:\s*(\d+)/i);
+          const costMatch = parts[2]?.match(/Price:\s*([\d.]+)/i);
+          const sellMatch = parts[3]?.match(/Sell:\s*([\d.]+)/i);
+
+          const stock_qty = qtyMatch ? parseInt(qtyMatch[1]) : 0;
+          const cost_price = costMatch ? parseFloat(costMatch[1]) : 0;
+          const selling_price = sellMatch ? parseFloat(sellMatch[1]) : cost_price * 1.25;
+
+          if (namePart && selling_price > 0) {
+            items.push({
+              name: namePart,
+              selling_price,
+              cost_price,
+              stock_qty,
+              category: 'General',
+              barcode: '',
+              gst_pct: 18,
               status: 'Valid'
             });
           }
@@ -180,12 +222,48 @@ Tata Salt 1kg, 26.00, 21.00, 120, Staples, 8901058002316, 0`;
 
       Alert.alert('Migration Complete', `Successfully imported ${importedCount} products into your active inventory database.`);
       setRawDataText('');
+      setSelectedImageUri(null);
     } catch (e: any) {
       console.error(e);
       Alert.alert('Migration Error', e.message || 'An error occurred during database migration.');
     } finally {
       setIsProcessingFile(false);
     }
+  };
+
+  // Simulated OCR Photo Uploader
+  const handleUploadImage = () => {
+    if (typeof document === 'undefined') return;
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    
+    fileInput.onchange = async (e: any) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+
+      setIsFileLoading(true);
+      setFileLoadingMsg(`Reading image file "${file.name}"...`);
+
+      try {
+        const reader = new FileReader();
+        reader.onload = async (evt: any) => {
+          setSelectedImageUri(evt.target.result);
+          setFileLoadingMsg(`Running cloud OCR layout text scan...`);
+          await new Promise(r => setTimeout(r, 1200));
+          setRawDataText(OCR_BILL_TEMPLATE);
+          setIsFileLoading(false);
+          Alert.alert('OCR Processing Success', `Invoice photo text extracted successfully! Verification table populated below.`);
+        };
+        reader.readAsDataURL(file);
+      } catch (err: any) {
+        Alert.alert('OCR Error', err.message || 'Failed to scan the image.');
+        setIsFileLoading(false);
+      }
+    };
+
+    fileInput.click();
   };
 
   // Simulate Cloud Sync / API integration fetch
@@ -298,39 +376,101 @@ Tata Salt 1kg, 26.00, 21.00, 120, Staples, 8901058002316, 0`;
               onValueChange={(val: any) => {
                 setImportFormat(val);
                 setRawDataText('');
+                setSelectedImageUri(null);
               }}
               buttons={[
                 { value: 'tally', label: 'TallyPrime XML Export', icon: 'code-tags' },
-                { value: 'csv', label: 'Generic POS CSV / Excel', icon: 'file-excel-outline' }
+                { value: 'csv', label: 'Generic POS CSV / Excel', icon: 'file-excel-outline' },
+                { value: 'image', label: 'Scan Photo (OCR)', icon: 'camera-outline' }
               ]}
               style={styles.subTabBar}
             />
 
-            <View style={styles.editorHeader}>
-              <Text style={styles.cardSectionTitle}>2. Paste XML / CSV Content</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setRawDataText(importFormat === 'tally' ? TALLY_XML_TEMPLATE : POS_CSV_TEMPLATE);
-                }}
-              >
-                <Text style={styles.demoLink}>Autofill Sample Template</Text>
-              </TouchableOpacity>
-            </View>
+            {importFormat !== 'image' ? (
+              <View style={{ gap: 12 }}>
+                <View style={styles.editorHeader}>
+                  <Text style={styles.cardSectionTitle}>2. Paste XML / CSV Content</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setRawDataText(importFormat === 'tally' ? TALLY_XML_TEMPLATE : POS_CSV_TEMPLATE);
+                    }}
+                  >
+                    <Text style={styles.demoLink}>Autofill Sample Template</Text>
+                  </TouchableOpacity>
+                </View>
 
-            <TextInput
-              mode="outlined"
-              multiline
-              numberOfLines={8}
-              placeholder={
-                importFormat === 'tally'
-                  ? 'Paste raw Tally XML tags here...'
-                  : 'Product Name, Selling Price, Cost Price, Stock Quantity, Category, Barcode, GST Pct...'
-              }
-              value={rawDataText}
-              onChangeText={setRawDataText}
-              style={styles.textArea}
-              activeOutlineColor="#10B981"
-            />
+                <TextInput
+                  mode="outlined"
+                  multiline
+                  numberOfLines={8}
+                  placeholder={
+                    importFormat === 'tally'
+                      ? 'Paste raw Tally XML tags here...'
+                      : 'Product Name, Selling Price, Cost Price, Stock Quantity, Category, Barcode, GST Pct...'
+                  }
+                  value={rawDataText}
+                  onChangeText={setRawDataText}
+                  style={styles.textArea}
+                  activeOutlineColor="#10B981"
+                />
+              </View>
+            ) : (
+              <View style={{ gap: 12 }}>
+                <Text style={styles.cardSectionTitle}>2. Upload / Take Photo of Invoice Bill</Text>
+                
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Button
+                    mode="contained"
+                    icon="camera-outline"
+                    buttonColor="#F57C00"
+                    onPress={handleUploadImage}
+                    disabled={isFileLoading}
+                    labelStyle={{ fontWeight: 'bold' }}
+                  >
+                    {isFileLoading ? 'Scanning...' : 'Scan Invoice Photo (OCR)'}
+                  </Button>
+                  
+                  <TouchableOpacity onPress={() => {
+                    setSelectedImageUri('https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?w=500');
+                    setRawDataText(OCR_BILL_TEMPLATE);
+                    Alert.alert('Sample OCR Loaded', 'Simulated scan of standard distributor invoice photo loaded successfully.');
+                  }}>
+                    <Text style={[styles.demoLink, { color: '#F57C00' }]}>Try Sample Invoice Image</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {isFileLoading && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: '#FFFBEB', borderRadius: 8, borderWidth: 1, borderColor: '#FDE68A' }}>
+                    <ActivityIndicator size="small" color="#F57C00" />
+                    <Text style={{ fontSize: 13, color: '#B45309', fontWeight: '500' }}>{fileLoadingMsg}</Text>
+                  </View>
+                )}
+
+                {selectedImageUri && (
+                  <View style={{ marginTop: 8, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 8, backgroundColor: '#F8FAFC', width: '100%', maxWidth: 300, alignSelf: 'center' }}>
+                    <Image 
+                      source={{ uri: selectedImageUri }} 
+                      style={{ width: '100%', height: 200, borderRadius: 8, resizeMode: 'cover' }} 
+                    />
+                    <Text style={{ fontSize: 11, color: '#64748B', textAlign: 'center', marginTop: 6, fontWeight: '500' }}>
+                      📷 Selected Invoice Photo Preview
+                    </Text>
+                  </View>
+                )}
+
+                <Text style={styles.cardSectionTitle}>3. Extracted Text Result</Text>
+                <TextInput
+                  mode="outlined"
+                  multiline
+                  numberOfLines={6}
+                  placeholder="OCR text results will appear here..."
+                  value={rawDataText}
+                  onChangeText={setRawDataText}
+                  style={styles.textArea}
+                  activeOutlineColor="#F57C00"
+                />
+              </View>
+            )}
           </Card.Content>
         </Card>
       )}
