@@ -30,6 +30,7 @@ const menuSections = [
       { name: 'Profit & Loss', icon: 'chart-line', path: '/(owner)/profit_loss' },
       { name: 'Balance Sheet', icon: 'scale-balance', path: '/(owner)/balance_sheet' },
       { name: 'GST Returns', icon: 'file-percent-outline', path: '/(owner)/gst_management', isGstOnly: true },
+      { name: 'Data Import', icon: 'file-import-outline', path: '/(owner)/data_import' },
     ]
   }
 ];
