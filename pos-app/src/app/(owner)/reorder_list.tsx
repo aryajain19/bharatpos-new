@@ -239,7 +239,6 @@ const MetricCard = ({ title, value, icon, color, bgColor }: any) => (
         <View style={[styles.iconWrapper, { backgroundColor: bgColor }]}>
           <Icon name={icon} size={20} color={color} />
         </View>
-        <Icon name="dots-horizontal" size={20} color="#94A3B8" />
       </View>
       <View>
         <Text style={styles.metricValue}>{value}</Text>

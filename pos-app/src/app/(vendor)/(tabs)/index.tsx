@@ -292,7 +292,6 @@ export default function VendorDashboard() {
                     <View style={[styles.iconWrapper, { backgroundColor: metric.bgColor }]}>
                       <MaterialCommunityIcons name={metric.icon} size={20} color={metric.color} />
                     </View>
-                    <MaterialCommunityIcons name="dots-horizontal" size={20} color="#94A3B8" />
                   </View>
                   <View style={styles.metricCardBottom}>
                     <Text style={styles.metricValue}>{metric.value}</Text>

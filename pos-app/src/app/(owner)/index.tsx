@@ -733,7 +733,6 @@ const GradientMetricCard = ({ config }: { config: MetricConfig }) => {
             <View style={[styles.metricIconCircle, { backgroundColor: config.bgColor }]}>
               <Icon name={config.icon} size={20} color={config.color} />
             </View>
-            <Icon name="dots-horizontal" size={20} color="#94A3B8" />
           </View>
           <View>
             <Text style={styles.metricValue}>{formatted}</Text>
