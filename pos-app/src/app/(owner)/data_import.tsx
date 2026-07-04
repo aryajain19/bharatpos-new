@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DS } from '../../constants/designTokens';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, useWindowDimensions, Image } from 'react-native';
-import { Text, Card, Button, useTheme, TextInput, Divider, SegmentedButtons, DataTable, Surface, Switch } from 'react-native-paper';
+import { Text, Card, Button, useTheme, TextInput, Divider, DataTable, Surface, Switch } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
 import { collection, addDoc, doc, setDoc } from '../../lib/firestore_adapter';
@@ -24,6 +24,11 @@ export default function DataImportScreen() {
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [fileLoadingMsg, setFileLoadingMsg] = useState('');
+
+  // Import Options
+  const [updateExisting, setUpdateExisting] = useState(true);
+  const [importStockQty, setImportStockQty] = useState(true);
+  const [showPasteArea, setShowPasteArea] = useState(false);
 
   // Cloud Sync States
   const [syncSource, setSyncSource] = useState<'tally' | 'shopify' | 'gstin'>('tally');
@@ -232,34 +237,51 @@ Total GST Collected: ₹2,154.00`;
     }
   };
 
-  // Simulated OCR Photo Uploader
-  const handleUploadImage = () => {
+  // Simulated File/OCR Photo Uploader
+  const handleUploadFile = () => {
     if (typeof document === 'undefined') return;
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = 'image/*';
+    if (importFormat === 'image') {
+      fileInput.accept = 'image/*';
+    } else if (importFormat === 'tally') {
+      fileInput.accept = '.xml';
+    } else {
+      fileInput.accept = '.csv,.xls,.xlsx';
+    }
     
     fileInput.onchange = async (e: any) => {
       const file = e.target?.files?.[0];
       if (!file) return;
 
       setIsFileLoading(true);
-      setFileLoadingMsg(`Reading image file "${file.name}"...`);
+      setFileLoadingMsg(`Reading and processing "${file.name}"...`);
 
       try {
-        const reader = new FileReader();
-        reader.onload = async (evt: any) => {
-          setSelectedImageUri(evt.target.result);
-          setFileLoadingMsg(`Running cloud OCR layout text scan...`);
-          await new Promise(r => setTimeout(r, 1200));
-          setRawDataText(OCR_BILL_TEMPLATE);
+        if (importFormat === 'image') {
+          const reader = new FileReader();
+          reader.onload = async (evt: any) => {
+            setSelectedImageUri(evt.target.result);
+            setFileLoadingMsg(`Running cloud OCR layout text scan...`);
+            await new Promise(r => setTimeout(r, 1200));
+            setRawDataText(OCR_BILL_TEMPLATE);
+            setIsFileLoading(false);
+            Alert.alert('OCR Processing Success', `Invoice photo text extracted successfully! Verification table populated below.`);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          await new Promise(r => setTimeout(r, 1000));
+          if (importFormat === 'tally') {
+            setRawDataText(TALLY_XML_TEMPLATE);
+          } else {
+            setRawDataText(POS_CSV_TEMPLATE);
+          }
           setIsFileLoading(false);
-          Alert.alert('OCR Processing Success', `Invoice photo text extracted successfully! Verification table populated below.`);
-        };
-        reader.readAsDataURL(file);
+          Alert.alert('File Processing Success', `"${file.name}" loaded and parsed successfully!`);
+        }
       } catch (err: any) {
-        Alert.alert('OCR Error', err.message || 'Failed to scan the image.');
+        Alert.alert('File Error', err.message || 'Failed to process the file.');
         setIsFileLoading(false);
       }
     };
@@ -342,171 +364,301 @@ Total GST Collected: ₹2,154.00`;
     }
   };
 
+  const formatLabels: Record<string, { label: string; icon: string }> = {
+    tally: { label: 'Tally XML', icon: 'code-tags' },
+    csv: { label: 'Excel / CSV', icon: 'file-excel-outline' },
+    image: { label: 'OCR (Bill Scan)', icon: 'camera-outline' },
+  };
+
+  const placeholderText =
+    importFormat === 'tally'
+      ? 'Paste raw Tally XML tags here...'
+      : importFormat === 'csv'
+      ? 'Product Name, Selling Price, Cost Price, Stock Qty, Category, Barcode, GST %'
+      : 'OCR text results will appear here...';
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Title Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTitleWrap}>
-          <Icon name="file-import-outline" size={28} color="#10B981" />
-          <Text style={styles.headerTitle}>Data Import & Migration Center</Text>
-        </View>
-        <Text style={styles.headerSubtitle}>
-          Import past records, inventory lists, and customer directories from TallyPrime, Shopify, or other POS backups instantly.
-        </Text>
+    <ScrollView style={s.container} contentContainerStyle={s.content}>
+      {/* ── Tab Switcher ── */}
+      <View style={s.tabRow}>
+        <TouchableOpacity
+          style={[s.tabBtn, activeTab === 'file' && s.tabBtnActive]}
+          onPress={() => setActiveTab('file')}
+          activeOpacity={0.7}
+        >
+          <Icon name="file-document-outline" size={16} color={activeTab === 'file' ? DS.colors.brand : DS.colors.textSecondary} />
+          <Text style={[s.tabBtnText, activeTab === 'file' && s.tabBtnTextActive]}>File / Text Import</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.tabBtn, activeTab === 'cloud' && s.tabBtnActive]}
+          onPress={() => setActiveTab('cloud')}
+          activeOpacity={0.7}
+        >
+          <Icon name="cloud-sync-outline" size={16} color={activeTab === 'cloud' ? DS.colors.brand : DS.colors.textSecondary} />
+          <Text style={[s.tabBtnText, activeTab === 'cloud' && s.tabBtnTextActive]}>Cloud Sync</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Main Tab Controller */}
-      <SegmentedButtons
-        value={activeTab}
-        onValueChange={(val: any) => setActiveTab(val)}
-        buttons={[
-          { value: 'file', label: 'File / Text Import', icon: 'file-document-outline' },
-          { value: 'cloud', label: 'Direct Cloud Sync', icon: 'cloud-sync-outline' }
-        ]}
-        style={styles.tabBar}
-        theme={{ colors: { primary: '#10B981' } }}
-      />
+      {/* ── Header ── */}
+      <View style={s.header}>
+        <Text style={s.headerTitle}>Import Data</Text>
+        <Text style={s.headerSubtitle}>Import products, customers and transactions from external sources</Text>
+      </View>
 
-      {/* TAB 1: FILE / TEXT IMPORT */}
+      {/* ════════════════ FILE / TEXT IMPORT TAB ════════════════ */}
       {activeTab === 'file' && (
-        <Card style={styles.card} elevation={1}>
-          <Card.Content style={styles.cardContent}>
-            <Text style={styles.cardSectionTitle}>1. Choose Data Source Format</Text>
-            <SegmentedButtons
-              value={importFormat}
-              onValueChange={(val: any) => {
-                setImportFormat(val);
-                setRawDataText('');
-                setSelectedImageUri(null);
-              }}
-              buttons={[
-                { value: 'tally', label: 'TallyPrime XML Export', icon: 'code-tags' },
-                { value: 'csv', label: 'Generic POS CSV / Excel', icon: 'file-excel-outline' },
-                { value: 'image', label: 'Scan Photo (OCR)', icon: 'camera-outline' }
-              ]}
-              style={styles.subTabBar}
-            />
-
-            {importFormat !== 'image' ? (
-              <View style={{ gap: 12 }}>
-                <View style={styles.editorHeader}>
-                  <Text style={styles.cardSectionTitle}>2. Paste XML / CSV Content</Text>
+        <>
+          {/* Section 1: Choose Source */}
+          <View style={s.card}>
+            <Text style={s.sectionLabel}>Import Source</Text>
+            <View style={s.sourceRow}>
+              {(['tally', 'csv', 'image'] as const).map((fmt) => {
+                const active = importFormat === fmt;
+                return (
                   <TouchableOpacity
+                    key={fmt}
+                    style={[s.sourceBtn, active && s.sourceBtnActive]}
                     onPress={() => {
-                      setRawDataText(importFormat === 'tally' ? TALLY_XML_TEMPLATE : POS_CSV_TEMPLATE);
+                      setImportFormat(fmt);
+                      setRawDataText('');
+                      setSelectedImageUri(null);
                     }}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.demoLink}>Autofill Sample Template</Text>
+                    <Icon
+                      name={formatLabels[fmt].icon}
+                      size={16}
+                      color={active ? DS.colors.brand : DS.colors.textSecondary}
+                    />
+                    <Text style={[s.sourceBtnText, active && s.sourceBtnTextActive]}>
+                      {formatLabels[fmt].label}
+                    </Text>
                   </TouchableOpacity>
-                </View>
+                );
+              })}
+            </View>
+          </View>
 
-                <TextInput
-                  mode="outlined"
-                  multiline
-                  numberOfLines={8}
-                  placeholder={
-                    importFormat === 'tally'
-                      ? 'Paste raw Tally XML tags here...'
-                      : 'Product Name, Selling Price, Cost Price, Stock Quantity, Category, Barcode, GST Pct...'
-                  }
-                  value={rawDataText}
-                  onChangeText={setRawDataText}
-                  style={styles.textArea}
-                  activeOutlineColor="#10B981"
-                />
-              </View>
-            ) : (
-              <View style={{ gap: 12 }}>
-                <Text style={styles.cardSectionTitle}>2. Upload / Take Photo of Invoice Bill</Text>
-                
-                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <Button
-                    mode="contained"
-                    icon="camera-outline"
-                    buttonColor="#F57C00"
-                    onPress={handleUploadImage}
-                    disabled={isFileLoading}
-                    labelStyle={{ fontWeight: 'bold' }}
-                  >
-                    {isFileLoading ? 'Scanning...' : 'Scan Invoice Photo (OCR)'}
-                  </Button>
-                  
-                  <TouchableOpacity onPress={() => {
+          {/* Section 2: Upload / Paste Data */}
+          <View style={s.card}>
+            <View style={s.sectionHeaderRow}>
+              <Text style={s.sectionLabel}>
+                {importFormat === 'image' ? 'Upload Invoice' : 'Upload Data File'}
+              </Text>
+              {importFormat !== 'image' && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setRawDataText(importFormat === 'tally' ? TALLY_XML_TEMPLATE : POS_CSV_TEMPLATE);
+                  }}
+                >
+                  <Text style={s.linkText}>Load Sample</Text>
+                </TouchableOpacity>
+              )}
+              {importFormat === 'image' && (
+                <TouchableOpacity
+                  onPress={() => {
                     setSelectedImageUri('https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?w=500');
                     setRawDataText(OCR_BILL_TEMPLATE);
                     Alert.alert('Sample OCR Loaded', 'Simulated scan of standard distributor invoice photo loaded successfully.');
-                  }}>
-                    <Text style={[styles.demoLink, { color: '#F57C00' }]}>Try Sample Invoice Image</Text>
-                  </TouchableOpacity>
-                </View>
+                  }}
+                >
+                  <Text style={s.linkText}>Try Sample Invoice</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-                {isFileLoading && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: '#FFFBEB', borderRadius: 8, borderWidth: 1, borderColor: '#FDE68A' }}>
-                    <ActivityIndicator size="small" color="#F57C00" />
-                    <Text style={{ fontSize: 13, color: '#B45309', fontWeight: '500' }}>{fileLoadingMsg}</Text>
-                  </View>
-                )}
+            {/* Upload Zone for all formats */}
+            <TouchableOpacity style={s.uploadZone} onPress={handleUploadFile} activeOpacity={0.7} disabled={isFileLoading}>
+              <Icon name="cloud-upload-outline" size={24} color={DS.colors.textSecondary} />
+              <Text style={s.uploadZoneText}>
+                {isFileLoading ? 'Scanning...' : 
+                 importFormat === 'image' ? 'Tap to upload invoice photo' : 
+                 importFormat === 'tally' ? 'Upload Tally XML file (Drag & Drop)' : 'Upload Excel / CSV file (Drag & Drop)'}
+              </Text>
+            </TouchableOpacity>
 
-                {selectedImageUri && (
-                  <View style={{ marginTop: 8, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 8, backgroundColor: '#F8FAFC', width: '100%', maxWidth: 300, alignSelf: 'center' }}>
-                    <Image 
-                      source={{ uri: selectedImageUri }} 
-                      style={{ width: '100%', height: 200, borderRadius: 8, resizeMode: 'cover' }} 
-                    />
-                    <Text style={{ fontSize: 11, color: '#64748B', textAlign: 'center', marginTop: 6, fontWeight: '500' }}>
-                      📷 Selected Invoice Photo Preview
-                    </Text>
-                  </View>
-                )}
+            {isFileLoading && (
+              <View style={s.loadingRow}>
+                <ActivityIndicator size="small" color={DS.colors.brand} />
+                <Text style={s.loadingText}>{fileLoadingMsg}</Text>
+              </View>
+            )}
 
-                <Text style={styles.cardSectionTitle}>3. Extracted Text Result</Text>
-                <TextInput
-                  mode="outlined"
-                  multiline
-                  numberOfLines={6}
-                  placeholder="OCR text results will appear here..."
-                  value={rawDataText}
-                  onChangeText={setRawDataText}
-                  style={styles.textArea}
-                  activeOutlineColor="#F57C00"
+            {importFormat === 'image' && selectedImageUri && (
+              <View style={s.imagePreview}>
+                <Image
+                  source={{ uri: selectedImageUri }}
+                  style={{ width: '100%', height: 120, borderRadius: DS.radius.xs, resizeMode: 'cover' } as any}
                 />
               </View>
             )}
-          </Card.Content>
-        </Card>
+
+            {/* Toggleable paste area */}
+            <TouchableOpacity onPress={() => setShowPasteArea(!showPasteArea)} style={{ alignSelf: 'flex-start', marginTop: DS.space.xs }}>
+              <Text style={s.linkText}>{showPasteArea ? 'Hide raw text input' : 'or paste raw data / XML text'}</Text>
+            </TouchableOpacity>
+
+            {showPasteArea && (
+              <TextInput
+                mode="outlined"
+                multiline
+                numberOfLines={4}
+                placeholder={placeholderText}
+                value={rawDataText}
+                onChangeText={setRawDataText}
+                style={s.textArea}
+                outlineStyle={s.textAreaOutline}
+                activeOutlineColor={DS.colors.brand}
+                outlineColor={DS.colors.border}
+                textColor={DS.colors.text}
+                placeholderTextColor={DS.colors.textMuted}
+              />
+            )}
+          </View>
+
+          {/* Section 3: Preview (only if parsed data) */}
+          {parsedItems.length > 0 && (
+            <View style={s.card}>
+              <View style={s.sectionHeaderRow}>
+                <Text style={s.sectionLabel}>Preview</Text>
+                <View style={s.badge}>
+                  <Icon name="check-circle" size={14} color={DS.colors.brand} />
+                  <Text style={s.badgeText}>{parsedItems.length} Products found</Text>
+                </View>
+              </View>
+
+              <DataTable>
+                <DataTable.Header style={s.tableHeader}>
+                  <DataTable.Title style={{ flex: 2 }}><Text style={s.thText}>Product</Text></DataTable.Title>
+                  <DataTable.Title numeric><Text style={s.thText}>Sell ₹</Text></DataTable.Title>
+                  <DataTable.Title numeric><Text style={s.thText}>Cost ₹</Text></DataTable.Title>
+                  <DataTable.Title numeric><Text style={s.thText}>Stock</Text></DataTable.Title>
+                  <DataTable.Title><Text style={s.thText}>Category</Text></DataTable.Title>
+                </DataTable.Header>
+
+                {parsedItems.slice(0, 4).map((item, idx) => (
+                  <DataTable.Row key={idx} style={s.tableRow}>
+                    <DataTable.Cell style={{ flex: 2 }}><Text style={s.tdText}>{item.name}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric><Text style={s.tdText}>₹{item.selling_price}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric><Text style={s.tdText}>₹{item.cost_price}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric><Text style={s.tdText}>{item.stock_qty}</Text></DataTable.Cell>
+                    <DataTable.Cell><Text style={s.tdText}>{item.category}</Text></DataTable.Cell>
+                  </DataTable.Row>
+                ))}
+              </DataTable>
+
+              {parsedItems.length > 4 && (
+                <Text style={s.moreText}>and {parsedItems.length - 4} more items...</Text>
+              )}
+            </View>
+          )}
+
+          {/* Section 4: Import Options */}
+          {parsedItems.length > 0 && (
+            <View style={s.card}>
+              <Text style={s.sectionLabel}>Import Options</Text>
+              <View style={s.optionRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.optionLabel}>Update existing products</Text>
+                  <Text style={s.optionDesc}>Overwrite if product name already exists</Text>
+                </View>
+                <Switch
+                  value={updateExisting}
+                  onValueChange={setUpdateExisting}
+                  color={DS.colors.brand}
+                />
+              </View>
+              <View style={s.divider} />
+              <View style={s.optionRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.optionLabel}>Import stock quantities</Text>
+                  <Text style={s.optionDesc}>Set opening stock from imported data</Text>
+                </View>
+                <Switch
+                  value={importStockQty}
+                  onValueChange={setImportStockQty}
+                  color={DS.colors.brand}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Footer Buttons */}
+          {parsedItems.length > 0 && (
+            <View style={s.footerRow}>
+              <TouchableOpacity
+                style={s.cancelBtn}
+                onPress={() => {
+                  setRawDataText('');
+                  setSelectedImageUri(null);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={s.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.importBtn, isProcessingFile && { opacity: 0.6 }]}
+                onPress={handleExecuteMigration}
+                disabled={isProcessingFile}
+                activeOpacity={0.7}
+              >
+                {isProcessingFile && <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />}
+                <Text style={s.importBtnText}>
+                  {isProcessingFile ? 'Importing...' : 'Import'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
       )}
 
-      {/* TAB 2: DIRECT CLOUD SYNC */}
+      {/* ════════════════ CLOUD SYNC TAB ════════════════ */}
       {activeTab === 'cloud' && (
-        <Card style={styles.card} elevation={1}>
-          <Card.Content style={styles.cardContent}>
-            <Text style={styles.cardSectionTitle}>1. Select Cloud Sync Integration</Text>
-            <SegmentedButtons
-              value={syncSource}
-              onValueChange={(val: any) => {
-                setSyncSource(val);
-                setRawDataText('');
-                setSyncLog([]);
-              }}
-              buttons={[
-                { value: 'tally', label: 'Tally License Sync', icon: 'account-key' },
-                { value: 'shopify', label: 'Shopify Store Connect', icon: 'shopping-outline' },
-                { value: 'gstin', label: 'GSTIN Profile Sync', icon: 'file-percent' }
-              ]}
-              style={styles.subTabBar}
-            />
+        <>
+          {/* Cloud Source Selector */}
+          <View style={s.card}>
+            <Text style={s.sectionLabel}>Sync Source</Text>
+            <View style={s.sourceRow}>
+              {([
+                { key: 'tally' as const, label: 'Tally License', icon: 'account-key' },
+                { key: 'shopify' as const, label: 'Shopify', icon: 'shopping-outline' },
+                { key: 'gstin' as const, label: 'GSTIN Profile', icon: 'file-percent' },
+              ]).map((src) => {
+                const active = syncSource === src.key;
+                return (
+                  <TouchableOpacity
+                    key={src.key}
+                    style={[s.sourceBtn, active && s.sourceBtnActive]}
+                    onPress={() => {
+                      setSyncSource(src.key);
+                      setRawDataText('');
+                      setSyncLog([]);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name={src.icon} size={16} color={active ? DS.colors.brand : DS.colors.textSecondary} />
+                    <Text style={[s.sourceBtnText, active && s.sourceBtnTextActive]}>{src.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
-            <Text style={styles.cardSectionTitle}>2. Connection Authentication Credentials</Text>
-            
+          {/* Connection Credentials */}
+          <View style={s.card}>
+            <Text style={s.sectionLabel}>Connection Details</Text>
+
             {syncSource === 'tally' && (
-              <View style={styles.formRow}>
+              <View style={s.cloudFormRow}>
                 <TextInput
                   label="Tally License Serial / ID"
                   mode="outlined"
                   value={licenseNumber}
                   onChangeText={setLicenseNumber}
-                  style={styles.inputFlex}
-                  activeOutlineColor="#10B981"
+                  style={s.cloudInput}
+                  outlineStyle={s.cloudInputOutline}
+                  activeOutlineColor={DS.colors.brand}
+                  outlineColor="#D1D5DB"
                   placeholder="e.g. 987654321"
                 />
                 <TextInput
@@ -514,22 +666,26 @@ Total GST Collected: ₹2,154.00`;
                   mode="outlined"
                   value={serverUrl}
                   onChangeText={setServerUrl}
-                  style={styles.inputFlex}
-                  activeOutlineColor="#10B981"
+                  style={s.cloudInput}
+                  outlineStyle={s.cloudInputOutline}
+                  activeOutlineColor={DS.colors.brand}
+                  outlineColor="#D1D5DB"
                   placeholder="e.g. http://localhost:9000"
                 />
               </View>
             )}
 
             {syncSource === 'shopify' && (
-              <View style={styles.formRow}>
+              <View style={s.cloudFormRow}>
                 <TextInput
                   label="Shopify Store URL"
                   mode="outlined"
                   value={shopifyStore}
                   onChangeText={setShopifyStore}
-                  style={styles.inputFlex}
-                  activeOutlineColor="#10B981"
+                  style={s.cloudInput}
+                  outlineStyle={s.cloudInputOutline}
+                  activeOutlineColor={DS.colors.brand}
+                  outlineColor="#D1D5DB"
                   placeholder="e.g. mystore.myshopify.com"
                 />
                 <TextInput
@@ -538,8 +694,10 @@ Total GST Collected: ₹2,154.00`;
                   secureTextEntry
                   value={shopifyToken}
                   onChangeText={setShopifyToken}
-                  style={styles.inputFlex}
-                  activeOutlineColor="#10B981"
+                  style={s.cloudInput}
+                  outlineStyle={s.cloudInputOutline}
+                  activeOutlineColor={DS.colors.brand}
+                  outlineColor="#D1D5DB"
                   placeholder="shpat_xxxxxxxxx"
                 />
               </View>
@@ -551,223 +709,405 @@ Total GST Collected: ₹2,154.00`;
                 mode="outlined"
                 value={gstinValue}
                 onChangeText={setGstinValue}
-                style={styles.inputFull}
-                activeOutlineColor="#10B981"
+                style={s.cloudInputFull}
+                outlineStyle={s.cloudInputOutline}
+                activeOutlineColor={DS.colors.brand}
+                outlineColor="#D1D5DB"
                 placeholder="e.g. 29GGGGG1314R9Z9"
               />
             )}
 
-            <Button
-              mode="contained"
-              buttonColor="#10B981"
-              style={styles.syncBtn}
-              labelStyle={{ fontWeight: 'bold' }}
-              onPress={handleCloudSync}
-              disabled={isSyncing}
-            >
-              {isSyncing ? 'Fetching Live Database...' : 'Connect & Fetch Records'}
-            </Button>
-
-            {syncLog.length > 0 && (
-              <Surface style={styles.logBox} elevation={1}>
-                <Text style={styles.logHeader}>Integration Connection Logs:</Text>
-                {syncLog.map((log, idx) => (
-                  <Text key={idx} style={styles.logText}>{log}</Text>
-                ))}
-              </Surface>
-            )}
-          </Card.Content>
-        </Card>
-      )}
-
-      {/* VALIDATION PREVIEW SECTION (Runs if data parsed) */}
-      {parsedItems.length > 0 && (
-        <Card style={[styles.card, { marginTop: 20 }]} elevation={1}>
-          <Card.Content style={styles.cardContent}>
-            <View style={styles.tableHeaderRow}>
-              <Text style={styles.cardSectionTitle}>3. Parsed Data Verification</Text>
-              <Surface style={styles.badgeSuccess}>
-                <Text style={styles.badgeSuccessText}>{parsedItems.length} Valid Items Detected</Text>
-              </Surface>
-            </View>
-
-            <DataTable style={styles.table}>
-              <DataTable.Header>
-                <DataTable.Title style={{ flex: 2 }}>Product Name</DataTable.Title>
-                <DataTable.Title numeric>Sell Price</DataTable.Title>
-                <DataTable.Title numeric>Cost Price</DataTable.Title>
-                <DataTable.Title numeric>Opening Stock</DataTable.Title>
-                <DataTable.Title>Category</DataTable.Title>
-                <DataTable.Title>Barcode</DataTable.Title>
-              </DataTable.Header>
-
-              {parsedItems.slice(0, 5).map((item, idx) => (
-                <DataTable.Row key={idx}>
-                  <DataTable.Cell style={{ flex: 2 }}>{item.name}</DataTable.Cell>
-                  <DataTable.Cell numeric>₹{item.selling_price}</DataTable.Cell>
-                  <DataTable.Cell numeric>₹{item.cost_price}</DataTable.Cell>
-                  <DataTable.Cell numeric>{item.stock_qty}</DataTable.Cell>
-                  <DataTable.Cell>{item.category}</DataTable.Cell>
-                  <DataTable.Cell>{item.barcode || '—'}</DataTable.Cell>
-                </DataTable.Row>
-              ))}
-            </DataTable>
-
-            {parsedItems.length > 5 && (
-              <Text style={styles.tableFooterNote}>and {parsedItems.length - 5} more products...</Text>
-            )}
-
-            <Divider style={{ marginVertical: 16 }} />
-
-            <View style={styles.actionRow}>
-              <Button
-                mode="contained"
-                buttonColor="#6366F1"
-                style={styles.migrateBtn}
-                labelStyle={{ fontWeight: 'bold' }}
-                onPress={handleExecuteMigration}
-                disabled={isProcessingFile}
+            <View style={s.cloudActionRow}>
+              <TouchableOpacity
+                style={[s.importBtn, isSyncing && { opacity: 0.6 }]}
+                onPress={handleCloudSync}
+                disabled={isSyncing}
+                activeOpacity={0.7}
               >
-                {isProcessingFile ? 'Migrating Items...' : 'Save & Import Catalog to Store'}
-              </Button>
+                {isSyncing && <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />}
+                <Text style={s.importBtnText}>
+                  {isSyncing ? 'Fetching...' : 'Connect & Fetch Records'}
+                </Text>
+              </TouchableOpacity>
             </View>
-          </Card.Content>
-        </Card>
+          </View>
+
+          {/* Sync Logs */}
+          {syncLog.length > 0 && (
+            <View style={s.logCard}>
+              <Text style={s.logHeader}>Connection Logs</Text>
+              {syncLog.map((log, idx) => (
+                <Text key={idx} style={s.logLine}>{log}</Text>
+              ))}
+            </View>
+          )}
+
+          {/* Preview from Cloud Sync (reuses parsedItems) */}
+          {parsedItems.length > 0 && (
+            <View style={s.card}>
+              <View style={s.sectionHeaderRow}>
+                <Text style={s.sectionLabel}>Fetched Data</Text>
+                <View style={s.badge}>
+                  <Icon name="check-circle" size={14} color={DS.colors.brand} />
+                  <Text style={s.badgeText}>{parsedItems.length} Products found</Text>
+                </View>
+              </View>
+
+              <DataTable>
+                <DataTable.Header style={s.tableHeader}>
+                  <DataTable.Title style={{ flex: 2 }}><Text style={s.thText}>Product</Text></DataTable.Title>
+                  <DataTable.Title numeric><Text style={s.thText}>Sell ₹</Text></DataTable.Title>
+                  <DataTable.Title numeric><Text style={s.thText}>Cost ₹</Text></DataTable.Title>
+                  <DataTable.Title numeric><Text style={s.thText}>Stock</Text></DataTable.Title>
+                </DataTable.Header>
+                {parsedItems.slice(0, 4).map((item, idx) => (
+                  <DataTable.Row key={idx} style={s.tableRow}>
+                    <DataTable.Cell style={{ flex: 2 }}><Text style={s.tdText}>{item.name}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric><Text style={s.tdText}>₹{item.selling_price}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric><Text style={s.tdText}>₹{item.cost_price}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric><Text style={s.tdText}>{item.stock_qty}</Text></DataTable.Cell>
+                  </DataTable.Row>
+                ))}
+              </DataTable>
+
+              <View style={[s.footerRow, { marginTop: DS.space.lg }]}>
+                <TouchableOpacity style={s.cancelBtn} onPress={() => { setRawDataText(''); setSyncLog([]); }} activeOpacity={0.7}>
+                  <Text style={s.cancelBtnText}>Clear</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.importBtn, isProcessingFile && { opacity: 0.6 }]}
+                  onPress={handleExecuteMigration}
+                  disabled={isProcessingFile}
+                  activeOpacity={0.7}
+                >
+                  {isProcessingFile && <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />}
+                  <Text style={s.importBtnText}>{isProcessingFile ? 'Importing...' : 'Import to Store'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </>
       )}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: DS.colors.surfaceBg,
   },
-  contentContainer: {
-    padding: 24,
-    gap: 16,
+  content: {
+    padding: DS.space.xl,
+    gap: DS.space.lg,
+    paddingBottom: DS.space.xxxl,
   },
+
+  /* ── Header ── */
   header: {
-    marginBottom: 8,
-  },
-  headerTitleWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 4,
+    gap: DS.space.xs,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontSize: 24,
+    fontWeight: '700',
+    color: DS.colors.text,
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    lineHeight: 18,
-  },
-  tabBar: {
-    marginVertical: 10,
-  },
-  card: {
-    borderRadius: DS.radius.md,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 0, ...DS.shadow.sm,
-  },
-  cardContent: {
-    paddingVertical: 16,
-    gap: 12,
-  },
-  cardSectionTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#334155',
+    color: DS.colors.textSecondary,
+    lineHeight: 20,
   },
-  subTabBar: {
-    marginBottom: 8,
-  },
-  editorHeader: {
+
+  /* ── Tab Switcher ── */
+  tabRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: DS.space.sm,
   },
-  demoLink: {
-    fontSize: 12,
-    color: '#10B981',
+  tabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: DS.space.sm,
+    paddingVertical: DS.space.sm,
+    paddingHorizontal: DS.space.lg,
+    borderRadius: DS.radius.md,
+    borderWidth: 1,
+    borderColor: DS.colors.border,
+    backgroundColor: DS.colors.cardBg,
+  },
+  tabBtnActive: {
+    backgroundColor: DS.colors.successBg,
+    borderColor: DS.colors.brand,
+  },
+  tabBtnText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: DS.colors.textSecondary,
+  },
+  tabBtnTextActive: {
+    color: DS.colors.brand,
     fontWeight: '600',
   },
-  textArea: {
-    fontSize: 12,
-    lineHeight: 18,
-    backgroundColor: DS.colors.surfaceBg,
+
+  /* ── Cards ── */
+  card: {
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: DS.radius.md,
+    borderWidth: 1,
+    borderColor: DS.colors.border,
+    padding: DS.space.xl,
+    gap: DS.space.md,
   },
-  formRow: {
-    flexDirection: 'row',
-    gap: 12,
+
+  /* ── Section Labels ── */
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: DS.colors.text,
   },
-  inputFlex: {
-    flex: 1,
-  },
-  inputFull: {
-    width: '100%',
-  },
-  syncBtn: {
-    marginTop: 8,
-    borderRadius: DS.radius.sm,
-    paddingVertical: 4,
-  },
-  logBox: {
-    backgroundColor: '#0F172A',
-    borderRadius: DS.radius.sm,
-    padding: 14,
-    marginTop: 12,
-  },
-  logHeader: {
-    color: '#38BDF8',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  logText: {
-    color: '#F8FAFC',
-    fontSize: 11,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    lineHeight: 16,
-  },
-  tableHeaderRow: {
+  sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  badgeSuccess: {
-    backgroundColor: '#DCFCE7',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+
+  /* ── Source Buttons ── */
+  sourceRow: {
+    flexDirection: 'row',
+    gap: DS.space.sm,
+    flexWrap: 'wrap',
+  },
+  sourceBtn: {
+    flex: 1,
+    minWidth: 120,
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: DS.space.sm,
+    borderRadius: DS.radius.md,
+    borderWidth: 1,
+    borderColor: DS.colors.border,
+    backgroundColor: DS.colors.cardBg,
+  },
+  sourceBtnActive: {
+    backgroundColor: DS.colors.successBg,
+    borderColor: DS.colors.brand,
+  },
+  sourceBtnText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: DS.colors.textSecondary,
+  },
+  sourceBtnTextActive: {
+    color: DS.colors.brand,
+    fontWeight: '600',
+  },
+
+  /* ── Text Area ── */
+  textArea: {
+    fontSize: 12,
+    backgroundColor: DS.colors.surfaceBg,
+    maxHeight: 120,
+  },
+  textAreaOutline: {
+    borderRadius: DS.radius.md,
+    borderColor: DS.colors.border,
+  },
+
+  /* ── Upload Zone ── */
+  uploadZone: {
+    height: 80,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: DS.colors.border,
+    borderRadius: DS.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: DS.space.sm,
+    backgroundColor: DS.colors.surfaceBg,
+  },
+  uploadZoneText: {
+    fontSize: 14,
+    color: DS.colors.textSecondary,
+  },
+  imagePreview: {
+    borderWidth: 1,
+    borderColor: DS.colors.border,
+    borderRadius: DS.radius.md,
+    padding: DS.space.sm,
+    backgroundColor: DS.colors.surfaceBg,
+    maxWidth: 280,
+    alignSelf: 'center',
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: DS.space.sm,
+    padding: DS.space.md,
+    backgroundColor: DS.colors.successBg,
+    borderRadius: DS.radius.md,
+    borderWidth: 1,
+    borderColor: DS.colors.border,
+  },
+  loadingText: {
+    fontSize: 12,
+    color: DS.colors.brand,
+    fontWeight: '500',
+  },
+
+  /* ── Link ── */
+  linkText: {
+    fontSize: 14,
+    color: DS.colors.brand,
+    fontWeight: '600',
+  },
+
+  /* ── Badge ── */
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: DS.space.xs,
+    backgroundColor: DS.colors.successBg,
+    paddingVertical: DS.space.xs,
+    paddingHorizontal: DS.space.md,
     borderRadius: DS.radius.md,
     borderWidth: 1,
     borderColor: '#BBF7D0',
   },
-  badgeSuccessText: {
-    color: '#15803D',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  table: {
-    marginTop: 8,
-    borderWidth: 0, ...DS.shadow.sm,
-    borderRadius: DS.radius.sm,
-  },
-  tableFooterNote: {
+  badgeText: {
     fontSize: 12,
-    color: '#94A3B8',
+    fontWeight: '600',
+    color: DS.colors.accent,
+  },
+
+  /* ── Data Table ── */
+  tableHeader: {
+    backgroundColor: DS.colors.surfaceBg,
+    borderBottomWidth: 1,
+    borderBottomColor: DS.colors.border,
+  },
+  tableRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: DS.colors.borderLight,
+  },
+  thText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: DS.colors.textSecondary,
+  },
+  tdText: {
+    fontSize: 12,
+    color: DS.colors.text,
+  },
+  moreText: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: DS.space.sm,
   },
-  actionRow: {
-    alignItems: 'flex-end',
+
+  /* ── Options ── */
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: DS.space.lg,
   },
-  migrateBtn: {
-    borderRadius: DS.radius.sm,
-    paddingVertical: 4,
+  optionLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: DS.colors.text,
+  },
+  optionDesc: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: DS.colors.border,
+  },
+
+  /* ── Footer ── */
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: DS.space.md,
+  },
+  cancelBtn: {
+    height: 44,
+    paddingHorizontal: DS.space.xl,
+    borderRadius: DS.radius.md,
+    borderWidth: 1,
+    borderColor: DS.colors.border,
+    backgroundColor: DS.colors.cardBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: DS.colors.textSecondary,
+  },
+  importBtn: {
+    height: 44,
+    paddingHorizontal: DS.space.xl,
+    borderRadius: DS.radius.md,
+    backgroundColor: DS.colors.brand,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  importBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  /* ── Cloud Sync ── */
+  cloudFormRow: {
+    flexDirection: 'row',
+    gap: DS.space.md,
+  },
+  cloudInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 14,
+    backgroundColor: DS.colors.cardBg,
+  },
+  cloudInputFull: {
+    width: '100%',
+    height: 44,
+    fontSize: 14,
+    backgroundColor: DS.colors.cardBg,
+  },
+  cloudInputOutline: {
+    borderRadius: DS.radius.md,
+    borderColor: '#D1D5DB',
+  },
+  cloudActionRow: {
+    alignItems: 'flex-start',
+    marginTop: DS.space.xs,
+  },
+
+  /* ── Sync Logs ── */
+  logCard: {
+    backgroundColor: '#111827',
+    borderRadius: DS.radius.md,
+    padding: DS.space.lg,
+    gap: DS.space.xs,
+  },
+  logHeader: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: DS.colors.brand,
+    marginBottom: DS.space.xs,
+  },
+  logLine: {
+    fontSize: 12,
+    color: '#E5E7EB',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    lineHeight: 16,
   },
 });

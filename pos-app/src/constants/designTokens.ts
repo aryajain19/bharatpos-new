@@ -1,89 +1,92 @@
 export const DS = {
-  // Spacing (8-point grid)
+  // Spacing (8-point grid -> adapted to user request: 4, 8, 12, 16, 24, 32, 48)
   space: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
-  },
-  
-  // Border Radius
-  radius: {
     xs: 4,
     sm: 8,
     md: 12,
     lg: 16,
-    xl: 20,
+    xl: 24,
+    xxl: 32,
+    xxxl: 48,
+  },
+  
+  // Border Radius (Globally 12px)
+  radius: {
+    xs: 12,
+    sm: 12,
+    md: 12,
+    lg: 12,
+    xl: 12,
     full: 9999,
   },
   
-  // Typography Scale
+  // Typography Scale (32, 24, 20, 16, 14, 12)
   font: {
-    h1: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.5 },
-    h2: { fontSize: 22, fontWeight: '700' as const, letterSpacing: -0.3 },
-    h3: { fontSize: 17, fontWeight: '600' as const },
-    body: { fontSize: 14, fontWeight: '400' as const },
+    h1: { fontSize: 32, fontWeight: '700' as const, letterSpacing: -0.5 },
+    h2: { fontSize: 24, fontWeight: '700' as const, letterSpacing: -0.3 },
+    h3: { fontSize: 20, fontWeight: '600' as const },
+    body: { fontSize: 16, fontWeight: '400' as const },
     bodyMedium: { fontSize: 14, fontWeight: '500' as const },
     bodySemiBold: { fontSize: 14, fontWeight: '600' as const },
     caption: { fontSize: 12, fontWeight: '500' as const },
     captionMuted: { fontSize: 12, fontWeight: '400' as const },
-    label: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.5 },
+    label: { fontSize: 12, fontWeight: '600' as const, letterSpacing: 0.5 },
   },
   
-  // Shadows (Standard elevation/box shadows)
+  // Shadows (Modern SaaS: Use shadow-sm or none)
   shadow: {
     sm: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.04,
-      shadowRadius: 3,
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
       elevation: 1,
     },
     md: {
-      shadowColor: '#0F172A',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 3,
+      // Re-mapped to sm for flat aesthetic
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
     },
     lg: {
-      shadowColor: '#0F172A',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 6,
+      // Re-mapped to sm for flat aesthetic
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
     },
   },
   
   // Semantic Colors
   colors: {
-    brand: '#1E3A8A',         // Deep Blue (primary brand)
-    brandLight: '#DBEAFE',
-    accent: '#3B82F6',        // Bright Blue (CTAs)
-    success: '#10B981',
-    successBg: '#ECFDF5',
+    brand: '#16A34A',         // Primary Green
+    brandLight: '#DCFCE7',    // Light Green
+    accent: '#15803D',        // Primary Hover Green
+    success: '#16A34A',
+    successBg: '#F0FDF4',
     warning: '#F59E0B',
     warningBg: '#FFFBEB',
-    danger: '#EF4444',
+    danger: '#DC2626',
     dangerBg: '#FEF2F2',
     
     // Neutrals
-    text: '#0F172A',
-    textSecondary: '#475569',
-    textMuted: '#94A3B8',
-    border: '#E2E8F0',       // Standard border color
-    borderLight: '#F1F5F9',
-    surfaceBg: '#F8FAFC',    // Page background
-    cardBg: '#FFFFFF',       // Card background
+    text: '#111827',          // Primary Text
+    textSecondary: '#6B7280', // Secondary Text
+    textMuted: '#9CA3AF',
+    border: '#E5E7EB',        // 1px Border Color
+    borderLight: '#F3F4F6',
+    surfaceBg: '#F8FAFC',     // Background
+    cardBg: '#FFFFFF',        // Card
     
     // Sidebar
-    sidebarBg: '#FAFBFD',
-    sidebarActive: '#1E3A8A',
-    sidebarActiveBg: 'rgba(30, 58, 138, 0.08)',
-    sidebarHover: '#F1F5F9',
-    sidebarText: '#475569',
-    sidebarTextActive: '#1E3A8A',
+    sidebarBg: '#FFFFFF',
+    sidebarActive: '#16A34A',
+    sidebarActiveBg: '#F0FDF4',
+    sidebarHover: '#F9FAFB',
+    sidebarText: '#4B5563',
+    sidebarTextActive: '#16A34A',
   }
 };

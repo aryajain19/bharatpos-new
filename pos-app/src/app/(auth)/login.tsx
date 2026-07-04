@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
-import { Text, useTheme, Button, Surface, TextInput } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { Text, useTheme, Button, Surface, TextInput, Checkbox } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from '../../lib/firestore_adapter';
@@ -9,11 +9,11 @@ import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function LoginScreen() {
-  const { isDarkMode, toggleTheme } = useAppTheme();
+  const { isDarkMode } = useAppTheme();
   const appTheme = useTheme();
 
   const { width: screenWidth } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && screenWidth > 850;
+  const isDesktop = Platform.OS === 'web' && screenWidth > 992;
 
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isSecure, setIsSecure] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   async function handleLogin() {
     setLoading(true);
@@ -80,24 +81,18 @@ export default function LoginScreen() {
     }
   }
 
-  // Right Login Form Panel Component
   const renderLoginForm = () => (
     <View style={styles.formWrapper}>
-      {/* Top Controls Row */}
-      <View style={styles.topRow}>
-        <TouchableOpacity onPress={() => router.push('/' as any)} style={styles.backBtn}>
-          <Icon name="arrow-left" size={16} color="#10B981" />
-          <Text style={styles.backBtnText}>Back to Website</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Brand Header */}
       <View style={styles.brandHeader}>
-        <Text style={styles.brandTitle}>POS SaaS India</Text>
+        <View style={styles.logoIconBg}>
+          <Icon name="store" size={16} color="#FFFFFF" />
+        </View>
+        <Text style={styles.brandTitle}>SmartPOS</Text>
       </View>
 
       <Text style={styles.welcomeTitle}>Welcome Back</Text>
-      <Text style={styles.welcomeSubtitle}>Sign in to access your business terminal</Text>
+      <Text style={styles.welcomeSubtitle}>Sign in to access your SmartPOS account</Text>
 
       {/* Main Form Fields */}
       <View style={styles.fieldsContainer}>
@@ -107,12 +102,12 @@ export default function LoginScreen() {
           onChangeText={setMobile}
           keyboardType="email-address"
           autoCapitalize="none"
-          placeholder="e.g. owner@pos.com"
+          placeholder="e.g. owner@shop.com"
           style={styles.input}
           mode="outlined"
           outlineColor="#E2E8F0"
-          activeOutlineColor="#10B981"
-          left={<TextInput.Icon icon="account-outline" color="#718096" />}
+          activeOutlineColor="#16A34A"
+          left={<TextInput.Icon icon="account-outline" color="#64748B" />}
           dense
         />
 
@@ -121,17 +116,36 @@ export default function LoginScreen() {
           value={password}
           onChangeText={setPassword}
           secureTextEntry={isSecure}
-          placeholder="Enter password"
+          placeholder="Enter your password"
           style={styles.input}
           mode="outlined"
           outlineColor="#E2E8F0"
-          activeOutlineColor="#10B981"
-          left={<TextInput.Icon icon="lock-outline" color="#718096" />}
-          right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#718096" onPress={() => setIsSecure(!isSecure)} />}
+          activeOutlineColor="#16A34A"
+          left={<TextInput.Icon icon="lock-outline" color="#64748B" />}
+          right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#64748B" onPress={() => setIsSecure(!isSecure)} />}
           dense
         />
 
-        {errorMsg ? <Text style={{ color: '#E53E3E', marginBottom: 12, fontSize: 14 }}>{errorMsg}</Text> : null}
+        {/* Remember me & Forgot Password */}
+        <View style={styles.rememberForgotRow}>
+          <TouchableOpacity 
+            style={styles.rememberMeClick} 
+            activeOpacity={0.8}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <Checkbox.Android 
+              status={rememberMe ? 'checked' : 'unchecked'} 
+              color="#16A34A"
+              onPress={() => setRememberMe(!rememberMe)}
+            />
+            <Text style={styles.rememberMeText}>Remember me</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => alert('Launching password reset helper...')}>
+            <Text style={styles.forgotPassLink}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
+
+        {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
         <Button
           mode="contained"
@@ -141,18 +155,35 @@ export default function LoginScreen() {
           style={styles.primaryButton}
           contentStyle={styles.buttonPadding}
           labelStyle={styles.buttonLabel}
+          buttonColor="#0B192C"
         >
-          {loading ? 'Signing In...' : 'Sign In'}
+          {loading ? 'Logging in...' : 'Login to Dashboard'}
+        </Button>
+
+        {/* Divider */}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or continue with</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Google sign-in */}
+        <Button
+          mode="outlined"
+          icon={() => <Icon name="google" size={18} color="#EA4335" />}
+          style={styles.googleButton}
+          labelStyle={styles.googleBtnLabel}
+          onPress={() => alert('Starting Google OAuth sign-in...')}
+        >
+          Sign in with Google
         </Button>
       </View>
-
-
 
       {/* Register Promo Footer */}
       <View style={styles.registerFooter}>
         <Text style={styles.registerDescText}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => router.push('/?signup=true' as any)}>
-          <Text style={styles.registerLinkText}>Start Free Trial</Text>
+        <TouchableOpacity onPress={() => router.push('/(auth)/signup' as any)}>
+          <Text style={styles.registerLinkText}>Create Account</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -167,72 +198,103 @@ export default function LoginScreen() {
         {/* Split Screen container */}
         <View style={[styles.splitWrapper, { flexDirection: isDesktop ? 'row' : 'column' }]}>
           
-          {/* LEFT PANEL: Branding & SaaS Highlights (Desktop only) */}
+          {/* LEFT PANEL: Branding & Highlights */}
           {isDesktop && (
             <View style={styles.leftBanner}>
-              {/* Background accent decorations */}
-              <View style={styles.accentBlob1} />
-              <View style={styles.accentBlob2} />
-
               <View style={styles.bannerContent}>
                 {/* Brand Logo Row */}
                 <View style={styles.bannerBrandRow}>
-                  <Text style={styles.bannerBrandName}>POS SaaS India</Text>
+                  <View style={[styles.logoIconBg, { width: 32, height: 32, borderRadius: 6 }]}>
+                    <Icon name="store" size={18} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.bannerBrandName}>SmartPOS</Text>
                 </View>
 
                 {/* Slogan */}
                 <Text style={styles.bannerSlogan}>
-                  The Complete Cloud POS & Inventory Solution for Local Retailers & Stores
+                  Manage Your Store{"\n"}Anywhere
+                </Text>
+                <Text style={styles.bannerSubTitle}>
+                  The complete cloud POS & inventory solution for modern Indian retailers.
                 </Text>
 
                 {/* Highlights list */}
                 <View style={styles.highlightsList}>
                   <View style={styles.highlightRow}>
-                    <Icon name="check-circle" size={20} color="#27C93F" style={styles.checkIcon} />
+                    <View style={styles.highlightIconWrap}>
+                      <Icon name="flash-outline" size={18} color="#16A34A" />
+                    </View>
                     <View>
-                      <Text style={styles.highlightTitle}>Lightning-Fast Barcode Billing</Text>
-                      <Text style={styles.highlightText}>Generate tax-compliant bills in milliseconds using phone camera or barcode scanner.</Text>
+                      <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
+                      <Text style={styles.highlightText}>Create bills in seconds with barcode scanning and quick product search.</Text>
                     </View>
                   </View>
 
                   <View style={styles.highlightRow}>
-                    <Icon name="check-circle" size={20} color="#27C93F" style={styles.checkIcon} />
+                    <View style={styles.highlightIconWrap}>
+                      <Icon name="clipboard-list-outline" size={18} color="#16A34A" />
+                    </View>
                     <View>
-                      <Text style={styles.highlightTitle}>Automated Stock & Ledger Alerts</Text>
-                      <Text style={styles.highlightText}>Get notified instantly when stock runs low. Automatically update day books.</Text>
+                      <Text style={styles.highlightTitle}>Real-time Inventory</Text>
+                      <Text style={styles.highlightText}>Track stock, get low stock alerts and manage multiple locations.</Text>
                     </View>
                   </View>
 
                   <View style={styles.highlightRow}>
-                    <Icon name="check-circle" size={20} color="#27C93F" style={styles.checkIcon} />
+                    <View style={styles.highlightIconWrap}>
+                      <Icon name="file-document-outline" size={18} color="#16A34A" />
+                    </View>
                     <View>
                       <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
-                      <Text style={styles.highlightText}>Auto-calculated CGST, SGST, IGST with downloadable GSTR returns & PDF ledger reports.</Text>
+                      <Text style={styles.highlightText}>Generate GST invoices, GSTR reports and downloadable ledgers.</Text>
                     </View>
                   </View>
 
                   <View style={styles.highlightRow}>
-                    <Icon name="check-circle" size={20} color="#27C93F" style={styles.checkIcon} />
+                    <View style={styles.highlightIconWrap}>
+                      <Icon name="account-group-outline" size={18} color="#16A34A" />
+                    </View>
                     <View>
-                      <Text style={styles.highlightTitle}>Staff Account Tracking</Text>
-                      <Text style={styles.highlightText}>Create accounts for cashiers. Monitor sales history, activity logs, and drawer counts.</Text>
+                      <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
+                      <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
                     </View>
                   </View>
                 </View>
 
+                {/* Trust badge */}
+                <View style={styles.bannerTrustBadge}>
+                  <Icon name="shield-check" size={16} color="#16A34A" />
+                  <Text style={styles.bannerTrustText}>Trusted by 15,000+ businesses across India</Text>
+                </View>
+              </View>
 
+              {/* Graphic mockup in bottom right of left banner */}
+              <View style={styles.graphicOverlay}>
+                <View style={styles.mockGraphMiniCard}>
+                  <Text style={styles.mockMiniLabel}>Sales Today</Text>
+                  <Text style={styles.mockMiniVal}>₹48,250.00</Text>
+                  <Text style={styles.mockMiniSub}>▲ +12.5% vs yesterday</Text>
+                  <Divider style={{ marginVertical: 8 }} />
+                  <Text style={styles.mockMiniLabel}>Orders</Text>
+                  <Text style={styles.mockMiniVal}>156</Text>
+                  <Text style={styles.mockMiniSub}>▲ +8.2% vs yesterday</Text>
+                </View>
+                <View style={styles.barcodeScannerIllust}>
+                  <Icon name="barcode-scan" size={48} color="#1E293B" />
+                  <View style={styles.boxIllust}><Icon name="package-variant-closed" size={24} color="#64748B" /></View>
+                </View>
               </View>
             </View>
           )}
 
           {/* RIGHT PANEL: Form Container */}
-          <View style={[styles.rightPanel as any, { width: isDesktop ? '50%' : '100%', paddingVertical: isDesktop ? 60 : 20 }]}>
+          <View style={[styles.rightPanel, { width: isDesktop ? '50%' : '100%', paddingVertical: isDesktop ? 60 : 20 }]}>
             {isDesktop ? (
-              <Surface style={styles.cardContainer as any} elevation={4}>
+              <Surface style={styles.cardContainer} elevation={0}>
                 {renderLoginForm()}
               </Surface>
             ) : (
-              <View style={styles.mobileFormContainer as any}>
+              <View style={styles.mobileFormContainer}>
                 {renderLoginForm()}
               </View>
             )}
@@ -243,10 +305,10 @@ export default function LoginScreen() {
 
       {/* Loading Overlay */}
       {loading && (
-        <View style={styles.loadingOverlay as any}>
-          <Surface style={styles.loadingBox as any} elevation={5}>
-            <ActivityIndicator size="large" color="#10B981" style={{ marginBottom: 16 }} />
-            <Text style={styles.loadingText as any}>{loadingMessage || 'Authenticating account...'}</Text>
+        <View style={styles.loadingOverlay}>
+          <Surface style={styles.loadingBox} elevation={5}>
+            <ActivityIndicator size="large" color="#16A34A" style={{ marginBottom: 16 }} />
+            <Text style={styles.loadingText}>{loadingMessage || 'Authenticating account...'}</Text>
           </Surface>
         </View>
       )}
@@ -255,127 +317,180 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   scrollContent: { flexGrow: 1 },
   splitWrapper: { flex: 1 },
   
   // Left Banner (Desktop)
   leftBanner: {
     width: '50%',
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
     paddingHorizontal: '8%',
     paddingVertical: 60,
+    borderRightWidth: 1,
+    borderRightColor: '#E5E7EB'
   },
-  accentBlob1: {
+  bannerContent: { zIndex: 2, paddingRight: '10%' },
+  bannerBrandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 32, gap: 8 },
+  bannerBrandName: { fontSize: 18, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
+  bannerSlogan: { fontSize: 32, lineHeight: 38, marginBottom: 8, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
+  bannerSubTitle: { fontSize: 13, color: '#64748B', lineHeight: 20, marginBottom: 36, fontFamily: 'Plus Jakarta Sans' },
+  highlightsList: { gap: 20 },
+  highlightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  highlightIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2
+  },
+  highlightTitle: { fontSize: 14, fontWeight: '700', color: '#0F172A', marginBottom: 4, fontFamily: 'Plus Jakarta Sans' },
+  highlightText: { fontSize: 12, color: '#475569', lineHeight: 18, fontFamily: 'Plus Jakarta Sans' },
+  bannerTrustBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#E8F5E9',
+    alignSelf: 'flex-start',
+    marginTop: 40
+  },
+  bannerTrustText: { fontSize: 11, fontWeight: '700', color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
+
+  // Graphic Mockup Overlay
+  graphicOverlay: {
     position: 'absolute',
-    top: '-10%',
-    left: '-10%',
-    width: '40%',
-    height: '35%',
-    borderRadius: 200,
-    opacity: 0.15,
+    bottom: 20,
+    right: 20,
+    width: 230,
+    height: 200,
+    zIndex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    opacity: 0.85
   },
-  accentBlob2: {
+  mockGraphMiniCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 10,
+    width: 140,
     position: 'absolute',
-    bottom: '-15%',
-    right: '-10%',
-    width: '45%',
-    height: '40%',
-    borderRadius: 250,
-    opacity: 0.12,
+    left: 0,
+    top: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2
   },
-  bannerContent: { zIndex: 2 },
-  bannerBrandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 12 },
-  bannerBrandName: { fontSize: 28, fontWeight: 'bold', letterSpacing: 0.5 },
-  bannerSlogan: { fontSize: 20, lineHeight: 28, marginBottom: 44, fontWeight: '500' },
-  highlightsList: { gap: 28 },
-  highlightRow: { flexDirection: 'row', alignItems: 'flex-start' },
-  checkIcon: { marginRight: 14, marginTop: 2 },
-  highlightTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
-  highlightText: { fontSize: 13, lineHeight: 18 },
+  mockMiniLabel: { fontSize: 8, color: '#64748B', fontWeight: '600', fontFamily: 'Plus Jakarta Sans' },
+  mockMiniVal: { fontSize: 12, fontWeight: '800', color: '#0F172A', marginVertical: 1, fontFamily: 'Plus Jakarta Sans' },
+  mockMiniSub: { fontSize: 7, fontWeight: '700', color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
+  barcodeScannerIllust: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6
+  },
+  boxIllust: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    backgroundColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#CBD5E1'
+  },
 
   // Right Panel
   rightPanel: {
     justifyContent: 'center',
     alignItems: 'center',
-    },
+    backgroundColor: '#FFFFFF'
+  },
   cardContainer: {
     width: 440,
     borderRadius: 16,
     padding: 32,
-    borderWidth: 1,
-    },
+    backgroundColor: '#FFFFFF'
+  },
   mobileFormContainer: {
     width: '100%',
     maxWidth: 440,
     paddingHorizontal: 24,
     paddingVertical: 40,
-    },
+  },
   formWrapper: { width: '100%' },
 
-  // Top navigation row
-  topRow: { flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 24 },
-  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  backBtnText: { fontSize: 13, fontWeight: 'bold' },
-
-  // Form Headers
-  brandHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  brandTitle: { fontSize: 18, fontWeight: 'bold', },
-  welcomeTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 6 },
-  welcomeSubtitle: { fontSize: 13, marginBottom: 28 },
-
-  // Input Fields & Custom +91 Row
-  fieldsContainer: { width: '100%', marginBottom: 20 },
-  inputLabel: { fontSize: 13, fontWeight: 'bold', marginBottom: 6 },
-  mobileRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  countryCodeBox: {
-    width: 60,
-    justifyContent: 'center',
+  // Brand Header
+  brandHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 48,
+    gap: 8,
+    marginBottom: 24,
+    ...Platform.select({
+      web: { display: 'flex' },
+      default: { display: 'none' } // Hidden on mobile since it feels redundant
+    })
   },
-  countryCodeText: { fontSize: 14, fontWeight: 'bold', },
-  mobileInput: { flex: 1, backgroundColor: 'white', height: 48 },
-  input: { marginBottom: 20, backgroundColor: 'white', height: 48 },
+  logoIconBg: {
+    width: 24,
+    height: 24,
+    borderRadius: 5,
+    backgroundColor: '#16A34A',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  brandTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
+  welcomeTitle: { fontSize: 24, fontWeight: '800', color: '#0F172A', marginBottom: 4, fontFamily: 'Plus Jakarta Sans' },
+  welcomeSubtitle: { fontSize: 13, color: '#64748B', marginBottom: 28, fontFamily: 'Plus Jakarta Sans' },
 
-  primaryButton: { borderRadius: 8, marginTop: 10, marginBottom: 16 },
+  // Input Fields
+  fieldsContainer: { width: '100%' },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: '#374151', marginBottom: 6, fontFamily: 'Plus Jakarta Sans' },
+  input: { marginBottom: 16, backgroundColor: '#FFFFFF', height: 44 },
+
+  rememberForgotRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  rememberMeClick: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: -8
+  },
+  rememberMeText: { fontSize: 12, color: '#475569', fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
+  forgotPassLink: { fontSize: 12, fontWeight: '700', color: '#2563EB', fontFamily: 'Plus Jakarta Sans' },
+  errorText: { color: '#EF4444', marginBottom: 14, fontSize: 12, fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
+
+  primaryButton: { borderRadius: 6, marginVertical: 8 },
   buttonPadding: { paddingVertical: 6 },
-  buttonLabel: { fontSize: 14, fontWeight: 'bold' },
-  toggleModeLink: { alignSelf: 'center', padding: 4 },
-  toggleModeText: { fontSize: 13, fontWeight: '600' },
+  buttonLabel: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', fontFamily: 'Plus Jakarta Sans' },
 
   // Divider
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
-  dividerLine: { flex: 1, height: 1, },
-  dividerText: { marginHorizontal: 12, fontSize: 10, fontWeight: 'bold', letterSpacing: 0.8 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
+  dividerText: { marginHorizontal: 12, fontSize: 10, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Plus Jakarta Sans' },
 
-  // Demo Grid
-  demoSubtitle: { fontSize: 12, marginBottom: 14, textAlign: 'center' },
-  demoButtonGrid: { flexDirection: 'row', gap: 10, justifyContent: 'space-between', marginBottom: 28 },
-  demoCardBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  demoIconCircle: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  demoCardLabel: { fontSize: 11, fontWeight: 'bold', textAlign: 'center' },
-  demoCardDesc: { fontSize: 9, marginTop: 1, textAlign: 'center' },
+  // Google button
+  googleButton: { borderRadius: 6, borderColor: '#E2E8F0', height: 40, justifyContent: 'center' },
+  googleBtnLabel: { fontSize: 12, fontWeight: '600', color: '#374151', fontFamily: 'Plus Jakarta Sans' },
 
   // Footer Register Link
-  registerFooter: { flexDirection: 'row', justifyContent: 'center', marginTop: 10, borderTopWidth: 1, borderTopColor: '#EDF2F7', paddingTop: 20 },
-  registerDescText: { fontSize: 13 },
-  registerLinkText: { fontWeight: 'bold', fontSize: 13 },
+  registerFooter: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 20 },
+  registerDescText: { fontSize: 13, color: '#475569', fontFamily: 'Plus Jakarta Sans' },
+  registerLinkText: { fontWeight: '700', fontSize: 13, color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
 
   // Loading Overlay
   loadingOverlay: {
@@ -384,17 +499,17 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: 'rgba(26, 27, 45, 0.7)',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
   },
   loadingBox: {
     padding: 24,
-    borderRadius: 16,
+    borderRadius: 10,
     alignItems: 'center',
-    width: 300,
+    width: 280,
+    backgroundColor: '#FFFFFF'
   },
-  loadingText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  loadingText: { fontSize: 12, fontWeight: '700', color: '#475569', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
 });
-

@@ -61,6 +61,8 @@ interface MetricConfig {
   icon: string;
   color: string;
   bgColor: string;
+  changeText?: string;
+  changeColor?: string;
 }
 
 // ── Animated Section Wrapper ───────────────────────────────────────────
@@ -384,24 +386,32 @@ export default function AdminDashboard() {
   const salesValue = todaySales;
   const ordersValue = totalOrders;
 
+  // Comparison Calculations
+  const salesDiff = yesterdaySales > 0 ? ((todaySales - yesterdaySales) / yesterdaySales) * 100 : 0;
+  const salesDiffText = salesDiff >= 0 ? `+${salesDiff.toFixed(0)}% vs yesterday` : `${salesDiff.toFixed(0)}% vs yesterday`;
+  const salesDiffColor = salesDiff >= 0 ? '#16A34A' : '#DC2626';
+
+  const profitMarginText = todaySales > 0 ? `${((totalProfit / todaySales) * 100).toFixed(0)}% net margin` : '0% net margin';
+  const lowStockAlertText = lowStockAlertCount > 0 ? `${lowStockAlertCount} items need attention` : 'All items in stock';
+
   const metrics: MetricConfig[] = shopMode === 'Mobile Only' ? (
     isGstRegistered ? [
-      { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-      { title: "Total Amount Collected", value: salesValue, prefix: '₹', icon: 'cash-check', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-      { title: "Total Profit", value: totalProfit, prefix: '₹', icon: 'trending-up', color: appTheme.colors.onSurface, bgColor: '#EEF2FF' },
-      { title: "GST Collected", value: 0, prefix: '₹', icon: 'bank', color: appTheme.colors.onSurface, bgColor: '#FEF2F2' },
+      { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: '#16A34A', bgColor: '#F0FDF4', changeText: salesDiffText, changeColor: salesDiffColor },
+      { title: "Total Amount Collected", value: salesValue, prefix: '₹', icon: 'cash-check', color: '#16A34A', bgColor: '#F0FDF4', changeText: 'Settled to bank', changeColor: '#6B7280' },
+      { title: "Total Profit", value: totalProfit, prefix: '₹', icon: 'trending-up', color: '#16A34A', bgColor: '#F0FDF4', changeText: profitMarginText, changeColor: '#16A34A' },
+      { title: "GST Collected", value: 0, prefix: '₹', icon: 'bank', color: '#4B5563', bgColor: '#F9FAFB', changeText: 'Tax Portal synced', changeColor: '#6B7280' },
     ] : [
-      { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-      { title: "Total Amount Collected", value: salesValue, prefix: '₹', icon: 'cash-check', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-      { title: "Coming Soon (Khata)", value: 0, prefix: '₹', icon: 'account-clock', color: appTheme.colors.onSurface, bgColor: '#FEF2F2' },
-      { title: "Low Stock Alert", value: lowStockAlertCount, icon: 'alert-outline', color: appTheme.colors.onSurface, bgColor: '#FFFBEB' },
+      { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: '#16A34A', bgColor: '#F0FDF4', changeText: salesDiffText, changeColor: salesDiffColor },
+      { title: "Total Amount Collected", value: salesValue, prefix: '₹', icon: 'cash-check', color: '#16A34A', bgColor: '#F0FDF4', changeText: 'Settled to bank', changeColor: '#6B7280' },
+      { title: "Coming Soon (Khata)", value: 0, prefix: '₹', icon: 'account-clock', color: '#4B5563', bgColor: '#F9FAFB', changeText: 'Bookkeeping module', changeColor: '#6B7280' },
+      { title: "Low Stock Alert", value: lowStockAlertCount, icon: 'alert-outline', color: '#DC2626', bgColor: '#FEF2F2', changeText: lowStockAlertText, changeColor: lowStockAlertCount > 0 ? '#DC2626' : '#16A34A' },
     ]
   ) : [
-    { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-    { title: "Yesterday's Sales", value: yesterdaySales, prefix: '₹', icon: 'chart-timeline-variant', color: appTheme.colors.onSurface, bgColor: '#F1F5F9' },
-    { title: "Monthly Sales", value: monthlySales, prefix: '₹', icon: 'calendar-month', color: appTheme.colors.onSurface, bgColor: '#ECFDF5' },
-    { title: "Total Profit", value: totalProfit, prefix: '₹', icon: 'trending-up', color: appTheme.colors.onSurface, bgColor: '#EEF2FF' },
-    { title: "Low Stock Alert", value: lowStockAlertCount, icon: 'alert-outline', color: appTheme.colors.onSurface, bgColor: '#FFFBEB' },
+    { title: "Today's Sales", value: salesValue, prefix: '₹', icon: 'currency-inr', color: '#16A34A', bgColor: '#F0FDF4', changeText: salesDiffText, changeColor: salesDiffColor },
+    { title: "Yesterday's Sales", value: yesterdaySales, prefix: '₹', icon: 'chart-timeline-variant', color: '#4B5563', bgColor: '#F9FAFB', changeText: 'Previous day revenue', changeColor: '#6B7280' },
+    { title: "Monthly Sales", value: monthlySales, prefix: '₹', icon: 'calendar-month', color: '#16A34A', bgColor: '#F0FDF4', changeText: 'Target: ₹1,00,000', changeColor: '#16A34A' },
+    { title: "Total Profit", value: totalProfit, prefix: '₹', icon: 'trending-up', color: '#16A34A', bgColor: '#F0FDF4', changeText: profitMarginText, changeColor: '#16A34A' },
+    { title: "Low Stock Alert", value: lowStockAlertCount, icon: 'alert-outline', color: '#DC2626', bgColor: '#FEF2F2', changeText: lowStockAlertText, changeColor: lowStockAlertCount > 0 ? '#DC2626' : '#16A34A' },
   ];
 
   const renderShopModeWidget = () => {
@@ -615,10 +625,10 @@ export default function AdminDashboard() {
                       width={Math.max(screenWidth - 380, 720)}
                       height={240}
                       withDots={true}
-                      withInnerLines={true}
+                      withInnerLines={false}
                       withOuterLines={false}
                       withVerticalLines={false}
-                      withHorizontalLines={true}
+                      withHorizontalLines={false}
                       withShadow={true}
                       fromZero={false}
                       yAxisLabel="₹"
@@ -628,14 +638,14 @@ export default function AdminDashboard() {
                         backgroundGradientFrom: "#ffffff",
                         backgroundGradientTo: "#ffffff",
                         decimalPlaces: 0,
-                        color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                        labelColor: (opacity = 1) => `rgba(100, 100, 100, ${opacity})`,
-                        style: { borderRadius: 16 },
-                        propsForDots: { r: "5", strokeWidth: "2", stroke: "#10B981", fill: "#fff" },
-                        propsForBackgroundLines: { stroke: '#F0F0F0', strokeDasharray: '' },
-                        fillShadowGradientFrom: '#10B981',
+                        color: (opacity = 1) => `rgba(22, 163, 74, ${opacity})`,
+                        labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
+                        style: { borderRadius: 12 },
+                        propsForDots: { r: "4", strokeWidth: "2", stroke: "#16A34A", fill: "#fff" },
+                        propsForBackgroundLines: { stroke: '#F3F4F6', strokeDasharray: '' },
+                        fillShadowGradientFrom: '#16A34A',
                         fillShadowGradientTo: '#ffffff',
-                        fillShadowGradientFromOpacity: 0.15,
+                        fillShadowGradientFromOpacity: 0.1,
                         fillShadowGradientToOpacity: 0,
                       }}
                       bezier
@@ -730,14 +740,19 @@ const GradientMetricCard = ({ config }: { config: MetricConfig }) => {
     <View style={styles.metricCardWrapper}>
       <Card style={styles.metricCard} elevation={0}>
         <Card.Content style={styles.metricCardContent}>
-          <View style={styles.metricCardTop}>
+          <View style={styles.metricCardHeader}>
+            <Text style={styles.metricTitle}>{config.title}</Text>
             <View style={[styles.metricIconCircle, { backgroundColor: config.bgColor }]}>
-              <Icon name={config.icon} size={20} color={config.color} />
+              <Icon name={config.icon} size={16} color={config.color} />
             </View>
           </View>
-          <View>
+          <View style={styles.metricBody}>
             <Text style={styles.metricValue}>{formatted}</Text>
-            <Text style={styles.metricTitle}>{config.title}</Text>
+            {config.changeText && (
+              <Text style={[styles.metricChangeText, { color: config.changeColor || '#6B7280' }]}>
+                {config.changeText}
+              </Text>
+            )}
           </View>
         </Card.Content>
       </Card>
@@ -754,25 +769,27 @@ const styles = StyleSheet.create({
   greetingContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: DS.space.xl },
   greetingText: { fontSize: DS.font.h1.fontSize, fontWeight: DS.font.h1.fontWeight, letterSpacing: DS.font.h1.letterSpacing, color: DS.colors.text },
   greetingSubtext: { fontSize: DS.font.body.fontSize, marginTop: DS.space.xs, color: DS.colors.textSecondary },
-  greetingBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: DS.radius.full, backgroundColor: 'rgba(30, 58, 138, 0.08)' },
+  greetingBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: DS.radius.full, backgroundColor: '#F0FDF4' },
   greetingBadgeText: { marginLeft: 6, fontSize: DS.font.caption.fontSize, fontWeight: DS.font.caption.fontWeight, color: DS.colors.brand },
 
   // Metrics Grid
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: DS.space.md, marginBottom: DS.space.lg },
   metricCardWrapper: { flexGrow: 1, flexBasis: '22%', minWidth: 220, maxWidth: 320 },
-  metricCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
-  metricCardContent: { padding: 20, minHeight: 130, justifyContent: 'space-between' },
-  metricCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  metricIconCircle: { width: 42, height: 42, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center' },
-  metricValue: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5, color: DS.colors.text },
-  metricTitle: { fontSize: DS.font.caption.fontSize, marginTop: 4, fontWeight: '600', color: DS.colors.textSecondary },
+  metricCard: { borderRadius: 12, backgroundColor: DS.colors.cardBg, borderWidth: 1, borderColor: DS.colors.border },
+  metricCardContent: { padding: 16, minHeight: 110, justifyContent: 'space-between' },
+  metricCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  metricIconCircle: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  metricBody: { gap: 2 },
+  metricValue: { fontSize: 24, fontWeight: '700', color: DS.colors.text },
+  metricTitle: { fontSize: 13, fontWeight: '500', color: DS.colors.textSecondary },
+  metricChangeText: { fontSize: 12, fontWeight: '600' },
 
   // Bottom Row
   bottomRow: { flexDirection: 'row', gap: 20, flexWrap: 'wrap' },
   rightColumn: { flex: 1, minWidth: 320, gap: 20 },
 
   // Chart
-  chartCard: { flex: 2, minWidth: 500, borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
+  chartCard: { flex: 2, minWidth: 500, borderRadius: 12, backgroundColor: DS.colors.cardBg, borderWidth: 1, borderColor: DS.colors.border },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   chartTitle: { fontSize: DS.font.h3.fontSize, fontWeight: DS.font.h3.fontWeight, color: DS.colors.text },
   chartSubtitle: { fontSize: DS.font.caption.fontSize, marginTop: 2, color: DS.colors.textSecondary },
@@ -785,7 +802,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: DS.font.h3.fontSize, fontWeight: DS.font.h3.fontWeight, color: DS.colors.text },
 
   // Activity Feed
-  activityCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
+  activityCard: { borderRadius: 12, backgroundColor: DS.colors.cardBg, borderWidth: 1, borderColor: DS.colors.border },
   activityItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 },
   activityIcon: { width: 34, height: 34, borderRadius: DS.radius.sm, alignItems: 'center', justifyContent: 'center', marginRight: 12, marginTop: 2 },
   activityContent: { flex: 1 },
@@ -793,7 +810,7 @@ const styles = StyleSheet.create({
   activityTime: { fontSize: DS.font.caption.fontSize, marginTop: 3, color: DS.colors.textMuted },
 
   // Top Selling
-  topSellingCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, ...DS.shadow.sm },
+  topSellingCard: { borderRadius: 12, backgroundColor: DS.colors.cardBg, borderWidth: 1, borderColor: DS.colors.border },
   tableHeader: { flexDirection: 'row', alignItems: 'center', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: DS.colors.border, marginBottom: 4 },
   tableHeaderText: { fontSize: DS.font.label.fontSize, fontWeight: DS.font.label.fontWeight, textTransform: 'uppercase', letterSpacing: DS.font.label.letterSpacing, color: DS.colors.textSecondary },
   tableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: DS.colors.borderLight },
@@ -802,7 +819,7 @@ const styles = StyleSheet.create({
   tableCell: { fontSize: 13, color: DS.colors.text },
 
   // Shop Mode Card styles
-  modeCard: { borderRadius: DS.radius.lg, backgroundColor: DS.colors.cardBg, borderWidth: 0, padding: 20, marginBottom: 24, ...DS.shadow.sm },
+  modeCard: { borderRadius: 12, backgroundColor: DS.colors.cardBg, borderWidth: 1, borderColor: DS.colors.border, padding: 20, marginBottom: 24 },
   modeCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   modeCardTitle: { fontSize: 16, fontWeight: '800', color: DS.colors.text },
   modeCardSubtitle: { fontSize: DS.font.label.fontSize, fontWeight: '600', marginTop: 2, color: DS.colors.textSecondary },

@@ -87,6 +87,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    // Fail-safe timeout: if loading is still true after 5 seconds, resolve it to prevent hanging
+    const failSafeTimeout = setTimeout(() => {
+      setLoading(prev => {
+        if (prev) {
+          console.warn("Auth initialization timed out. Resolving loading state.");
+          return false;
+        }
+        return prev;
+      });
+    }, 5000);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
@@ -128,9 +139,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         setLoading(false);
       }
+      clearTimeout(failSafeTimeout);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(failSafeTimeout);
+    };
   }, []);
 
   const fetchUserData = async (uid: string) => {

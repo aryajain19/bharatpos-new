@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { doc, updateDoc, collection, getDocs, query, where, setDoc } from '../../lib/firestore_adapter';
 import { useAuth } from '../../providers/AuthProvider';
+import { PremiumHeader } from '../../components/PremiumHeader';
 
 export default function AdminSettingsScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
@@ -335,9 +336,11 @@ export default function AdminSettingsScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text variant="headlineSmall" style={styles.title}>Settings</Text>
-      </View>
+      <PremiumHeader
+        title="Settings"
+        subtitle="Configure your shop, preferences, and backups"
+        icon="cog"
+      />
 
       <View style={styles.contentRow}>
         {/* Store Details Card */}
@@ -355,20 +358,20 @@ export default function AdminSettingsScreen() {
               value={storeName}
               onChangeText={setStoreName}
               mode="outlined"
-              style={styles.input}
-              outlineColor="#EEF0F6"
-              activeOutlineColor="#10B981"
-             
+              activeOutlineColor="#16A34A"
+              outlineColor="#D1D5DB"
+              outlineStyle={{ borderRadius: 10 }}
+              style={{ height: 44, marginBottom: 16, backgroundColor: '#FFFFFF' }}
             />
             <TextInput
               label="Store Address"
               value={address}
               onChangeText={setAddress}
               mode="outlined"
-              style={styles.input}
-              outlineColor="#EEF0F6"
-              activeOutlineColor="#10B981"
-             
+              activeOutlineColor="#16A34A"
+              outlineColor="#D1D5DB"
+              outlineStyle={{ borderRadius: 10 }}
+              style={{ height: 44, marginBottom: 16, backgroundColor: '#FFFFFF' }}
             />
 
             <Text style={styles.label}>Business GST Registration Type</Text>
@@ -388,10 +391,10 @@ export default function AdminSettingsScreen() {
                 value={gstNumber}
                 onChangeText={setGstNumber}
                 mode="outlined"
-                style={styles.input}
-                outlineColor="#EEF0F6"
-                activeOutlineColor="#10B981"
-               
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 16, backgroundColor: '#FFFFFF' }}
                 placeholder="e.g. 08AAPCS1081A1Z5"
               />
             )}
@@ -408,7 +411,7 @@ export default function AdminSettingsScreen() {
               style={styles.segmentedBtn}
             />
 
-            <Button mode="contained" onPress={handleSave} buttonColor="#10B981" style={styles.saveBtn}>
+            <Button mode="contained" onPress={handleSave} buttonColor="#16A34A" style={styles.saveBtn}>
               Save Shop Profile
             </Button>
           </Card.Content>
@@ -429,7 +432,7 @@ export default function AdminSettingsScreen() {
                 <Text style={styles.switchLabel}>Receive Daily Email Reports</Text>
                 <Text style={styles.switchDesc}>Get sales and inventory updates in your mailbox every evening.</Text>
               </View>
-              <Switch value={emailNotifs} onValueChange={setEmailNotifs} color="#10B981" />
+              <Switch value={emailNotifs} onValueChange={setEmailNotifs} color="#16A34A" />
             </View>
 
             <View style={styles.divider} />
@@ -446,7 +449,7 @@ export default function AdminSettingsScreen() {
                 <Text style={styles.switchLabel}>Low Stock Alerts</Text>
                 <Text style={styles.switchDesc}>Get real-time alerts when catalog stock falls below 5 units.</Text>
               </View>
-              <Switch value={lowStockNotif} onValueChange={setLowStockNotif} color="#10B981" />
+              <Switch value={lowStockNotif} onValueChange={setLowStockNotif} color="#16A34A" />
             </View>
 
             <View style={styles.switchRow}>
@@ -454,7 +457,7 @@ export default function AdminSettingsScreen() {
                 <Text style={styles.switchLabel}>Auto Out-of-Stock Lock</Text>
                 <Text style={styles.switchDesc}>Automatically prevent billing checkout of products when stock drops to 0.</Text>
               </View>
-              <Switch value={autoOutOfStock} onValueChange={setAutoOutOfStock} color="#10B981" />
+              <Switch value={autoOutOfStock} onValueChange={setAutoOutOfStock} color="#16A34A" />
             </View>
 
             <TextInput
@@ -462,9 +465,10 @@ export default function AdminSettingsScreen() {
               value={webhookUrl}
               onChangeText={setWebhookUrl}
               mode="outlined"
-              style={styles.input}
-              outlineColor="#EEF0F6"
-              activeOutlineColor="#10B981"
+              activeOutlineColor="#16A34A"
+              outlineColor="#D1D5DB"
+              outlineStyle={{ borderRadius: 10 }}
+              style={{ height: 44, marginBottom: 16, backgroundColor: '#FFFFFF' }}
               placeholder="e.g. https://api.mycompany.com/sales-sync"
             />
 
@@ -492,7 +496,7 @@ export default function AdminSettingsScreen() {
           <Card.Content style={styles.cardContent}>
             <View style={styles.sectionHeaderRow}>
               <View style={styles.iconTitleBox}>
-                <Icon name="archive-arrow-down-outline" size={20} color="#E65100" />
+                <Icon name="archive-arrow-down-outline" size={20} color="#16A34A" />
                 <Text style={styles.sectionTitle}>FMCG Catalog Quick-Start</Text>
               </View>
             </View>
@@ -505,7 +509,7 @@ export default function AdminSettingsScreen() {
               loading={seedLoading}
               disabled={seedLoading}
               onPress={handleSeedCatalog}
-              buttonColor="#E65100"
+              buttonColor="#16A34A"
               style={{ borderRadius: 10 }}
             >
               Preload Grocery SKUs
@@ -518,7 +522,7 @@ export default function AdminSettingsScreen() {
           <Card.Content style={styles.cardContent}>
             <View style={styles.sectionHeaderRow}>
               <View style={styles.iconTitleBox}>
-                <Icon name="database-sync-outline" size={20} color="#10B981" />
+                <Icon name="database-sync-outline" size={20} color="#16A34A" />
                 <Text style={styles.sectionTitle}>Database Backup & Recovery</Text>
               </View>
             </View>
@@ -533,7 +537,7 @@ export default function AdminSettingsScreen() {
               loading={backupLoading}
               disabled={backupLoading}
               onPress={handleCreateBackup}
-              buttonColor="#10B981"
+              buttonColor="#16A34A"
               style={{ borderRadius: 10, marginBottom: 16 }}
             >
               Export JSON Backup
@@ -561,8 +565,8 @@ export default function AdminSettingsScreen() {
               loading={restoreLoading}
               disabled={restoreLoading}
               onPress={triggerFileSelect}
-              textColor="#10B981"
-              style={{ borderRadius: 10, borderColor: '#10B981', marginTop: 4 }}
+              textColor="#16A34A"
+              style={{ borderRadius: 10, borderColor: '#16A34A', marginTop: 4 }}
             >
               {Platform.OS === 'web' ? 'Upload & Restore File' : 'Restore from Text Paste'}
             </Button>
@@ -591,7 +595,7 @@ export default function AdminSettingsScreen() {
             <Button onPress={() => setShowRestoreDialog(false)}>Cancel</Button>
             <Button 
               mode="contained" 
-              buttonColor="#10B981"
+              buttonColor="#16A34A"
               loading={restoreLoading}
               disabled={restoreLoading || !restoreText.trim()}
               onPress={() => {
@@ -615,11 +619,11 @@ export default function AdminSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24, backgroundColor: DS.colors.surfaceBg },
-  header: { paddingVertical: 24 },
+  container: { flex: 1, paddingHorizontal: DS.space.xl, backgroundColor: DS.colors.surfaceBg },
+  header: { paddingVertical: DS.space.xl },
   title: { fontWeight: '800', color: '#1E293B' },
   contentRow: { flexDirection: 'row', gap: 24, flexWrap: 'wrap', marginBottom: 40 },
-  card: { flex: 1, minWidth: 320, backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg, borderWidth: 0, ...DS.shadow.sm, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
+  card: { flex: 1, minWidth: 320, backgroundColor: DS.colors.cardBg, borderRadius: 12, borderWidth: 1, borderColor: DS.colors.border },
   cardContent: { padding: 24 },
   sectionHeaderRow: { marginBottom: 20 },
   iconTitleBox: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -627,10 +631,10 @@ const styles = StyleSheet.create({
   input: { marginBottom: 16, backgroundColor: DS.colors.cardBg },
   label: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 8, marginTop: 4 },
   segmentedBtn: { marginBottom: 20 },
-  saveBtn: { borderRadius: DS.radius.md, marginTop: 12, paddingVertical: 4 },
+  saveBtn: { borderRadius: 10, marginTop: 12, paddingVertical: 4 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 8 },
   switchLabel: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
   switchDesc: { fontSize: 12, color: '#64748B', marginTop: 3, lineHeight: 18, marginBottom: 14 },
   divider: { height: 1, backgroundColor: '#E2E8F0', marginVertical: 24 },
-  logoutBtn: { borderRadius: DS.radius.md, marginTop: 8, borderColor: '#EF4444' },
+  logoutBtn: { borderRadius: 10, marginTop: 8, borderColor: '#EF4444' },
 });

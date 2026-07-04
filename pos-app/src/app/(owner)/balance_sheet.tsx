@@ -6,6 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, useWindowDimensions, ActivityIndicator, Platform, Alert } from 'react-native';
 import { Text, useTheme, Card, Button, Divider, Surface, TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { PremiumHeader } from '../../components/PremiumHeader';
 
 interface AccountItem {
   label: string;
@@ -203,21 +204,21 @@ export default function BalanceSheetScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: appTheme.colors.background }}>
-        <ActivityIndicator size="large" color={appTheme.colors.primary} />
-        <Text style={{ marginTop: 12, color: appTheme.colors.onSurfaceVariant, fontWeight: '600' }}>Loading Balance Sheet...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+        <ActivityIndicator size="large" color="#16A34A" />
+        <Text style={{ marginTop: 12, color: '#6B7280', fontWeight: '600' }}>Loading Balance Sheet...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: appTheme.colors.background }}>
-        <Card style={{ padding: 32, borderRadius: 16, width: '90%', maxWidth: 500, alignItems: 'center', borderWidth: 1, borderColor: appTheme.colors.outlineVariant, backgroundColor: 'white' }} elevation={1}>
-          <Icon name="alert-circle-outline" size={48} color={appTheme.colors.error} style={{ marginBottom: 10 }} />
-          <Text variant="titleMedium" style={{ marginTop: 8, fontWeight: 'bold', color: appTheme.colors.onSurface, textAlign: 'center' }}>Unable to Load Balance Sheet</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#F8FAFC' }}>
+        <Card style={{ padding: 32, borderRadius: 12, width: '90%', maxWidth: 500, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: 'white' }} elevation={0}>
+          <Icon name="alert-circle-outline" size={48} color="#DC2626" style={{ marginBottom: 10 }} />
+          <Text variant="titleMedium" style={{ marginTop: 8, fontWeight: 'bold', color: '#111827', textAlign: 'center' }}>Unable to Load Balance Sheet</Text>
           <Text style={{ marginTop: 8, color: 'gray', textAlign: 'center', fontSize: 13, lineHeight: 18, marginBottom: 24 }}>{error}</Text>
-          <Button mode="contained" onPress={fetchFinancialData} style={{ borderRadius: 10, width: '100%', backgroundColor: appTheme.colors.primary }}>
+          <Button mode="contained" onPress={fetchFinancialData} buttonColor="#16A34A" style={{ borderRadius: 10, width: '100%' }}>
             Retry Sync
           </Button>
         </Card>
@@ -227,16 +228,11 @@ export default function BalanceSheetScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Icon name="scale-balance" size={28} color="#1565C0" />
-          <View>
-            <Text variant="headlineSmall" style={styles.title}>Balance Sheet</Text>
-            <Text style={styles.subtitle}>Statement of Financial Position — Assets = Liabilities + Equity</Text>
-          </View>
-        </View>
-      </View>
+      <PremiumHeader
+        title="Balance Sheet"
+        subtitle="Statement of Financial Position"
+        icon="scale-balance"
+      />
 
       {/* Top Controls */}
       <View style={styles.topBar}>
@@ -247,13 +243,15 @@ export default function BalanceSheetScreen() {
               value={asOfDate}
               onChangeText={setAsOfDate}
               mode="outlined"
-              dense
-              style={{ backgroundColor: 'white' }}
-              outlineStyle={{ borderRadius: 4 }}
+              activeOutlineColor="#16A34A"
+              outlineColor="#D1D5DB"
+              outlineStyle={{ borderRadius: 10 }}
+              style={{ height: 44, backgroundColor: '#FFFFFF' }}
             />
           </View>
            <Button 
             mode="contained" 
+            buttonColor="#16A34A"
             onPress={() => {
               if (Platform.OS === 'web' && typeof window !== 'undefined') {
                 window.print();
@@ -263,14 +261,13 @@ export default function BalanceSheetScreen() {
             }} 
             style={styles.printBtn} 
             labelStyle={{ color: 'white' }} 
-            compact
           >
             Print Statement
           </Button>
         </View>
-        <View style={[styles.balanceStatus, { borderColor: isBalanced ? '#A7F3D0' : '#FCA5A5', backgroundColor: isBalanced ? '#ECFDF5' : '#FEF2F2' }]}>
-          <Text style={{ fontWeight: '600', color: isBalanced ? '#2E7D32' : '#D32F2F' }}>
-            {isBalanced ? 'Books Balanced' : 'Unbalanced'}
+        <View style={[styles.balanceStatus, { borderColor: isBalanced ? '#BBF7D0' : '#FEE2E2', backgroundColor: isBalanced ? '#F0FDF4' : '#FEF2F2' }]}>
+          <Text style={{ fontWeight: '600', color: isBalanced ? '#16A34A' : '#DC2626' }}>
+            {isBalanced ? '🟢 Books Balanced' : '🔴 Unbalanced'}
           </Text>
         </View>
       </View>
@@ -315,15 +312,15 @@ export default function BalanceSheetScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24, paddingBottom: 40 },
+  container: { flex: 1, paddingHorizontal: DS.space.xl, paddingBottom: 40 },
   header: { paddingTop: 24, paddingBottom: 16 },
   title: { fontWeight: 'bold', },
   subtitle: { fontSize: 13, marginTop: 4 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 16 },
   fieldLabel: { fontSize: 11, fontWeight: '600', marginBottom: 4 },
-  printBtn: { borderRadius: 4, marginBottom: 2 },
-  balanceStatus: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: DS.radius.sm, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
-  sheetCard: { backgroundColor: '#FFFFFF', padding: 32, borderRadius: DS.radius.sm, borderWidth: 0, ...DS.shadow.sm, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2, minHeight: 600, marginBottom: 40 },
+  printBtn: { borderRadius: 10, marginBottom: 2, height: 44, justifyContent: 'center' },
+  balanceStatus: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 9999, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  sheetCard: { backgroundColor: '#FFFFFF', padding: 32, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', minHeight: 600, marginBottom: 40 },
   sheetHeader: { alignItems: 'center', marginBottom: 32 },
   sheetTitle: { fontSize: 18, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, color: '#1E293B' },
   sheetSubtitle: { fontSize: 16, marginTop: 4, color: '#1E293B' },

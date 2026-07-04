@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated, useWindowDimensions } from 'react-native';
-import { Text, Divider, useTheme, IconButton, Avatar, Surface, Badge, Button, TextInput, ActivityIndicator, Portal } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Animated, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { Text, Divider, useTheme, IconButton, Avatar, Surface, Badge, Button, TextInput, Portal } from 'react-native-paper';
 import { Slot, router, usePathname } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth, isFirebaseConfigured, db } from '../../lib/firebase';
@@ -9,31 +9,21 @@ import { useAuth } from '../../providers/AuthProvider';
 import { collection, query, onSnapshot } from '../../lib/firestore_adapter';
 import { DS } from '../../constants/designTokens';
 
-const menuSections = [
-{
-    label: 'POS Billing & Stock',
-    items: [
-      { name: 'Dashboard', icon: 'view-dashboard', path: '/(owner)' },
-      { name: 'POS Billing', icon: 'cash-register', path: '/(owner)/pos_billing' },
-      { name: 'Products', icon: 'package-variant', path: '/(owner)/products_management' },
-      { name: 'Inventory', icon: 'clipboard-list-outline', path: '/(owner)/inventory' },
-      { name: 'Barcode Gen.', icon: 'barcode', path: '/(owner)/barcode_generator' },
-      { name: 'Reorder List', icon: 'alert-decagram-outline', path: '/(owner)/reorder_list' },
-    ]
-  },
-  {
-    label: 'Accounting & Tally',
-    items: [
-      { name: 'Day Book', icon: 'book-open-outline', path: '/(owner)/day_book' },
-      { name: 'Cash & Bank Book', icon: 'cash-multiple', path: '/(owner)/cash_bank_book' },
-      { name: 'Journal Entry', icon: 'notebook-outline', path: '/(owner)/journal_entry' },
-      { name: 'Ledgers', icon: 'account-details-outline', path: '/(owner)/ledgers' },
-      { name: 'Profit & Loss', icon: 'chart-line', path: '/(owner)/profit_loss' },
-      { name: 'Balance Sheet', icon: 'scale-balance', path: '/(owner)/balance_sheet' },
-      { name: 'GST Returns', icon: 'file-percent-outline', path: '/(owner)/gst_management', isGstOnly: true },
-      { name: 'Data Import', icon: 'file-import-outline', path: '/(owner)/data_import' },
-    ]
-  }
+const menuItems = [
+  { name: 'Dashboard', icon: 'view-dashboard-outline', path: '/(owner)' },
+  { name: 'Billing', icon: 'receipt', path: '/(owner)/pos_billing' },
+  { name: 'Inventory', icon: 'clipboard-list-outline', path: '/(owner)/inventory' },
+  { name: 'Products', icon: 'package-variant-closed', path: '/(owner)/products_management' },
+  { name: 'Barcode Gen.', icon: 'barcode-scan', path: '/(owner)/barcode_generator' },
+  { name: 'Reorder List', icon: 'alert-circle-outline', path: '/(owner)/reorder_list' },
+  { name: 'Day Book', icon: 'book-open-page-variant-outline', path: '/(owner)/day_book' },
+  { name: 'Cash & Bank', icon: 'cash-multiple', path: '/(owner)/cash_bank_book' },
+  { name: 'Journal', icon: 'notebook-outline', path: '/(owner)/journal_entry' },
+  { name: 'Ledgers', icon: 'account-details-outline', path: '/(owner)/ledgers' },
+  { name: 'Profit & Loss', icon: 'chart-line', path: '/(owner)/profit_loss' },
+  { name: 'Balance Sheet', icon: 'scale-balance', path: '/(owner)/balance_sheet' },
+  { name: 'GST Returns', icon: 'file-percent-outline', path: '/(owner)/gst_management', isGstOnly: true },
+  { name: 'Data Import', icon: 'file-import-outline', path: '/(owner)/data_import' },
 ];
 
 // ── Live Clock Hook ────────────────────────────────────────────────────
@@ -51,42 +41,23 @@ function useLiveClock() {
 // ── Sidebar Menu Item with hover ───────────────────────────────────────
 const MenuItem = ({ item, isActive, onPress }: { item: any; isActive: boolean; onPress: () => void }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const bgAnim = useRef(new Animated.Value(isActive ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(bgAnim, { toValue: isActive ? 1 : 0, duration: 200, useNativeDriver: false }).start();
-  }, [isActive]);
-
-  const backgroundColor = bgAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgba(255,255,255,0)', 'rgba(30, 58, 138, 0.08)'],
-  });
-
   return (
-    <Animated.View style={[{ backgroundColor }]}>
-      <TouchableOpacity
-        style={[
-          styles.menuItem,
-          isActive && styles.menuItemActive,
-          isHovered && !isActive && styles.menuItemHover,
-        ]}
-        onPress={onPress}
-        // @ts-ignore - web only
-        onMouseEnter={Platform.OS === 'web' ? () => setIsHovered(true) : undefined}
-        // @ts-ignore
-        onMouseLeave={Platform.OS === 'web' ? () => setIsHovered(false) : undefined}
-        activeOpacity={0.7}
-      >
-        <View style={[
-          styles.menuIconContainer,
-          isActive && { backgroundColor: 'rgba(30, 58, 138, 0.15)' },
-        ]}>
-          <Icon name={item.icon} size={17} color={isActive ? '#1E3A8A' : '#64748B'} />
-        </View>
-        <Text style={[styles.menuText, isActive && styles.menuTextActive]}>{item.name}</Text>
-        {isActive && <View style={styles.activeIndicator} />}
-      </TouchableOpacity>
-    </Animated.View>
+    <TouchableOpacity
+      style={[
+        styles.menuItem,
+        isActive && styles.menuItemActive,
+        isHovered && !isActive && styles.menuItemHover,
+      ]}
+      onPress={onPress}
+      // @ts-ignore - web only
+      onMouseEnter={Platform.OS === 'web' ? () => setIsHovered(true) : undefined}
+      // @ts-ignore
+      onMouseLeave={Platform.OS === 'web' ? () => setIsHovered(false) : undefined}
+      activeOpacity={0.7}
+    >
+      <Icon name={item.icon} size={20} color={isActive ? '#16A34A' : '#6B7280'} />
+      <Text style={[styles.menuText, isActive && styles.menuTextActive]}>{item.name}</Text>
+    </TouchableOpacity>
   );
 };
 
@@ -191,6 +162,19 @@ export default function OwnerLayout() {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          router.push('/(owner)/products_management');
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, []);
+
   const isLaptopLocked = false;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(screenWidth > 800);
@@ -237,7 +221,7 @@ export default function OwnerLayout() {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#16A34A" />
         <Text style={{ marginTop: 12, color: '#64748B', fontWeight: '600' }}>Loading BharatPOS...</Text>
       </View>
     );
@@ -257,7 +241,7 @@ export default function OwnerLayout() {
           </Text>
           <Button 
             mode="contained" 
-            buttonColor="#10B981" 
+            buttonColor="#16A34A" 
             labelStyle={{ fontWeight: 'bold' }} 
             style={{ width: '100%', borderRadius: 10, paddingVertical: 6 }} 
             onPress={() => router.push('/(owner)/upgrade' as any)}
@@ -291,7 +275,7 @@ export default function OwnerLayout() {
           </Text>
           <Button 
             mode="contained" 
-            buttonColor="#10B981" 
+            buttonColor="#16A34A" 
             labelStyle={{ fontWeight: 'bold' }} 
             style={{ width: '100%', borderRadius: 10, paddingVertical: 6 }} 
             onPress={() => router.push('/(owner)/upgrade' as any)}
@@ -307,7 +291,7 @@ export default function OwnerLayout() {
               }
             }}
           >
-            <Text style={{ color: '#10B981', fontWeight: 'bold', fontSize: 13 }}>Simulate Medium Shop Plan</Text>
+            <Text style={{ color: '#16A34A', fontWeight: 'bold', fontSize: 13 }}>Simulate Medium Shop Plan</Text>
           </TouchableOpacity>
         </Surface>
       </View>
@@ -329,7 +313,7 @@ export default function OwnerLayout() {
       ]}>
         {/* Logo Area */}
         <View style={styles.logoContainer}>
-          <View style={[styles.logoIconContainer, { backgroundColor: '#1E3A8A' }]}>
+          <View style={styles.logoIconContainer}>
             <Icon name="store" size={22} color="#fff" />
           </View>
           <View style={styles.logoTextContainer}>
@@ -338,32 +322,18 @@ export default function OwnerLayout() {
           </View>
         </View>
 
-        <Divider style={{ backgroundColor: '#E2E8F0', marginHorizontal: 16 }} />
+        <Divider style={{ backgroundColor: '#E5E7EB', marginHorizontal: 16 }} />
 
         {/* Menu */}
         <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
-          {menuSections.map((section, sIdx) => (
-            <View key={sIdx}>
-              <View style={styles.sectionLabelContainer}>
-                <Text style={styles.sectionLabel}>{section.label.toUpperCase()}</Text>
-                <View style={styles.sectionLine} />
-              </View>
-
-              {section.items
-                .filter(item => !(item as any).isGstOnly || isGstRegistered)
-                .map((item, iIdx) => {
-                  const isActive = pathname === item.path || (item.path === '/(owner)' && pathname === '/(owner)/');
-                  return (
-                    <MenuItem
-                      key={iIdx}
-                      item={item}
-                      isActive={isActive}
-                      onPress={() => handleNav(item.path)}
-                    />
-                  );
-                })}
-            </View>
-          ))}
+          {menuItems
+            .filter(item => !(item as any).isGstOnly || isGstRegistered)
+            .map((item, idx) => {
+              const isActive = pathname === item.path || (item.path === '/(owner)' && pathname === '/(owner)/');
+              return (
+                <MenuItem key={idx} item={item} isActive={isActive} onPress={() => handleNav(item.path)} />
+              );
+            })}
           <View style={{ height: 20 }} />
         </ScrollView>
 
@@ -383,26 +353,27 @@ export default function OwnerLayout() {
             {screenWidth > 480 && (
               <>
                 <View style={styles.topBarDivider} />
-                <Icon name="store-outline" size={18} color="#1E3A8A" />
+                <Icon name="store-outline" size={18} color="#6B7280" />
                 <Text style={styles.storeName}>Main Branch</Text>
               </>
             )}
           </View>
 
+          {screenWidth > 768 && (
+            <TouchableOpacity 
+              style={styles.searchContainer} 
+              activeOpacity={0.8}
+              onPress={() => router.push('/(owner)/products_management')}
+            >
+              <Icon name="magnify" size={18} color="#6B7280" style={{ marginRight: 8 }} />
+              <Text style={styles.searchPlaceholder}>Search products...</Text>
+              <View style={styles.shortcutBadge}>
+                <Text style={styles.shortcutText}>Ctrl + K</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
           <View style={styles.topBarRight}>
-            {/* Date & Time */}
-            {screenWidth > 768 && (
-              <>
-                <View style={styles.dateTimeContainer}>
-                  <Icon name="calendar-outline" size={15} color="#888" />
-                  <Text style={styles.dateTimeText}>{dateStr}</Text>
-                  <View style={styles.timeDot} />
-                  <Icon name="clock-outline" size={15} color="#888" />
-                  <Text style={styles.dateTimeText}>{timeStr}</Text>
-                </View>
-                <View style={styles.topBarDivider} />
-              </>
-            )}
 
             {/* Notification Bell */}
             <View style={styles.bellContainer}>
@@ -477,7 +448,7 @@ export default function OwnerLayout() {
                 <Avatar.Text
                   size={36}
                   label={initial}
-                  style={{ backgroundColor: '#10B981' }}
+                  style={{ backgroundColor: '#16A34A' }}
                   labelStyle={{ fontSize: 14, fontWeight: '700' }}
                 />
                 <Icon name={showProfileMenu ? "chevron-up" : "chevron-down"} size={16} color="#64748B" style={{ marginLeft: 4 }} />
@@ -542,7 +513,7 @@ export default function OwnerLayout() {
 
 // ── Styles ─────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, flexDirection: 'row', backgroundColor: '#F5F6FA' },
+  container: { flex: 1, flexDirection: 'row', backgroundColor: '#F8FAFC' },
   main: { flex: 1, flexDirection: 'column' },
 
   // Sidebar
@@ -551,7 +522,7 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#FFFFFF',
     borderRightWidth: 1,
-    borderRightColor: '#E2E8F0',
+    borderRightColor: '#E5E7EB',
     paddingTop: 0,
   },
   overlay: {
@@ -566,7 +537,7 @@ const styles = StyleSheet.create({
   },
   logoIconContainer: {
     width: 42, height: 42, borderRadius: 12,
-    backgroundColor: '#1E3A8A', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#16A34A', alignItems: 'center', justifyContent: 'center',
   },
   logoTextContainer: { marginLeft: 14 },
   logoText: { color: '#1E293B', fontWeight: '800', fontSize: 18, letterSpacing: -0.3 },
@@ -574,41 +545,25 @@ const styles = StyleSheet.create({
 
   // Menu
   sidebarMenu: { flex: 1, marginTop: 8 },
-  sectionLabelContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 20, marginTop: 20, marginBottom: 8,
-  },
-  sectionLabel: {
-    color: '#94A3B8', fontSize: 10, fontWeight: '700',
-    letterSpacing: 1.8, marginRight: 10,
-  },
-  sectionLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
 
   // Menu Item
   menuItem: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 9, paddingHorizontal: 16,
-    marginHorizontal: 10, marginBottom: 2, borderRadius: 10,
+    paddingVertical: 10, paddingHorizontal: 16,
+    marginHorizontal: 8, marginBottom: 4, borderRadius: 0,
+    borderLeftWidth: 3, borderLeftColor: 'transparent',
   },
   menuItemActive: {
-    backgroundColor: 'rgba(30, 58, 138, 0.08)',
+    backgroundColor: '#F0FDF4',
+    borderLeftColor: '#16A34A',
   },
   menuItemHover: {
-    backgroundColor: '#F8FAFC',
-  },
-  menuIconContainer: {
-    width: 32, height: 32, borderRadius: 8,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F9FAFB',
   },
   menuText: {
-    color: '#475569', marginLeft: 12, fontSize: 13.5, fontWeight: '500',
+    color: '#4B5563', marginLeft: 12, fontSize: 14, fontWeight: '500',
   },
-  menuTextActive: { color: '#1E3A8A', fontWeight: '700' },
-  activeIndicator: {
-    position: 'absolute', left: 0, top: '25%',
-    width: 3, height: '50%', backgroundColor: '#1E3A8A', borderRadius: 2,
-  },
+  menuTextActive: { color: '#16A34A', fontWeight: '600' },
 
   // Logout
   logoutButton: {
@@ -627,17 +582,16 @@ const styles = StyleSheet.create({
 
   // Top Bar
   topBar: {
-    height: 64, backgroundColor: '#fff', flexDirection: 'row',
+    height: 56, backgroundColor: '#fff', flexDirection: 'row',
     alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
     zIndex: 1000,
-    elevation: 5,
   },
   topBarLeft: { flexDirection: 'row', alignItems: 'center' },
   topBarRight: { flexDirection: 'row', alignItems: 'center' },
   menuToggle: {
-    width: 38, height: 38, borderRadius: 10,
-    backgroundColor: '#F5F6FA', alignItems: 'center', justifyContent: 'center',
+    width: 38, height: 38, borderRadius: 12,
+    backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center',
   },
   topBarDivider: {
     width: 1, height: 28, backgroundColor: '#ECECEC', marginHorizontal: 16,
@@ -657,12 +611,12 @@ const styles = StyleSheet.create({
   // Notification Bell
   bellContainer: { position: 'relative' },
   bellButton: {
-    width: 40, height: 40, borderRadius: 10,
-    backgroundColor: '#F5F6FA', alignItems: 'center', justifyContent: 'center',
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center',
   },
   bellBadge: {
     position: 'absolute', top: -2, right: -4,
-    backgroundColor: '#EF4444', fontWeight: '700',
+    backgroundColor: '#DC2626', fontWeight: '700',
   },
 
   // Premium Notifications Dropdown
@@ -675,12 +629,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
     zIndex: 999,
     overflow: 'hidden',
   },
@@ -759,14 +713,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5E7EB',
     paddingVertical: 4,
     zIndex: 9999,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   profileDropdownHeader: {
     padding: 12,
@@ -795,4 +749,36 @@ const styles = StyleSheet.create({
 
   // Content
   contentArea: { flex: 1, overflow: 'hidden' },
+
+  // Search Bar Navbar
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 38,
+    width: 280,
+    justifyContent: 'space-between',
+  },
+  searchPlaceholder: {
+    color: '#6B7280',
+    fontSize: 13,
+    flex: 1,
+  },
+  shortcutBadge: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  shortcutText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
 });

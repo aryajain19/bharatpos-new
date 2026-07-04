@@ -428,29 +428,36 @@ export default function ProductsManagementScreen() {
             <DataTable>
               <DataTable.Header style={styles.tableHeader}>
                 <DataTable.Title style={{ flex: 3 }}><Text style={styles.colHeader}>Product</Text></DataTable.Title>
+                <DataTable.Title style={{ flex: 2 }}><Text style={styles.colHeader}>SKU / Barcode</Text></DataTable.Title>
                 <DataTable.Title style={{ flex: 2 }}><Text style={styles.colHeader}>Category</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.colHeader}>MRP</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.colHeader}>Selling Price</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.colHeader}>Price</Text></DataTable.Title>
                 <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHeader}>Stock</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1.5, justifyContent: 'center' }}><Text style={styles.colHeader}>Status</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHeader}>Action</Text></DataTable.Title>
+                <DataTable.Title style={{ flex: 1.8, justifyContent: 'center' }}><Text style={styles.colHeader}>Status</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ flex: 1.2 }}><Text style={styles.colHeader}>Actions</Text></DataTable.Title>
               </DataTable.Header>
 
               {products.map((item) => {
                 const isOutOfStock = item.stock_qty <= 0;
+                const isLowStock = item.stock_qty > 0 && item.stock_qty <= 5;
+                
+                const statusLabel = isOutOfStock ? '🔴 Out of Stock' : isLowStock ? '🟠 Low Stock' : '🟢 In Stock';
+                const statusBg = isOutOfStock ? '#FEF2F2' : isLowStock ? '#FFFBEB' : '#F0FDF4';
+                const statusBorder = isOutOfStock ? '#FEE2E2' : isLowStock ? '#FEF3C7' : '#DCFCE7';
+                const statusColor = isOutOfStock ? '#DC2626' : isLowStock ? '#D97706' : '#16A34A';
+
                 return (
                   <DataTable.Row key={item.id} style={styles.tableRow}>
                     <DataTable.Cell style={{ flex: 3 }}>
                       <Text style={styles.cellMainText}>{item.name}</Text>
                     </DataTable.Cell>
-                      <DataTable.Cell style={{ flex: 2, justifyContent: 'center' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Icon name={cleanAndMapCategory(item.category || '').icon} size={14} color="#64748B" style={{ marginRight: 6 }} />
-                          <Text style={styles.cellSubText}>{cleanAndMapCategory(item.category || '').cleanName}</Text>
-                        </View>
-                      </DataTable.Cell>
-                    <DataTable.Cell numeric style={{ flex: 1.5 }}>
-                      <Text style={styles.cellSubText}>₹{item.mrp.toFixed(2)}</Text>
+                    <DataTable.Cell style={{ flex: 2 }}>
+                      <Text style={styles.cellSubText} numberOfLines={1}>{item.barcode || '—'}</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 2 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Icon name={cleanAndMapCategory(item.category || '').icon} size={14} color="#6B7280" style={{ marginRight: 6 }} />
+                        <Text style={styles.cellSubText}>{cleanAndMapCategory(item.category || '').cleanName}</Text>
+                      </View>
                     </DataTable.Cell>
                     <DataTable.Cell numeric style={{ flex: 1.5 }}>
                       <Text style={styles.cellMainText}>₹{item.selling_price.toFixed(2)}</Text>
@@ -458,35 +465,41 @@ export default function ProductsManagementScreen() {
                     <DataTable.Cell numeric style={{ flex: 1 }}>
                       <Text style={styles.cellSubText}>{item.stock_qty}</Text>
                     </DataTable.Cell>
-                    <DataTable.Cell style={{ flex: 1.5, justifyContent: 'center' }}>
-                      <View style={styles.statusContainer}>
-                        <Icon 
-                          name={isOutOfStock ? "close-circle-outline" : "check-circle-outline"} 
-                          size={14} 
-                          color={isOutOfStock ? '#F44336' : '#4CAF50'} 
-                        />
-                        <Text style={[styles.statusText, { color: isOutOfStock ? '#F44336' : '#4CAF50' }]}>
-                          {isOutOfStock ? 'Out of Stock' : 'In Stock'}
+                    <DataTable.Cell style={{ flex: 1.8, justifyContent: 'center' }}>
+                      <View style={[styles.statusPill, { backgroundColor: statusBg, borderColor: statusBorder }]}>
+                        <Text style={[styles.statusText, { color: statusColor }]}>
+                          {statusLabel}
                         </Text>
                       </View>
                     </DataTable.Cell>
-                     <DataTable.Cell numeric style={{ flex: 1 }}>
-                       <View style={styles.actionIcons}>
-                         <TouchableOpacity style={{ marginRight: 12 }} onPress={() => openEditModal(item)}>
-                           <Icon name="pencil-outline" size={18} color="#2196F3" />
-                         </TouchableOpacity>
-                         <TouchableOpacity onPress={() => handleDeleteProduct(item)}>
-                           <Icon name="trash-can-outline" size={18} color="#F44336" />
-                         </TouchableOpacity>
-                       </View>
-                     </DataTable.Cell>
+                    <DataTable.Cell numeric style={{ flex: 1.2 }}>
+                      <View style={styles.actionIcons}>
+                        <TouchableOpacity onPress={() => openEditModal(item)}>
+                          <Icon name="pencil" size={18} color="#4B5563" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDeleteProduct(item)}>
+                          <Icon name="delete-outline" size={18} color="#DC2626" />
+                        </TouchableOpacity>
+                      </View>
+                    </DataTable.Cell>
                   </DataTable.Row>
                 );
               })}
 
               {products.length === 0 && (
-                <View style={{ padding: 40, alignItems: 'center', width: '100%' }}>
-                  <Text style={{ color: 'gray', fontStyle: 'italic' }}>No Data Available</Text>
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateIcon}>📦</Text>
+                  <Text style={styles.emptyStateTitle}>No products found</Text>
+                  <Text style={styles.emptyStateText}>Import a bill or click Add Product to get started</Text>
+                  <Button 
+                    mode="contained" 
+                    buttonColor="#16A34A" 
+                    textColor="white"
+                    style={{ borderRadius: 8 }}
+                    onPress={() => router.push('/(vendor)/add_product')}
+                  >
+                    Add Product
+                  </Button>
                 </View>
               )}
             </DataTable>
@@ -715,21 +728,30 @@ export default function ProductsManagementScreen() {
                 value={editName}
                 onChangeText={setEditName}
                 mode="outlined"
-                style={{ marginBottom: 12 }}
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 12, backgroundColor: '#FFFFFF' }}
               />
               <TextInput
                 label="Category"
                 value={editCategory}
                 onChangeText={setEditCategory}
                 mode="outlined"
-                style={{ marginBottom: 12 }}
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 12, backgroundColor: '#FFFFFF' }}
               />
               <TextInput
                 label="Barcode"
                 value={editBarcode}
                 onChangeText={setEditBarcode}
                 mode="outlined"
-                style={{ marginBottom: 12 }}
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 12, backgroundColor: '#FFFFFF' }}
               />
               <TextInput
                 label="MRP"
@@ -737,7 +759,10 @@ export default function ProductsManagementScreen() {
                 onChangeText={setEditMrp}
                 keyboardType="numeric"
                 mode="outlined"
-                style={{ marginBottom: 12 }}
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 12, backgroundColor: '#FFFFFF' }}
               />
               <TextInput
                 label="Selling Price"
@@ -745,7 +770,10 @@ export default function ProductsManagementScreen() {
                 onChangeText={setEditSellingPrice}
                 keyboardType="numeric"
                 mode="outlined"
-                style={{ marginBottom: 12 }}
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 12, backgroundColor: '#FFFFFF' }}
               />
               <TextInput
                 label="Stock Quantity"
@@ -753,7 +781,10 @@ export default function ProductsManagementScreen() {
                 onChangeText={setEditStockQty}
                 keyboardType="numeric"
                 mode="outlined"
-                style={{ marginBottom: 12 }}
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 12, backgroundColor: '#FFFFFF' }}
               />
               <TextInput
                 label="GST Percentage"
@@ -761,7 +792,10 @@ export default function ProductsManagementScreen() {
                 onChangeText={setEditGstPct}
                 keyboardType="numeric"
                 mode="outlined"
-                style={{ marginBottom: 20 }}
+                activeOutlineColor="#16A34A"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 20, backgroundColor: '#FFFFFF' }}
               />
             </ScrollView>
 
@@ -791,35 +825,42 @@ export default function ProductsManagementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: DS.space.lg, backgroundColor: DS.colors.surfaceBg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: DS.space.md },
-  title: { fontSize: 18, fontWeight: 'bold', color: DS.colors.text },
-  addBtn: { borderRadius: DS.radius.sm },
-  card: { backgroundColor: DS.colors.cardBg, borderRadius: DS.radius.lg, overflow: 'hidden', borderWidth: 0, ...DS.shadow.sm },
-  tableHeader: { borderBottomWidth: 1, borderBottomColor: DS.colors.border },
-  colHeader: { fontWeight: 'bold', color: DS.colors.textSecondary, fontSize: 12 },
+  container: { flex: 1, padding: DS.space.xl, backgroundColor: DS.colors.surfaceBg },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: DS.space.lg },
+  title: { fontSize: DS.font.h3.fontSize, fontWeight: DS.font.h3.fontWeight, color: DS.colors.text },
+  addBtn: { borderRadius: 10 },
+  card: { backgroundColor: DS.colors.cardBg, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: DS.colors.border },
+  tableHeader: { backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: DS.colors.border },
+  colHeader: { fontWeight: '700', color: DS.colors.textSecondary, fontSize: 13 },
   tableRow: { borderBottomWidth: 1, borderBottomColor: DS.colors.borderLight },
-  cellMainText: { fontWeight: '600', fontSize: 13, color: DS.colors.text },
-  cellSubText: { color: DS.colors.textSecondary, fontSize: 13 },
-  statusContainer: { flexDirection: 'row', alignItems: 'center' },
-  statusText: { fontSize: 12, fontWeight: 'bold', marginLeft: 4 },
-  actionIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', width: '100%' },
+  cellMainText: { fontWeight: '500', fontSize: 14, color: DS.colors.text },
+  cellSubText: { color: DS.colors.textSecondary, fontSize: 14 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 9999, borderWidth: 1, alignSelf: 'center' },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  actionIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 },
+  
   // Modal styles
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContainer: { backgroundColor: DS.colors.cardBg, width: '100%', maxWidth: 700, maxHeight: '85%', borderRadius: DS.radius.lg, overflow: 'hidden', ...DS.shadow.lg },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: DS.colors.border },
-  modalTitle: { fontSize: 16, fontWeight: 'bold', color: DS.colors.text },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.3)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContainer: { backgroundColor: DS.colors.cardBg, width: '100%', maxWidth: 600, maxHeight: '85%', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: DS.colors.border },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: DS.colors.border },
+  modalTitle: { fontSize: 16, fontWeight: '700', color: DS.colors.text },
   modalDesc: { fontSize: 13, color: DS.colors.textSecondary, lineHeight: 18, marginBottom: 16 },
   sectionLabel: { fontSize: 13, fontWeight: '700', color: DS.colors.text, marginBottom: 8, marginTop: 8 },
   templateContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   templateBadge: { backgroundColor: DS.colors.borderLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: DS.colors.border },
   templateText: { fontSize: 11, fontWeight: '600', color: DS.colors.textSecondary },
   textArea: { backgroundColor: DS.colors.surfaceBg, fontSize: 13, minHeight: 120, textAlignVertical: 'top' },
-  previewCard: { borderWidth: 1, borderColor: DS.colors.border, borderRadius: DS.radius.sm, overflow: 'hidden', marginTop: 6, backgroundColor: DS.colors.surfaceBg },
+  previewCard: { borderWidth: 1, borderColor: DS.colors.border, borderRadius: 8, overflow: 'hidden', marginTop: 6, backgroundColor: DS.colors.surfaceBg },
   previewColHead: { fontSize: 11, fontWeight: '700', color: DS.colors.textSecondary },
   previewCellMain: { fontSize: 12, fontWeight: '600', color: DS.colors.text },
   previewCellSub: { fontSize: 12, color: DS.colors.textSecondary },
   previewCellBarcode: { fontSize: 11, fontFamily: 'monospace', color: DS.colors.textMuted },
   modalFooter: { flexDirection: 'row', justifyContent: 'flex-end', padding: 16, borderTopWidth: 1, borderTopColor: DS.colors.border, backgroundColor: DS.colors.surfaceBg },
-  modalBtn: { borderRadius: DS.radius.sm },
+  modalBtn: { borderRadius: 10, height: 44, justifyContent: 'center' },
+
+  // Empty State
+  emptyStateContainer: { padding: 48, alignItems: 'center', justifyContent: 'center', width: '100%' },
+  emptyStateIcon: { fontSize: 32, marginBottom: 12 },
+  emptyStateTitle: { fontSize: 16, fontWeight: '700', color: DS.colors.text, marginBottom: 4 },
+  emptyStateText: { fontSize: 14, color: DS.colors.textSecondary, textAlign: 'center', marginBottom: 16 },
 });
