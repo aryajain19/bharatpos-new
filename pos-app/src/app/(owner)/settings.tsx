@@ -262,7 +262,7 @@ export default function AdminSettingsScreen() {
     if (isFirebaseConfigured) {
       await signOut(auth);
     }
-    router.replace('/(auth)/login');
+    router.replace('/login');
   };
 
   const handleSeedCatalog = async () => {

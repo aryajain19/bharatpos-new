@@ -458,7 +458,7 @@ export default function SignupScreen() {
                 {/* Footer Login Promo */}
                 <View style={styles.leftPromoFooter}>
                   <Text style={styles.promoText}>Already have an account? </Text>
-                  <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)}>
+                  <TouchableOpacity onPress={() => router.push('/login' as any)}>
                     <Text style={styles.promoLink}>Login</Text>
                   </TouchableOpacity>
                 </View>
@@ -483,7 +483,7 @@ export default function SignupScreen() {
                   {/* Mobile Back-to-login link */}
                   <View style={[styles.leftPromoFooter, { marginTop: 24, alignSelf: 'center' }]}>
                     <Text style={styles.promoText}>Already have an account? </Text>
-                    <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)}>
+                    <TouchableOpacity onPress={() => router.push('/login' as any)}>
                       <Text style={styles.promoLink}>Login</Text>
                     </TouchableOpacity>
                   </View>

@@ -73,7 +73,7 @@ export default function Index() {
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
           const hostname = window.location.hostname;
           if (hostname.includes('pos-admin') || hostname.includes('admin')) {
-            router.replace('/(auth)/login' as any);
+            router.replace('/login' as any);
           }
         }
       }
@@ -252,7 +252,7 @@ export default function Index() {
             mode="outlined" 
             style={styles.headerBtnOutline}
             labelStyle={styles.btnLabelOutline}
-            onPress={() => router.push('/(auth)/login' as any)}
+            onPress={() => router.push('/login' as any)}
           >
             Login
           </Button>
@@ -260,7 +260,7 @@ export default function Index() {
             mode="contained" 
             style={styles.headerBtnSolid}
             labelStyle={styles.btnLabelSolid}
-            onPress={() => router.push('/(auth)/signup' as any)}
+            onPress={() => router.push('/signup' as any)}
           >
             Sign Up
           </Button>
@@ -306,7 +306,7 @@ export default function Index() {
               </View>
 
               <View style={styles.heroActionsRow}>
-                <Button mode="contained" style={styles.heroBtnSolid} contentStyle={{ paddingVertical: 6 }} labelStyle={{ fontWeight: 'bold' }} onPress={() => router.push('/(auth)/signup' as any)}>
+                <Button mode="contained" style={styles.heroBtnSolid} contentStyle={{ paddingVertical: 6 }} labelStyle={{ fontWeight: 'bold' }} onPress={() => router.push('/signup' as any)}>
                   Start Free Trial
                 </Button>
                 <Button mode="outlined" style={styles.heroBtnOutline} contentStyle={{ paddingVertical: 6 }} labelStyle={{ fontWeight: 'bold', color: '#374151' }} onPress={() => setShowDemoModal(true)}>
@@ -973,7 +973,7 @@ export default function Index() {
                 <View style={styles.priceInc}><Icon name="check" color="#16A34A" size={14} /><Text style={styles.priceIncText}>Up to 100 Products</Text></View>
                 <View style={styles.priceInc}><Icon name="check" color="#16A34A" size={14} /><Text style={styles.priceIncText}>Basic Reports</Text></View>
                 <View style={styles.priceInc}><Icon name="check" color="#16A34A" size={14} /><Text style={styles.priceIncText}>Email Support</Text></View>
-                <Button mode="outlined" style={styles.priceBtnOutline} labelStyle={{ fontWeight: 'bold', color: '#16A34A' }} onPress={() => router.push('/(auth)/signup' as any)}>
+                <Button mode="outlined" style={styles.priceBtnOutline} labelStyle={{ fontWeight: 'bold', color: '#16A34A' }} onPress={() => router.push('/signup' as any)}>
                   Start Free Trial
                 </Button>
               </Card.Content>

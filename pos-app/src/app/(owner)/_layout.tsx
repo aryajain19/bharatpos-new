@@ -208,7 +208,7 @@ export default function OwnerLayout() {
     } catch (error) {
       console.error("Firebase logout error:", error);
     }
-    router.replace('/(auth)/login');
+    router.replace('/login');
   };
 
   const handleNav = (path: any) => {
