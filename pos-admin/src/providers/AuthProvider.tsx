@@ -42,7 +42,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    const failSafeTimeout = setTimeout(() => {
+      setLoading(prev => {
+        if (prev) {
+          console.warn("Auth initialization timed out. Resolving loading state.");
+          return false;
+        }
+        return prev;
+      });
+    }, 5000);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(failSafeTimeout);
       setUser(firebaseUser);
       if (firebaseUser) {
         await fetchUserData(firebaseUser.uid);
@@ -54,7 +65,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(failSafeTimeout);
+      unsubscribe();
+    };
   }, []);
 
   const fetchUserData = async (uid: string) => {
