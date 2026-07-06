@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Button, Surface, TextInput } from 'react-native-paper';
 import { auth, db } from '../../lib/firebase';
@@ -9,11 +9,13 @@ import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function SignupScreen() {
-  const { isDarkMode } = useAppTheme();
-  const appTheme = useTheme();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const { width: screenWidth } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && screenWidth > 992;
+  const isDesktop = isMounted && Platform.OS === 'web' && screenWidth > 992;
 
   // Step state simulation (1 = form, 2 = success page)
   const [currentStep, setCurrentStep] = useState(1);

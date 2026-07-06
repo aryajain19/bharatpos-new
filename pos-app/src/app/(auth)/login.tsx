@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Button, Surface, TextInput, Checkbox } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
@@ -9,11 +9,13 @@ import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function LoginScreen() {
-  const { isDarkMode } = useAppTheme();
-  const appTheme = useTheme();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const { width: screenWidth } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && screenWidth > 992;
+  const isDesktop = isMounted && Platform.OS === 'web' && screenWidth > 992;
 
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
@@ -274,7 +276,7 @@ export default function LoginScreen() {
                   <Text style={styles.mockMiniLabel}>Sales Today</Text>
                   <Text style={styles.mockMiniVal}>₹48,250.00</Text>
                   <Text style={styles.mockMiniSub}>▲ +12.5% vs yesterday</Text>
-                  <Divider style={{ marginVertical: 8 }} />
+                  <View style={{ height: 1, backgroundColor: '#E2E8F0', marginVertical: 8 }} />
                   <Text style={styles.mockMiniLabel}>Orders</Text>
                   <Text style={styles.mockMiniVal}>156</Text>
                   <Text style={styles.mockMiniSub}>▲ +8.2% vs yesterday</Text>
