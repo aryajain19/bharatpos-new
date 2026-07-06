@@ -630,6 +630,7 @@ export function SuperAdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           uid: editingCustomer.id,
+          email: editingCustomer.email,
           newPassword: editFormNewPassword
         })
       });
