@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions, Animated } from 'react-native';
-import { TextInput, Button, Text, Surface } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions, Image, TouchableOpacity } from 'react-native';
+import { TextInput, Button, Text, Surface, Checkbox } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc } from '../../lib/firestore_adapter';
-import { router } from 'expo-router';
+import { router, Link } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { width, height } = Dimensions.get('window');
@@ -14,16 +14,14 @@ export default function AdminLoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSecure, setIsSecure] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
 
   async function handleLogin() {
     setLoading(true);
     
-    // Quick Demo Bypass
     if (!isFirebaseConfigured || email === '0000000000') {
       setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('adminBypass', 'true');
-        }
+        if (typeof window !== 'undefined') window.localStorage.setItem('adminBypass', 'true');
         setLoading(false);
         router.replace('/' as any);
       }, 400);
@@ -32,9 +30,8 @@ export default function AdminLoginScreen() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('adminBypass');
-      }
+      if (typeof window !== 'undefined') window.localStorage.removeItem('adminBypass');
+      
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userSnap = await getDoc(userDocRef);
       
@@ -53,14 +50,14 @@ export default function AdminLoginScreen() {
 
       if (userSnap.exists()) {
         const role = userSnap.data().role;
-        if (role === 'admin') {
+        if (role === 'admin' || role === 'owner') {
           router.replace('/' as any);
         } else {
-          Alert.alert('Access Denied', 'You do not have Super Admin privileges.');
+          Alert.alert('Access Denied', 'You do not have admin privileges.');
           await auth.signOut();
         }
       } else {
-        Alert.alert('Access Denied', 'Admin profile not found in database.');
+        Alert.alert('Access Denied', 'Admin profile not found.');
         await auth.signOut();
       }
     } catch (error: any) {
@@ -70,80 +67,179 @@ export default function AdminLoginScreen() {
     }
   }
 
+  const FeatureItem = ({ icon, title, desc }: { icon: string, title: string, desc: string }) => (
+    <View style={styles.featureItem}>
+      <View style={styles.featureIconContainer}>
+        <Icon name={icon} size={20} color="#10B981" />
+      </View>
+      <View style={styles.featureTextContainer}>
+        <Text style={styles.featureTitle}>{title}</Text>
+        <Text style={styles.featureDesc}>{desc}</Text>
+      </View>
+    </View>
+  );
+
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      {/* Dynamic Background Elements */}
-      <View style={[styles.glowOrb, styles.orbTopRight]} />
-      <View style={[styles.glowOrb, styles.orbBottomLeft]} />
-      
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.contentWrapper}>
+        
+        <View style={styles.splitLayout}>
           
-          <View style={styles.logoContainer}>
-            <View style={styles.iconRingExt}>
-              <View style={styles.iconRingInt}>
-                <Icon name="shield-lock" size={38} color="#818CF8" />
+          {/* Left Panel: Value Proposition & Illustration */}
+          <View style={styles.leftPanel}>
+            <View style={styles.logoRow}>
+               <Icon name="cash-register" size={28} color="#10B981" />
+               <Text style={styles.logoText}>SmartPOS</Text>
+            </View>
+
+            <View style={styles.leftPanelInner}>
+              <View style={styles.heroContent}>
+                <Text style={styles.heroTitle}>Manage Your Store{'\n'}<Text style={{ color: '#10B981' }}>Anywhere</Text></Text>
+                <Text style={styles.heroSubtitle}>The complete cloud POS & Inventory solution{'\n'}for modern Indian retailers.</Text>
+                
+                <View style={styles.featuresList}>
+                  <FeatureItem 
+                    icon="lightning-bolt-outline" 
+                    title="Lightning Fast Billing" 
+                    desc="Create bills in seconds with barcode scanning and quick product search." 
+                  />
+                  <FeatureItem 
+                    icon="store-outline" 
+                    title="Real-time Inventory" 
+                    desc="Track stock, get low stock alerts and manage multiple locations." 
+                  />
+                  <FeatureItem 
+                    icon="file-document-outline" 
+                    title="GST Invoicing & Reports" 
+                    desc="Generate GST invoices, GSTR reports and downloadable ledgers." 
+                  />
+                  <FeatureItem 
+                    icon="account-group-outline" 
+                    title="Staff & Customer Management" 
+                    desc="Manage staff access, customers, due payments and loyalty points." 
+                  />
+                </View>
+
+                <View style={styles.trustBadge}>
+                  <Icon name="shield-check" size={20} color="#10B981" style={{ marginRight: 8 }} />
+                  <Text style={styles.trustText}>Trusted by 15,000+ businesses across India</Text>
+                </View>
+              </View>
+
+              <View style={styles.illustrationWrapper}>
+                <Image source={require('../../../assets/login_illustration.png')} style={styles.illustration} resizeMode="contain" />
               </View>
             </View>
-            <Text style={styles.title}>Admin Portal</Text>
-            <Text style={styles.subtitle}>Secure Access Required</Text>
           </View>
 
-          <Surface style={styles.cardContainer} elevation={0}>
-            <View style={styles.formContainer}>
-              <TextInput
-                label="Admin Email or ID"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.input}
-                mode="outlined"
-                outlineColor="transparent"
-                activeOutlineColor="#818CF8"
-                textColor="#F8FAFC"
-                placeholderTextColor="#64748B"
-                theme={{ colors: { onSurfaceVariant: '#94A3B8', primary: '#818CF8' }, roundness: 12 }}
-                left={<TextInput.Icon icon="email-outline" color="#64748B" />}
-              />
+          {/* Right Panel: Login Form */}
+          <View style={styles.rightPanel}>
+            <Surface style={styles.formCard} elevation={2}>
+              <View style={styles.formLogoRow}>
+                 <Icon name="cash-register" size={24} color="#10B981" />
+                 <Text style={styles.formLogoText}>SmartPOS</Text>
+              </View>
+              
+              <Text style={styles.welcomeTitle}>Welcome Back</Text>
+              <Text style={styles.welcomeSubtitle}>Sign in to access your SmartPOS account</Text>
 
-              <TextInput
-                label="Security Passkey"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={isSecure}
-                style={[styles.input, { marginTop: 16 }]}
-                mode="outlined"
-                outlineColor="transparent"
-                activeOutlineColor="#818CF8"
-                textColor="#F8FAFC"
-                placeholderTextColor="#64748B"
-                theme={{ colors: { onSurfaceVariant: '#94A3B8', primary: '#818CF8' }, roundness: 12 }}
-                left={<TextInput.Icon icon="lock-outline" color="#64748B" />}
-                right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#64748B" onPress={() => setIsSecure(!isSecure)} />}
-              />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email or Mobile Number</Text>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={styles.input}
+                  mode="outlined"
+                  outlineColor="#E2E8F0"
+                  activeOutlineColor="#10B981"
+                  textColor="#1E293B"
+                  placeholderTextColor="#94A3B8"
+                  placeholder="e.g. owner@shop.com"
+                  theme={{ roundness: 8, colors: { background: '#FFF' } }}
+                  left={<TextInput.Icon icon="account-outline" color="#94A3B8" />}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={isSecure}
+                  style={styles.input}
+                  mode="outlined"
+                  outlineColor="#E2E8F0"
+                  activeOutlineColor="#10B981"
+                  textColor="#1E293B"
+                  placeholderTextColor="#94A3B8"
+                  placeholder="Enter your password"
+                  theme={{ roundness: 8, colors: { background: '#FFF' } }}
+                  left={<TextInput.Icon icon="lock-outline" color="#94A3B8" />}
+                  right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#94A3B8" onPress={() => setIsSecure(!isSecure)} />}
+                />
+              </View>
+
+              <View style={styles.rowBetween}>
+                <TouchableOpacity style={styles.checkboxRow} onPress={() => setRememberMe(!rememberMe)} activeOpacity={0.8}>
+                  <Checkbox.Android
+                    status={rememberMe ? 'checked' : 'unchecked'}
+                    onPress={() => setRememberMe(!rememberMe)}
+                    color="#10B981"
+                    uncheckedColor="#CBD5E1"
+                  />
+                  <Text style={styles.rememberText}>Remember me</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </View>
 
               <Button
                 mode="contained"
                 onPress={handleLogin}
                 loading={loading}
-                style={styles.loginBtn}
-                contentStyle={styles.loginBtnContent}
-                labelStyle={styles.loginBtnLabel}
-                buttonColor="#6366F1"
+                style={styles.primaryBtn}
+                contentStyle={styles.btnContent}
+                labelStyle={styles.btnLabel}
+                buttonColor="#1E293B"
               >
-                Sign In to Dashboard
+                {'Log In to Dashboard'}
               </Button>
-            </View>
-          </Surface>
-          
-          <Text style={styles.footerText}>
-            Protected by advanced 256-bit encryption.
-          </Text>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or continue with</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <Button
+                mode="outlined"
+                onPress={() => Alert.alert('Coming Soon', 'Google Sign-in is not configured yet.')}
+                style={styles.googleBtn}
+                contentStyle={styles.btnContent}
+                labelStyle={styles.googleBtnLabel}
+                icon="google"
+                textColor="#1E293B"
+              >
+                Sign in with Google
+              </Button>
+
+              <View style={styles.createAccountRow}>
+                <Text style={styles.noAccountText}>Don't have an account? </Text>
+                <Link href="/signup" asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.createAccountLink}>Create Account</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+
+            </Surface>
+          </View>
         </View>
+
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -152,115 +248,246 @@ export default function AdminLoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020617', // Very dark slate (Tailwind slate-950)
-  },
-  glowOrb: {
-    position: 'absolute',
-    width: width * 0.8,
-    height: width * 0.8,
-    borderRadius: width * 0.4,
-    opacity: 0.15,
-    filter: 'blur(80px)' as any,
-  },
-  orbTopRight: {
-    top: -height * 0.1,
-    right: -width * 0.2,
-    backgroundColor: '#6366F1', // Indigo
-  },
-  orbBottomLeft: {
-    bottom: -height * 0.1,
-    left: -width * 0.2,
-    backgroundColor: '#8B5CF6', // Violet
+    backgroundColor: '#F8FAFC', // Light background matching image
   },
   scrollContent: {
     flexGrow: 1,
+  },
+  splitLayout: {
+    flex: 1,
+    flexDirection: width > 900 ? 'row' : 'column',
+  },
+  leftPanel: {
+    flex: 1,
+    padding: width > 900 ? 60 : 30,
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  contentWrapper: {
-    width: '100%',
-    maxWidth: 400,
+  logoRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    position: 'absolute',
+    top: 40,
+    left: width > 900 ? 60 : 30,
+    zIndex: 10,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  iconRingExt: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  iconRingInt: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
-  },
-  title: {
-    fontSize: 28,
+  logoText: {
+    fontSize: 22,
     fontWeight: '800',
-    color: '#F8FAFC',
-    letterSpacing: -0.5,
+    color: '#0F172A',
+    marginLeft: 8,
+  },
+  leftPanelInner: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 80,
+  },
+  heroContent: {
+    width: width > 600 ? 480 : '100%',
+    zIndex: 2,
+  },
+  heroTitle: {
+    fontSize: width > 900 ? 46 : 36,
+    fontWeight: '800',
+    color: '#0F172A',
+    lineHeight: width > 900 ? 54 : 44,
+    letterSpacing: -1,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: '#475569',
+    marginTop: 16,
+    lineHeight: 24,
+  },
+  featuresList: {
+    marginTop: 40,
+    gap: 24,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  featureIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#ECFDF5', // Light emerald
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  featureTextContainer: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  featureDesc: {
+    fontSize: 14,
+    color: '#64748B',
+    lineHeight: 20,
+  },
+  trustBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 48,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#ECFDF5',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  trustText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#065F46',
+  },
+  illustrationWrapper: {
+    flex: 1,
+    height: 400,
+    marginLeft: 40,
+    zIndex: 1,
+    display: width > 1300 ? 'flex' : 'none',
+  },
+  illustration: {
+    width: '100%',
+    height: '100%',
+  },
+  rightPanel: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: width > 900 ? 40 : 20,
+    backgroundColor: '#FFFFFF',
+  },
+  formCard: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 40,
+    elevation: 4,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+  },
+  formLogoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  formLogoText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginLeft: 8,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
     marginBottom: 8,
   },
-  subtitle: {
+  welcomeSubtitle: {
     fontSize: 14,
-    color: '#94A3B8',
-    fontWeight: '500',
-    letterSpacing: 0.5,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 32,
   },
-  cardContainer: {
-    width: '100%',
-    backgroundColor: 'rgba(15, 23, 42, 0.6)', // Slate 900 with opacity for glass effect
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.4,
-    shadowRadius: 30,
-    elevation: 10, // for Android
+  inputGroup: {
+    marginBottom: 20,
   },
-  formContainer: {
-    padding: 32,
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 8,
   },
   input: {
-    backgroundColor: 'rgba(2, 6, 23, 0.6)', // Slate 950 inside the input
+    backgroundColor: '#FFFFFF',
+    fontSize: 14,
   },
-  loginBtn: {
-    marginTop: 32,
-    borderRadius: 12,
-    elevation: 4,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+    marginTop: -4,
   },
-  loginBtnContent: {
-    paddingVertical: 10,
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: -8,
   },
-  loginBtnLabel: {
+  rememberText: {
+    fontSize: 14,
+    color: '#475569',
+    marginLeft: 2,
+  },
+  forgotText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3B82F6', // Blue like the design
+  },
+  primaryBtn: {
+    borderRadius: 8,
+  },
+  btnContent: {
+    height: 48,
+  },
+  btnLabel: {
+    fontSize: 16,
     fontWeight: '700',
-    fontSize: 15,
     letterSpacing: 0.5,
-    color: '#FFF',
   },
-  footerText: {
-    marginTop: 40,
-    fontSize: 12,
-    color: '#475569', // Slate 600
-    textAlign: 'center',
-    fontWeight: '500',
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 13,
+    color: '#94A3B8',
+  },
+  googleBtn: {
+    borderRadius: 8,
+    borderColor: '#E2E8F0',
+  },
+  googleBtnLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  createAccountRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  noAccountText: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  createAccountLink: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#10B981',
   },
 });
