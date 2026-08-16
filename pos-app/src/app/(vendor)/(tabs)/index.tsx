@@ -50,7 +50,7 @@ const QuickActionButton = ({ icon, label, bgColor, iconColor, onPress }: {
 };
 
 export default function VendorDashboard() {
-  const { user, tenantId } = useAuth();
+  const { user, tenantId, loading: authLoading } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date(1704067200000)); // Fixed date for SSR
   useEffect(() => {
     setCurrentTime(new Date());
@@ -217,7 +217,7 @@ export default function VendorDashboard() {
     { label: 'Low Stock Items', value: String(lowStockCount), icon: 'alert-outline', color: appTheme.colors.onSurface, bgColor: '#FFFBEB', valueColor: '#1E293B' },
   ];
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: appTheme.colors.background }}>
         <ActivityIndicator size="large" color={appTheme.colors.primary} />

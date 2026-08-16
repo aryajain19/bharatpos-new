@@ -214,7 +214,7 @@ export default function ProductsScreen() {
   const totalInCart = cart.reduce((sum, c) => sum + c.qty, 0);
   const cartTotal = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: appTheme.colors.background }}>
         <ActivityIndicator size="large" color={appTheme.colors.primary} />

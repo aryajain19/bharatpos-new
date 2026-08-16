@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
-  const { user, tenantId } = useAuth();
+  const { user, tenantId, loading: authLoading } = useAuth();
   const theme = useTheme();
 
   const [darkMode, setDarkMode] = useState(false);
@@ -190,7 +190,7 @@ export default function ProfileScreen() {
     { label: 'Days Active', value: String(daysActive), icon: 'calendar-check', color: appTheme.colors.onSurface, bg: '#E3F2FD' },
   ];
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: appTheme.colors.background }}>
         <ActivityIndicator size="large" color="#10B981" />

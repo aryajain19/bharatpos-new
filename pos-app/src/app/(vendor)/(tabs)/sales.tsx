@@ -141,7 +141,7 @@ export default function SalesHistoryScreen() {
     { key: 'month', label: 'This Month', icon: 'calendar-month' },
   ];
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: appTheme.colors.background }}>
         <ActivityIndicator size="large" color={appTheme.colors.primary} />
