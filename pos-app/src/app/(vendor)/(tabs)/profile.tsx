@@ -190,6 +190,15 @@ export default function ProfileScreen() {
     { label: 'Days Active', value: String(daysActive), icon: 'calendar-check', color: appTheme.colors.onSurface, bg: '#E3F2FD' },
   ];
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: appTheme.colors.background }}>
+        <ActivityIndicator size="large" color="#10B981" />
+        <Text style={{ marginTop: 12, color: appTheme.colors.onSurfaceVariant, fontWeight: '600' }}>Loading Profile...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
