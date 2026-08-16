@@ -243,7 +243,7 @@ export default function VendorDashboard() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
         {/* Premium Gradient-Like Header */}
-        <View style={[styles.headerOuter, { backgroundColor: appTheme.colors.primary || '#10B981' }]}>
+        <View style={styles.headerOuter}>
           <View style={styles.headerGradientTop} />
           <View style={styles.headerGradientBottom} />
           <Animated.View style={[styles.headerContent, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
@@ -380,6 +380,7 @@ const styles = StyleSheet.create({
 
   // --- Premium Header ---
   headerOuter: {
+    backgroundColor: '#10B981',
     position: 'relative',
     overflow: 'hidden',
     borderBottomLeftRadius: 32,

@@ -168,7 +168,7 @@ export default function SalesHistoryScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: appTheme.colors.primary || '#10B981' }]}>
+      <View style={styles.header}>
         <Animated.View style={[styles.headerInner, { opacity: headerFade }]}>
           <Text style={styles.headerTitle}>Sales History</Text>
           <Text style={styles.headerSubtitle}>{totalBills} transactions</Text>
@@ -227,7 +227,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, },
 
   // --- Header ---
-  header: { paddingHorizontal: 24, paddingTop: 52, paddingBottom: 24 },
+  header: {
+    backgroundColor: '#10B981', paddingHorizontal: 24, paddingTop: 52, paddingBottom: 24 },
   headerInner: {},
   headerTitle: { color: 'white', fontSize: 26, fontWeight: 'bold', marginBottom: 4 },
   headerSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },

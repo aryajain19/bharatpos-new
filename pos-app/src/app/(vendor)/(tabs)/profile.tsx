@@ -193,7 +193,7 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* Header with Avatar */}
-        <View style={[styles.headerBg, { backgroundColor: appTheme.colors.primary || '#10B981' }]}>
+        <View style={styles.headerBg}>
           <View style={styles.headerDecor1} />
           <View style={styles.headerDecor2} />
 
@@ -329,6 +329,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
     overflow: 'hidden',
+    backgroundColor: '#10B981',
     shadowColor: '#10B981',
     shadowOpacity: 0.25,
     shadowRadius: 16,
