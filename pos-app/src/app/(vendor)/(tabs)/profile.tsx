@@ -35,12 +35,14 @@ export default function ProfileScreen() {
   const [profileName, setProfileName] = useState(() => {
     return user?.email?.split('@')[0] || 'User';
   });
-  const [storeNameText, setStoreNameText] = useState(() => {
+  const [storeNameText, setStoreNameText] = useState('BharatPOS');
+  
+  useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      return window.localStorage.getItem('storeName') || 'BharatPOS';
+      const stored = window.localStorage.getItem('storeName');
+      if (stored) setStoreNameText(stored);
     }
-    return 'BharatPOS';
-  });
+  }, []);
   const [shiftTiming, setShiftTiming] = useState('');
   const [storeIdText, setStoreIdText] = useState('');
 

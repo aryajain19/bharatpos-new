@@ -51,7 +51,10 @@ const QuickActionButton = ({ icon, label, bgColor, iconColor, onPress }: {
 
 export default function VendorDashboard() {
   const { user, tenantId } = useAuth();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(new Date(1704067200000)); // Fixed date for SSR
+  useEffect(() => {
+    setCurrentTime(new Date());
+  }, []);
   const [todaySales, setTodaySales] = useState(0);
   const [todayOrders, setTodayOrders] = useState(0);
   const [itemsCheckedOutCount, setItemsCheckedOutCount] = useState(0);
