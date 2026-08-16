@@ -193,7 +193,7 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* Header with Avatar */}
-        <View style={styles.headerBg}>
+        <View style={[styles.headerBg, { backgroundColor: appTheme.colors.primary || '#10B981' }]}>
           <View style={styles.headerDecor1} />
           <View style={styles.headerDecor2} />
 

@@ -168,7 +168,7 @@ export default function SalesHistoryScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appTheme.colors.primary || '#10B981' }]}>
         <Animated.View style={[styles.headerInner, { opacity: headerFade }]}>
           <Text style={styles.headerTitle}>Sales History</Text>
           <Text style={styles.headerSubtitle}>{totalBills} transactions</Text>
