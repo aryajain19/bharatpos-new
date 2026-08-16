@@ -624,10 +624,19 @@ export function SuperAdminDashboard() {
     
     setIsResetting(true);
     try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        alert('Authentication error. Please log in again.');
+        setIsResetting(false);
+        return;
+      }
       const apiBase = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8083' : '';
       const response = await fetch(`${apiBase}/api/reset-password`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
         body: JSON.stringify({
           uid: editingCustomer.id,
           email: editingCustomer.email,
