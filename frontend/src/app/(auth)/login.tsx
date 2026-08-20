@@ -196,114 +196,94 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Split Screen container */}
-        <View style={[styles.splitWrapper, { flexDirection: isDesktop ? 'row' : 'column' }]}>
-          
-          {/* LEFT PANEL: Branding & Highlights */}
-          {isDesktop && (
-            <View style={styles.leftBanner}>
-              <View style={styles.bannerContent}>
-                {/* Brand Logo Row */}
-                <View style={styles.bannerBrandRow}>
-                  <View style={[styles.logoIconBg, { width: 32, height: 32, borderRadius: 6 }]}>
-                    <Icon name="store" size={18} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.bannerBrandName}>SmartPOS</Text>
+      <View style={styles.splitWrapper}>
+        {/* LEFT PANEL: Branding & Highlights */}
+        {isDesktop && (
+          <View style={styles.leftBanner}>
+            <View style={styles.bannerContent}>
+              {/* Brand Logo Row */}
+              <View style={styles.bannerBrandRow}>
+                <View style={[styles.logoIconBg, { width: 32, height: 32, borderRadius: 8 }]}>
+                  <Icon name="store" size={18} color="#FFFFFF" />
                 </View>
+                <Text style={styles.bannerBrandName}>SmartPOS</Text>
+              </View>
 
-                {/* Slogan */}
-                <Text style={styles.bannerSlogan}>
-                  Manage Your Store{"\n"}Anywhere
-                </Text>
-                <Text style={styles.bannerSubTitle}>
-                  The complete cloud POS & inventory solution for modern Indian retailers.
-                </Text>
+              {/* Slogan */}
+              <Text style={styles.bannerSlogan}>
+                Manage Your Store{"\n"}Anywhere
+              </Text>
+              <Text style={styles.bannerSubTitle}>
+                The complete cloud POS & inventory solution for modern Indian retailers.
+              </Text>
 
-                {/* Highlights list */}
-                <View style={styles.highlightsList}>
-                  <View style={styles.highlightRow}>
-                    <View style={styles.highlightIconWrap}>
-                      <Icon name="flash-outline" size={18} color="#16A34A" />
-                    </View>
-                    <View>
-                      <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
-                      <Text style={styles.highlightText}>Create bills in seconds with barcode scanning and quick product search.</Text>
-                    </View>
+              {/* Highlights list */}
+              <View style={styles.highlightsList}>
+                <View style={styles.highlightRow}>
+                  <View style={styles.highlightIconWrap}>
+                    <Icon name="flash-outline" size={16} color="#16A34A" />
                   </View>
-
-                  <View style={styles.highlightRow}>
-                    <View style={styles.highlightIconWrap}>
-                      <Icon name="clipboard-list-outline" size={18} color="#16A34A" />
-                    </View>
-                    <View>
-                      <Text style={styles.highlightTitle}>Real-time Inventory</Text>
-                      <Text style={styles.highlightText}>Track stock, get low stock alerts and manage multiple locations.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.highlightRow}>
-                    <View style={styles.highlightIconWrap}>
-                      <Icon name="file-document-outline" size={18} color="#16A34A" />
-                    </View>
-                    <View>
-                      <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
-                      <Text style={styles.highlightText}>Generate GST invoices, GSTR reports and downloadable ledgers.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.highlightRow}>
-                    <View style={styles.highlightIconWrap}>
-                      <Icon name="account-group-outline" size={18} color="#16A34A" />
-                    </View>
-                    <View>
-                      <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
-                      <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
-                    </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
+                    <Text style={styles.highlightText}>Create bills in seconds with barcode scanning and quick product search.</Text>
                   </View>
                 </View>
 
-                {/* Trust badge */}
-                <View style={styles.bannerTrustBadge}>
-                  <Icon name="shield-check" size={16} color="#16A34A" />
-                  <Text style={styles.bannerTrustText}>Trusted by 15,000+ businesses across India</Text>
+                <View style={styles.highlightRow}>
+                  <View style={styles.highlightIconWrap}>
+                    <Icon name="clipboard-list-outline" size={16} color="#16A34A" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.highlightTitle}>Real-time Inventory</Text>
+                    <Text style={styles.highlightText}>Track stock, get low stock alerts and manage multiple locations.</Text>
+                  </View>
+                </View>
+
+                <View style={styles.highlightRow}>
+                  <View style={styles.highlightIconWrap}>
+                    <Icon name="file-document-outline" size={16} color="#16A34A" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
+                    <Text style={styles.highlightText}>Generate GST invoices, GSTR reports and downloadable ledgers.</Text>
+                  </View>
+                </View>
+
+                <View style={styles.highlightRow}>
+                  <View style={styles.highlightIconWrap}>
+                    <Icon name="account-group-outline" size={16} color="#16A34A" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
+                    <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
+                  </View>
                 </View>
               </View>
 
-              {/* Graphic mockup in bottom right of left banner */}
-              <View style={styles.graphicOverlay}>
-                <View style={styles.mockGraphMiniCard}>
-                  <Text style={styles.mockMiniLabel}>Sales Today</Text>
-                  <Text style={styles.mockMiniVal}>₹48,250.00</Text>
-                  <Text style={styles.mockMiniSub}>▲ +12.5% vs yesterday</Text>
-                  <View style={{ height: 1, backgroundColor: '#E2E8F0', marginVertical: 8 }} />
-                  <Text style={styles.mockMiniLabel}>Orders</Text>
-                  <Text style={styles.mockMiniVal}>156</Text>
-                  <Text style={styles.mockMiniSub}>▲ +8.2% vs yesterday</Text>
-                </View>
-                <View style={styles.barcodeScannerIllust}>
-                  <Icon name="barcode-scan" size={48} color="#1E293B" />
-                  <View style={styles.boxIllust}><Icon name="package-variant-closed" size={24} color="#64748B" /></View>
-                </View>
+              {/* Trust badge */}
+              <View style={styles.bannerTrustBadge}>
+                <Icon name="shield-check" size={16} color="#16A34A" />
+                <Text style={styles.bannerTrustText}>Trusted by 15,000+ businesses across India</Text>
               </View>
             </View>
-          )}
+          </View>
+        )}
 
-          {/* RIGHT PANEL: Form Container */}
-          <View style={[styles.rightPanel, { width: isDesktop ? '50%' : '100%', paddingVertical: isDesktop ? 60 : 20 }]}>
-            {isDesktop ? (
-              <Surface style={styles.cardContainer} elevation={0}>
-                {renderLoginForm()}
-              </Surface>
-            ) : (
+        {/* RIGHT PANEL: Form Container */}
+        <View style={[styles.rightPanel, { width: isDesktop ? '50%' : '100%' }]}>
+          {isDesktop ? (
+            <Surface style={styles.cardContainer} elevation={0}>
+              {renderLoginForm()}
+            </Surface>
+          ) : (
+            <ScrollView contentContainerStyle={styles.mobileScrollContent} showsVerticalScrollIndicator={false}>
               <View style={styles.mobileFormContainer}>
                 {renderLoginForm()}
               </View>
-            )}
-          </View>
-
+            </ScrollView>
+          )}
         </View>
-      </ScrollView>
+      </View>
 
       {/* Loading Overlay */}
       {loading && (
@@ -319,117 +299,89 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  scrollContent: { flexGrow: 1 },
-  splitWrapper: { flex: 1 },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#FFFFFF',
+    height: '100%',
+    maxHeight: '100%',
+    overflow: 'hidden'
+  },
+  splitWrapper: { 
+    flex: 1, 
+    flexDirection: 'row',
+    height: '100%'
+  },
   
   // Left Banner (Desktop)
   leftBanner: {
     width: '50%',
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    paddingHorizontal: '8%',
-    paddingVertical: 60,
+    paddingHorizontal: '7%',
+    paddingVertical: 20,
     borderRightWidth: 1,
-    borderRightColor: '#E5E7EB'
+    borderRightColor: '#E2E8F0'
   },
-  bannerContent: { zIndex: 2, paddingRight: '10%' },
-  bannerBrandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 32, gap: 8 },
+  bannerContent: { 
+    maxWidth: 520,
+    alignSelf: 'center',
+    width: '100%'
+  },
+  bannerBrandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18, gap: 8 },
   bannerBrandName: { fontSize: 18, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
-  bannerSlogan: { fontSize: 32, lineHeight: 38, marginBottom: 8, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
-  bannerSubTitle: { fontSize: 13, color: '#64748B', lineHeight: 20, marginBottom: 36, fontFamily: 'Plus Jakarta Sans' },
-  highlightsList: { gap: 20 },
-  highlightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  bannerSlogan: { fontSize: 26, lineHeight: 32, marginBottom: 6, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
+  bannerSubTitle: { fontSize: 12.5, color: '#64748B', lineHeight: 18, marginBottom: 20, fontFamily: 'Plus Jakarta Sans' },
+  highlightsList: { gap: 12 },
+  highlightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   highlightIconWrap: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: 6,
     backgroundColor: '#E8F5E9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 2
+    marginTop: 1
   },
-  highlightTitle: { fontSize: 14, fontWeight: '700', color: '#0F172A', marginBottom: 4, fontFamily: 'Plus Jakarta Sans' },
-  highlightText: { fontSize: 12, color: '#475569', lineHeight: 18, fontFamily: 'Plus Jakarta Sans' },
+  highlightTitle: { fontSize: 13, fontWeight: '700', color: '#0F172A', marginBottom: 2, fontFamily: 'Plus Jakarta Sans' },
+  highlightText: { fontSize: 11.5, color: '#475569', lineHeight: 16, fontFamily: 'Plus Jakarta Sans' },
   bannerTrustBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 14,
     backgroundColor: '#E8F5E9',
     alignSelf: 'flex-start',
-    marginTop: 40
+    marginTop: 20
   },
   bannerTrustText: { fontSize: 11, fontWeight: '700', color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
-
-  // Graphic Mockup Overlay
-  graphicOverlay: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 230,
-    height: 200,
-    zIndex: 1,
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-    opacity: 0.85
-  },
-  mockGraphMiniCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 10,
-    width: 140,
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2
-  },
-  mockMiniLabel: { fontSize: 8, color: '#64748B', fontWeight: '600', fontFamily: 'Plus Jakarta Sans' },
-  mockMiniVal: { fontSize: 12, fontWeight: '800', color: '#0F172A', marginVertical: 1, fontFamily: 'Plus Jakarta Sans' },
-  mockMiniSub: { fontSize: 7, fontWeight: '700', color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
-  barcodeScannerIllust: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6
-  },
-  boxIllust: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-    backgroundColor: '#E2E8F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1'
-  },
 
   // Right Panel
   rightPanel: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF'
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: '5%'
   },
   cardContainer: {
-    width: 440,
+    width: '100%',
+    maxWidth: 420,
     borderRadius: 16,
-    padding: 32,
+    paddingHorizontal: 28,
+    paddingVertical: 20,
     backgroundColor: '#FFFFFF'
+  },
+  mobileScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 24
   },
   mobileFormContainer: {
     width: '100%',
-    maxWidth: 440,
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+    maxWidth: 420,
+    paddingHorizontal: 20,
   },
   formWrapper: { width: '100%' },
 
@@ -438,61 +390,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 24,
+    marginBottom: 16,
     ...Platform.select({
       web: { display: 'flex' },
-      default: { display: 'none' } // Hidden on mobile since it feels redundant
+      default: { display: 'none' }
     })
   },
   logoIconBg: {
     width: 24,
     height: 24,
-    borderRadius: 5,
+    borderRadius: 6,
     backgroundColor: '#16A34A',
     justifyContent: 'center',
     alignItems: 'center'
   },
   brandTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
-  welcomeTitle: { fontSize: 24, fontWeight: '800', color: '#0F172A', marginBottom: 4, fontFamily: 'Plus Jakarta Sans' },
-  welcomeSubtitle: { fontSize: 13, color: '#64748B', marginBottom: 28, fontFamily: 'Plus Jakarta Sans' },
+  welcomeTitle: { fontSize: 22, fontWeight: '800', color: '#0F172A', marginBottom: 2, fontFamily: 'Plus Jakarta Sans' },
+  welcomeSubtitle: { fontSize: 12.5, color: '#64748B', marginBottom: 18, fontFamily: 'Plus Jakarta Sans' },
 
   // Input Fields
   fieldsContainer: { width: '100%' },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: '#374151', marginBottom: 6, fontFamily: 'Plus Jakarta Sans' },
-  input: { marginBottom: 16, backgroundColor: '#FFFFFF', height: 44 },
+  inputLabel: { fontSize: 11.5, fontWeight: '700', color: '#374151', marginBottom: 4, fontFamily: 'Plus Jakarta Sans' },
+  input: { marginBottom: 12, backgroundColor: '#FFFFFF', height: 42, fontSize: 13 },
 
   rememberForgotRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20
+    marginBottom: 14
   },
   rememberMeClick: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: -8
   },
-  rememberMeText: { fontSize: 12, color: '#475569', fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
-  forgotPassLink: { fontSize: 12, fontWeight: '700', color: '#2563EB', fontFamily: 'Plus Jakarta Sans' },
-  errorText: { color: '#EF4444', marginBottom: 14, fontSize: 12, fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
+  rememberMeText: { fontSize: 11.5, color: '#475569', fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
+  forgotPassLink: { fontSize: 11.5, fontWeight: '700', color: '#2563EB', fontFamily: 'Plus Jakarta Sans' },
+  errorText: { color: '#EF4444', marginBottom: 10, fontSize: 11.5, fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
 
-  primaryButton: { borderRadius: 6, marginVertical: 8 },
-  buttonPadding: { paddingVertical: 6 },
+  primaryButton: { borderRadius: 6, marginVertical: 6 },
+  buttonPadding: { paddingVertical: 4 },
   buttonLabel: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', fontFamily: 'Plus Jakarta Sans' },
 
   // Divider
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 12 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
-  dividerText: { marginHorizontal: 12, fontSize: 10, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Plus Jakarta Sans' },
+  dividerText: { marginHorizontal: 10, fontSize: 9.5, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Plus Jakarta Sans' },
 
   // Google button
-  googleButton: { borderRadius: 6, borderColor: '#E2E8F0', height: 40, justifyContent: 'center' },
-  googleBtnLabel: { fontSize: 12, fontWeight: '600', color: '#374151', fontFamily: 'Plus Jakarta Sans' },
+  googleButton: { borderRadius: 6, borderColor: '#E2E8F0', height: 38, justifyContent: 'center' },
+  googleBtnLabel: { fontSize: 11.5, fontWeight: '600', color: '#374151', fontFamily: 'Plus Jakarta Sans' },
 
   // Footer Register Link
-  registerFooter: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 20 },
-  registerDescText: { fontSize: 13, color: '#475569', fontFamily: 'Plus Jakarta Sans' },
-  registerLinkText: { fontWeight: '700', fontSize: 13, color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
+  registerFooter: { flexDirection: 'row', justifyContent: 'center', marginTop: 14, borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 },
+  registerDescText: { fontSize: 12, color: '#475569', fontFamily: 'Plus Jakarta Sans' },
+  registerLinkText: { fontWeight: '700', fontSize: 12, color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
 
   // Loading Overlay
   loadingOverlay: {
@@ -507,11 +459,11 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   loadingBox: {
-    padding: 24,
+    padding: 20,
     borderRadius: 10,
     alignItems: 'center',
-    width: 280,
+    width: 260,
     backgroundColor: '#FFFFFF'
   },
-  loadingText: { fontSize: 12, fontWeight: '700', color: '#475569', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+  loadingText: { fontSize: 11.5, fontWeight: '700', color: '#475569', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
 });
