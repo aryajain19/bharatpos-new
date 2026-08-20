@@ -7,7 +7,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Pl
 import { Text, Card, Button, Surface, Divider, useTheme, TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
-import { collection, addDoc, getDocs, query, orderBy } from '../../lib/firestore_adapter';
+import { collection, addDoc, getDocs, query, orderBy, where } from '../../lib/firestore_adapter';
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface Ledger {
@@ -131,8 +131,6 @@ export default function LedgersScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTransactions = async () => {
-    const { isFirebaseConfigured, db, auth } = await import('../../lib/firebase');
-    const { collection, getDocs, query, where } = await import('../../lib/firestore_adapter');
     if (!isFirebaseConfigured) {
       setAllTransactions([]);
       setLoading(false);

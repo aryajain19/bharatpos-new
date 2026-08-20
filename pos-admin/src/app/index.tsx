@@ -150,9 +150,25 @@ export function SuperAdminDashboard() {
   const isMobileSize = screenWidth <= 900;
   const chartWidth = isMobileSize ? screenWidth - 72 : Math.max((screenWidth - 340) / 3.15, 300);
 
-  // Global State
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [pricingPlans, setPricingPlans] = useState<any[]>([]);
+  // Global State (hydrated instantly from cache if available)
+  const [customers, setCustomers] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = window.localStorage.getItem('admin_customers');
+        if (cached) return JSON.parse(cached);
+      } catch (_) {}
+    }
+    return [];
+  });
+  const [pricingPlans, setPricingPlans] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = window.localStorage.getItem('admin_plans');
+        if (cached) return JSON.parse(cached);
+      } catch (_) {}
+    }
+    return [];
+  });
   const [demos, setDemos] = useState<any[]>([]);
   const [workers, setWorkers] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
@@ -170,16 +186,52 @@ export function SuperAdminDashboard() {
   const [barcodesList, setBarcodesList] = useState<any[]>([]);
   const [salesList, setSalesList] = useState<any[]>([]);
   
-  // Data Fetching Effect
+  // Data Fetching Effect (100% Parallelized for Max Speed)
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (isFirebaseConfigured) {
-        try {
-          const usersQuery = query(collection(db, 'users'), where('role', 'in', ['owner', 'vendor']));
-          const userSnap = await getDocs(usersQuery);
-          const fetchedUsers: any[] = [];
-          
-          userSnap.forEach((doc: any) => {
+      if (!isFirebaseConfigured) {
+        setCustomers([]);
+        setWorkers([]);
+        setDemos([]);
+        setTickets([]);
+        setBarcodesList([]);
+        setRecentAct([]);
+        setPricingPlans([]);
+        return;
+      }
+
+      try {
+        // Fire ALL 7 database queries concurrently in parallel
+        const usersQuery = query(collection(db, 'users'), where('role', 'in', ['owner', 'vendor']));
+        const workersQuery = query(collection(db, 'users'), where('role', '==', 'salesperson'));
+        const demoQuery = collection(db, 'demos');
+        const ticketsQuery = collection(db, 'support_tickets');
+        const barcodesQuery = collection(db, 'barcodes');
+        const salesQuery = collection(db, 'sales');
+        const plansQuery = collection(db, 'plans');
+
+        const [
+          usersRes,
+          workersRes,
+          demosRes,
+          ticketsRes,
+          barcodesRes,
+          salesRes,
+          plansRes
+        ] = await Promise.allSettled([
+          getDocs(usersQuery),
+          getDocs(workersQuery),
+          getDocs(demoQuery),
+          getDocs(ticketsQuery),
+          getDocs(barcodesQuery),
+          getDocs(salesQuery),
+          getDocs(plansQuery),
+        ]);
+
+        // Process Users
+        const fetchedUsers: any[] = [];
+        if (usersRes.status === 'fulfilled') {
+          usersRes.value.forEach((doc: any) => {
             const d = doc.data();
             fetchedUsers.push({
               id: doc.id,
@@ -194,13 +246,14 @@ export function SuperAdminDashboard() {
               dbSize: 'Unknown',
             });
           });
-          
           setCustomers(fetchedUsers);
+          if (typeof window !== 'undefined') window.localStorage.setItem('admin_customers', JSON.stringify(fetchedUsers));
+        }
 
-          // Fetch Workers
-          const workersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'salesperson')));
+        // Process Workers
+        if (workersRes.status === 'fulfilled') {
           const fetchedWorkers: any[] = [];
-          workersSnap.forEach((doc: any) => {
+          workersRes.value.forEach((doc: any) => {
             const d = doc.data();
             fetchedWorkers.push({
               id: doc.id,
@@ -213,11 +266,12 @@ export function SuperAdminDashboard() {
             });
           });
           setWorkers(fetchedWorkers);
+        }
 
-          // Fetch Demos
-          const demoSnap = await getDocs(collection(db, 'demos'));
+        // Process Demos
+        if (demosRes.status === 'fulfilled') {
           const fetchedDemos: any[] = [];
-          demoSnap.forEach((doc: any) => {
+          demosRes.value.forEach((doc: any) => {
             const d = doc.data();
             fetchedDemos.push({
               id: doc.id,
@@ -230,11 +284,12 @@ export function SuperAdminDashboard() {
             });
           });
           setDemos(fetchedDemos);
+        }
 
-          // Fetch Support Tickets
-          const ticketsSnap = await getDocs(collection(db, 'support_tickets'));
+        // Process Tickets
+        if (ticketsRes.status === 'fulfilled') {
           const fetchedTickets: any[] = [];
-          ticketsSnap.forEach((doc: any) => {
+          ticketsRes.value.forEach((doc: any) => {
             const d = doc.data();
             fetchedTickets.push({
               id: doc.id,
@@ -246,11 +301,12 @@ export function SuperAdminDashboard() {
             });
           });
           setTickets(fetchedTickets);
+        }
 
-          // Fetch Barcodes
-          const barcodesSnap = await getDocs(collection(db, 'barcodes'));
+        // Process Barcodes
+        if (barcodesRes.status === 'fulfilled') {
           const fetchedBarcodes: any[] = [];
-          barcodesSnap.forEach((doc: any) => {
+          barcodesRes.value.forEach((doc: any) => {
             const d = doc.data();
             fetchedBarcodes.push({
               id: doc.id,
@@ -262,45 +318,40 @@ export function SuperAdminDashboard() {
             });
           });
           setBarcodesList(fetchedBarcodes);
+        }
 
-          // Fetch Sales for revenue calculation
-          const salesSnap = await getDocs(collection(db, 'sales'));
-          let totalSalesVal = 0;
-          let monthlySalesVal = 0;
-          let weeklySalesVal = 0;
-          let todaySalesVal = 0;
-          let transactionsCount = 0;
-          
-          const now = new Date();
-          const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-          const oneWeekAgoStr = todayStr - (7 * 86400000);
-          const firstOfMonthStr = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-          
-          const weekdaysData = [0, 0, 0, 0, 0, 0, 0];
-          const allSales: any[] = [];
-          
-          salesSnap.forEach((doc: any) => {
+        // Process Sales
+        const now = new Date();
+        const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const oneWeekAgoStr = todayStr - (7 * 86400000);
+        const firstOfMonthStr = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        
+        let totalSalesVal = 0;
+        let monthlySalesVal = 0;
+        let weeklySalesVal = 0;
+        let todaySalesVal = 0;
+        let transactionsCount = 0;
+        const weekdaysData = [0, 0, 0, 0, 0, 0, 0];
+        const allSales: any[] = [];
+
+        if (salesRes.status === 'fulfilled') {
+          salesRes.value.forEach((doc: any) => {
             const d = doc.data();
             const amt = parseFloat(d.total_amount || 0);
             const date = new Date(d.created_at || new Date()).getTime();
             
             allSales.push({ id: doc.id, ...d });
-            
             totalSalesVal += amt;
             transactionsCount++;
             
-            if (date >= todayStr) {
-              todaySalesVal += amt;
-            }
+            if (date >= todayStr) todaySalesVal += amt;
             if (date >= oneWeekAgoStr) {
               weeklySalesVal += amt;
               const day = new Date(date).getDay();
               const mapIndex = day === 0 ? 6 : day - 1;
               weekdaysData[mapIndex] += amt;
             }
-            if (date >= firstOfMonthStr) {
-              monthlySalesVal += amt;
-            }
+            if (date >= firstOfMonthStr) monthlySalesVal += amt;
           });
           
           allSales.sort((a, b) => new Date(b.created_at || new Date()).getTime() - new Date(a.created_at || new Date()).getTime());
@@ -311,11 +362,12 @@ export function SuperAdminDashboard() {
           setTodayRevenueSum(todaySalesVal);
           setTotalTransactionsCount(transactionsCount);
           setSalesChartData(weekdaysData);
+        }
 
-          // Fetch Plans
-          const plansSnap = await getDocs(collection(db, 'plans'));
+        // Process Plans
+        if (plansRes.status === 'fulfilled') {
           const fetchedPlans: any[] = [];
-          plansSnap.forEach((doc: any) => {
+          plansRes.value.forEach((doc: any) => {
             const d = doc.data();
             fetchedPlans.push({
               id: doc.id,
@@ -327,10 +379,13 @@ export function SuperAdminDashboard() {
             });
           });
           setPricingPlans(fetchedPlans);
+          if (typeof window !== 'undefined') window.localStorage.setItem('admin_plans', JSON.stringify(fetchedPlans));
+        }
 
-          // Recent Activities
-          const recent: any[] = [];
-          userSnap.forEach((doc: any) => {
+        // Build Recent Activity
+        const recent: any[] = [];
+        if (usersRes.status === 'fulfilled') {
+          usersRes.value.forEach((doc: any) => {
             const d = doc.data();
             if (d.created_at) {
               recent.push({
@@ -344,7 +399,9 @@ export function SuperAdminDashboard() {
               });
             }
           });
-          salesSnap.forEach((doc: any) => {
+        }
+        if (salesRes.status === 'fulfilled') {
+          salesRes.value.forEach((doc: any) => {
             const d = doc.data();
             const date = new Date(d.created_at || new Date()).getTime();
             recent.push({
@@ -357,20 +414,12 @@ export function SuperAdminDashboard() {
               timestamp: date
             });
           });
-          recent.sort((a, b) => b.timestamp - a.timestamp);
-          setRecentAct(recent.slice(0, 10));
-
-        } catch (error) {
-          console.error('Error fetching dashboard data:', error);
         }
-      } else {
-        setCustomers([]);
-        setWorkers([]);
-        setDemos([]);
-        setTickets([]);
-        setBarcodesList([]);
-        setRecentAct([]);
-        setPricingPlans([]);
+        recent.sort((a, b) => b.timestamp - a.timestamp);
+        setRecentAct(recent.slice(0, 10));
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
       }
     };
 
@@ -808,22 +857,21 @@ export function SuperAdminDashboard() {
                 <Text variant="titleSmall" style={{ fontWeight: 'bold', color: text }}>Recent Subscriptions</Text>
               </View>
               <DataTable>
-                <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#2D2D44' : '#F5F6FA' }]}>
-                  <DataTable.Title textStyle={styles.tableHeaderText}>Store</DataTable.Title>
-                  <DataTable.Title textStyle={styles.tableHeaderText}>Plan</DataTable.Title>
-                  <DataTable.Title textStyle={styles.tableHeaderText} numeric>Status</DataTable.Title>
+                <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                  <DataTable.Title style={{ flex: 1.8 }}><Text style={styles.tableHeaderText}>Store</Text></DataTable.Title>
+                  <DataTable.Title style={{ flex: 1.2 }}><Text style={styles.tableHeaderText}>Plan</Text></DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }} numeric><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
                 </DataTable.Header>
                 {customers.slice(0, 4).length > 0 ? customers.slice(0, 4).map((c, i) => (
-                  <DataTable.Row key={i} style={[styles.tableRow, { borderBottomColor: border }]}>
-                    <DataTable.Cell textStyle={{ color: text, fontSize: 12 }}>{c.store}</DataTable.Cell>
-                    <DataTable.Cell textStyle={{ color: subText, fontSize: 11 }}>{c.plan}</DataTable.Cell>
-                    <DataTable.Cell numeric>
-                      <View style={{
-                        backgroundColor: c.status === 'Active' ? '#E8F5E9' : c.status === 'Trial' ? '#FFF3E0' : '#FFEBEE',
-                        paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12
-                      }}>
-                        <Text style={{ fontSize: 9, fontWeight: 'bold', color: c.status === 'Active' ? '#2E7D32' : c.status === 'Trial' ? '#E65100' : '#C62828' }}>{c.status}</Text>
-                      </View>
+                  <DataTable.Row key={i} style={[styles.tableRow, { borderBottomColor: border, minHeight: 48, alignItems: 'center' }]}>
+                    <DataTable.Cell style={{ flex: 1.8 }}>
+                      <Text style={{ color: text, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>{c.store}</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1.2 }}>
+                      <Text style={{ color: subText, fontSize: 11.5 }} numberOfLines={1}>{c.plan}</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }} numeric>
+                      <StatusBadge status={c.status} />
                     </DataTable.Cell>
                   </DataTable.Row>
                 )) : (
@@ -959,15 +1007,15 @@ export function SuperAdminDashboard() {
           />
 
           <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-            <DataTable style={{ minWidth: 900 }}>
-              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                <DataTable.Title style={{ flex: 1.8 }}><Text style={styles.tableHeaderText}>Store / Owner</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Contact Info</Text></DataTable.Title>
-                <DataTable.Title numeric><Text style={styles.tableHeaderText}>Devices</Text></DataTable.Title>
-                <DataTable.Title numeric><Text style={styles.tableHeaderText}>Storage</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Subscription</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 2.2 }}><Text style={styles.tableHeaderText}>Actions</Text></DataTable.Title>
+            <DataTable style={{ minWidth: 980 }}>
+              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                <DataTable.Title style={{ minWidth: 220, flex: 2.2 }}><Text style={styles.tableHeaderText}>Store / Owner</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 190, flex: 1.9 }}><Text style={styles.tableHeaderText}>Contact Info</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 80, flex: 0.8 }}><Text style={styles.tableHeaderText}>Devices</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 90, flex: 0.9 }}><Text style={styles.tableHeaderText}>Storage</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Subscription</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 160, flex: 1.6 }}><Text style={styles.tableHeaderText}>Actions</Text></DataTable.Title>
               </DataTable.Header>
 
               {filtered.length === 0 ? (
@@ -975,27 +1023,29 @@ export function SuperAdminDashboard() {
                   <EmptyState icon="account-search" title="No customers found" subtitle="Try a different search term" />
                 </View>
               ) : filtered.map((c) => (
-                <DataTable.Row key={c.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                  <DataTable.Cell style={{ flex: 1.8 }}>
-                    <View style={{ paddingVertical: 6 }}>
-                      <Text style={{ fontWeight: '700', color: text, fontSize: 13 }}>{c.store}</Text>
-                      <Text style={{ fontSize: 11, color: subText, marginTop: 2 }}>{c.name}</Text>
+                <DataTable.Row key={c.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 60, alignItems: 'center' }]}>
+                  <DataTable.Cell style={{ minWidth: 220, flex: 2.2 }}>
+                    <View style={{ paddingVertical: 6, width: '100%' }}>
+                      <Text style={{ fontWeight: '700', color: text, fontSize: 13 }} numberOfLines={1}>{c.store}</Text>
+                      <Text style={{ fontSize: 11, color: subText, marginTop: 2 }} numberOfLines={1}>{c.name}</Text>
                     </View>
                   </DataTable.Cell>
-                  <DataTable.Cell>
-                    <View style={{ paddingVertical: 4 }}>
-                      <Text style={{ fontSize: 12, color: text }}>{c.email}</Text>
-                      <Text style={{ fontSize: 10, color: subText, marginTop: 2 }}>{c.phone}</Text>
+                  <DataTable.Cell style={{ minWidth: 190, flex: 1.9 }}>
+                    <View style={{ paddingVertical: 4, width: '100%' }}>
+                      <Text style={{ fontSize: 12, color: text }} numberOfLines={1}>{c.email}</Text>
+                      <Text style={{ fontSize: 10.5, color: subText, marginTop: 2 }} numberOfLines={1}>{c.phone}</Text>
                     </View>
                   </DataTable.Cell>
-                  <DataTable.Cell numeric><Text style={{ color: text, fontWeight: '600' }}>{c.devices}</Text></DataTable.Cell>
-                  <DataTable.Cell numeric><Text style={{ color: text }}>{c.dbSize}</Text></DataTable.Cell>
-                  <DataTable.Cell><StatusBadge status={c.status} /></DataTable.Cell>
-                  <DataTable.Cell>
-                    <Text style={{ color: subText, fontSize: 12 }}>{c.plan}</Text>
+                  <DataTable.Cell numeric style={{ minWidth: 80, flex: 0.8 }}><Text style={{ color: text, fontWeight: '600' }}>{c.devices}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ minWidth: 90, flex: 0.9 }}><Text style={{ color: text }}>{c.dbSize}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><StatusBadge status={c.status} /></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}>
+                    <View style={[styles.planBadge, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}>
+                      <Text style={{ color: text, fontSize: 11.5, fontWeight: '600' }} numberOfLines={1}>{c.plan}</Text>
+                    </View>
                   </DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 2.2 }}>
-                    <View style={{ flexDirection: 'row' }}>
+                  <DataTable.Cell numeric style={{ minWidth: 160, flex: 1.6 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: '100%' }}>
                       <IconButton icon="shield-key" size={16} iconColor="#2563EB" onPress={() => { setSelectedCustomer(c); setCustPermissions(initialPermissions); handleNav('permissions'); }} />
                       <IconButton icon="pencil" size={16} iconColor="#1565C0" onPress={() => openEditModal(c)} />
                       <IconButton icon="delete" size={16} iconColor="#F44336" onPress={() => handleDeleteCustomer(c.id, c.store)} />
@@ -1016,20 +1066,20 @@ export function SuperAdminDashboard() {
       <Card style={[styles.card, { backgroundColor: cardBg, borderColor: border }]} elevation={0}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={[styles.chartIconBadge, { backgroundColor: '#FCE4EC' }]}>
-              <Icon name="calendar-sync" size={16} color="#C2185B" />
+            <View style={[styles.chartIconBadge, { backgroundColor: '#EFF6FF' }]}>
+              <Icon name="calendar-sync" size={16} color="#2563EB" />
             </View>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', color: text }}>Active Subscriptions Ledger</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-            <DataTable style={{ minWidth: 850 }}>
-              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Store Owner</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1 }}><Text style={styles.tableHeaderText}>Plan Tier</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1 }}><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1 }}><Text style={styles.tableHeaderText}>Expiry Date</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1 }}><Text style={styles.tableHeaderText}>Auto Expiry</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 3.2 }}><Text style={styles.tableHeaderText}>Override Commands</Text></DataTable.Title>
+            <DataTable style={{ minWidth: 980 }}>
+              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                <DataTable.Title style={{ minWidth: 230, flex: 2.3 }}><Text style={styles.tableHeaderText}>Store Owner</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Plan Tier</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Expiry Date</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Auto Expiry</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 290, flex: 2.9 }}><Text style={styles.tableHeaderText}>Override Commands</Text></DataTable.Title>
               </DataTable.Header>
 
               {customers.length === 0 ? (
@@ -1037,26 +1087,30 @@ export function SuperAdminDashboard() {
                   <EmptyState icon="database-remove" title="No active subscriptions" subtitle="No stores found with an active subscription." />
                 </View>
               ) : customers.map((c) => (
-                <DataTable.Row key={c.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                  <DataTable.Cell style={{ flex: 1.5 }}>
-                    <View style={{ paddingVertical: 4 }}>
-                      <Text style={{ fontWeight: '700', color: text }}>{c.store}</Text>
-                      <Text style={{ fontSize: 11, color: subText }}>{c.email}</Text>
+                <DataTable.Row key={c.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 64, alignItems: 'center' }]}>
+                  <DataTable.Cell style={{ minWidth: 230, flex: 2.3 }}>
+                    <View style={{ paddingVertical: 6, width: '100%' }}>
+                      <Text style={{ fontWeight: '700', color: text, fontSize: 13 }} numberOfLines={1}>{c.store}</Text>
+                      <Text style={{ fontSize: 11, color: subText, marginTop: 2 }} numberOfLines={1}>{c.email}</Text>
                     </View>
                   </DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1 }}><Text style={{ color: text }}>{c.plan}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1 }}><StatusBadge status={c.status} /></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1 }}><Text style={{ color: text }}>{c.expiry}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1 }}>
+                  <DataTable.Cell style={{ minWidth: 120, flex: 1.2 }}>
+                    <View style={[styles.planBadge, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}>
+                      <Text style={{ color: text, fontWeight: '700', fontSize: 12 }} numberOfLines={1}>{c.plan}</Text>
+                    </View>
+                  </DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><StatusBadge status={c.status} /></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 120, flex: 1.2 }}><Text style={{ color: text, fontSize: 12 }}>{c.expiry}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}>
                     <Switch value={c.status === 'Active'} onValueChange={() => {}} color="#2563EB" style={{ transform: [{ scale: 0.85 }] }} />
                   </DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 3.2 }}>
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <DataTable.Cell numeric style={{ minWidth: 290, flex: 2.9 }}>
+                    <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'flex-end', width: '100%' }}>
                       <Button 
                         mode="outlined" 
                         compact 
-                        textColor="#4CAF50" 
-                        style={{ borderColor: '#4CAF50', borderRadius: 8 }}
+                        textColor="#10B981" 
+                        style={{ borderColor: '#10B981', borderRadius: 8 }}
                         onPress={() => {
                           const updated = customers.map(cust => {
                             if (cust.id === c.id) {
@@ -1088,8 +1142,8 @@ export function SuperAdminDashboard() {
                       <Button 
                         mode="outlined" 
                         compact 
-                        textColor="#F44336" 
-                        style={{ borderColor: '#F44336', borderRadius: 8 }}
+                        textColor="#EF4444" 
+                        style={{ borderColor: '#EF4444', borderRadius: 8 }}
                         onPress={() => handleDeleteCustomer(c.id, c.store)}
                       >
                         Delete
@@ -1124,14 +1178,14 @@ export function SuperAdminDashboard() {
             </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-              <DataTable style={{ marginTop: 12, minWidth: 800 }}>
-                <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                  <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Plan Name</Text></DataTable.Title>
-                  <DataTable.Title><Text style={styles.tableHeaderText}>Base Pricing</Text></DataTable.Title>
-                  <DataTable.Title><Text style={styles.tableHeaderText}>Billing Cycle</Text></DataTable.Title>
-                  <DataTable.Title numeric><Text style={styles.tableHeaderText}>Devices</Text></DataTable.Title>
-                  <DataTable.Title><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
-                  <DataTable.Title numeric style={{ flex: 1.2 }}><Text style={styles.tableHeaderText}>Actions</Text></DataTable.Title>
+              <DataTable style={{ marginTop: 12, minWidth: 880 }}>
+                <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                  <DataTable.Title style={{ minWidth: 180, flex: 1.8 }}><Text style={styles.tableHeaderText}>Plan Name</Text></DataTable.Title>
+                  <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Base Pricing</Text></DataTable.Title>
+                  <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Billing Cycle</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ minWidth: 90, flex: 0.9 }}><Text style={styles.tableHeaderText}>Devices</Text></DataTable.Title>
+                  <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Actions</Text></DataTable.Title>
                 </DataTable.Header>
 
                 {pricingPlans.length === 0 ? (
@@ -1139,16 +1193,16 @@ export function SuperAdminDashboard() {
                     <EmptyState icon="tag-off" title="No Pricing Plans" subtitle="Create your first subscription tier to get started." />
                   </View>
                 ) : pricingPlans.map((plan) => (
-                  <DataTable.Row key={plan.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                    <DataTable.Cell style={{ flex: 1.5 }}><Text style={{ fontWeight: '700', color: text }}>{plan.name}</Text></DataTable.Cell>
-                    <DataTable.Cell><Text style={{ color: '#2E7D32', fontWeight: 'bold' }}>{plan.price}</Text></DataTable.Cell>
-                    <DataTable.Cell><Text style={{ color: text }}>{plan.duration}</Text></DataTable.Cell>
-                    <DataTable.Cell numeric><Text style={{ color: text, fontWeight: '600' }}>{plan.devices}</Text></DataTable.Cell>
-                    <DataTable.Cell><StatusBadge status={plan.status} /></DataTable.Cell>
-                    <DataTable.Cell numeric style={{ flex: 1.2 }}>
-                      <View style={{ flexDirection: 'row' }}>
+                  <DataTable.Row key={plan.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 56, alignItems: 'center' }]}>
+                    <DataTable.Cell style={{ minWidth: 180, flex: 1.8 }}><Text style={{ fontWeight: '700', color: text }} numberOfLines={1}>{plan.name}</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}><Text style={{ color: '#10B981', fontWeight: 'bold' }}>{plan.price}</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}><Text style={{ color: text }} numberOfLines={1}>{plan.duration}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric style={{ minWidth: 90, flex: 0.9 }}><Text style={{ color: text, fontWeight: '600' }}>{plan.devices}</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><StatusBadge status={plan.status} /></DataTable.Cell>
+                    <DataTable.Cell numeric style={{ minWidth: 120, flex: 1.2 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: '100%' }}>
                         <IconButton icon="pencil" size={16} iconColor="#1565C0" onPress={() => alert('Editing Plan pricing structures...')} />
-                        <IconButton icon="delete" size={16} iconColor="#F44336" onPress={() => setPricingPlans(pricingPlans.filter(p => p.id !== plan.id))} />
+                        <IconButton icon="delete" size={16} iconColor="#EF4444" onPress={() => setPricingPlans(pricingPlans.filter(p => p.id !== plan.id))} />
                       </View>
                     </DataTable.Cell>
                   </DataTable.Row>
@@ -1167,21 +1221,21 @@ export function SuperAdminDashboard() {
       <Card style={[styles.card, { backgroundColor: cardBg, borderColor: border }]} elevation={0}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={[styles.chartIconBadge, { backgroundColor: '#DBEAFE' }]}>
+            <View style={[styles.chartIconBadge, { backgroundColor: '#EFF6FF' }]}>
               <Icon name="monitor-play" size={16} color="#2563EB" />
             </View>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', color: text }}>Demo Bookings & Trial Requests</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-            <DataTable style={{ minWidth: 850 }}>
-              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Business Store</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Owner Name</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Phone</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Scheduled Date</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Slot Time</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Action</Text></DataTable.Title>
+            <DataTable style={{ minWidth: 920 }}>
+              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                <DataTable.Title style={{ minWidth: 190, flex: 1.9 }}><Text style={styles.tableHeaderText}>Business Store</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 140, flex: 1.4 }}><Text style={styles.tableHeaderText}>Owner Name</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Phone</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Scheduled Date</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Slot Time</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Action</Text></DataTable.Title>
               </DataTable.Header>
 
               {demos.length === 0 ? (
@@ -1189,18 +1243,18 @@ export function SuperAdminDashboard() {
                   <EmptyState icon="calendar-blank" title="No demos scheduled" subtitle="You don't have any pending demo requests." />
                 </View>
               ) : demos.map((d) => (
-                <DataTable.Row key={d.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                  <DataTable.Cell style={{ flex: 1.5 }}><Text style={{ fontWeight: '700', color: text }}>{d.storeName}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text }}>{d.ownerName}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text }}>{d.phone}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text }}>{d.date}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text }}>{d.time}</Text></DataTable.Cell>
-                  <DataTable.Cell><StatusBadge status={d.status} /></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1.5 }}>
+                <DataTable.Row key={d.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 56, alignItems: 'center' }]}>
+                  <DataTable.Cell style={{ minWidth: 190, flex: 1.9 }}><Text style={{ fontWeight: '700', color: text }} numberOfLines={1}>{d.storeName}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 140, flex: 1.4 }}><Text style={{ color: text }} numberOfLines={1}>{d.ownerName}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}><Text style={{ color: text }} numberOfLines={1}>{d.phone}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 120, flex: 1.2 }}><Text style={{ color: text }} numberOfLines={1}>{d.date}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><Text style={{ color: text }} numberOfLines={1}>{d.time}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><StatusBadge status={d.status} /></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ minWidth: 120, flex: 1.2 }}>
                     <Button 
                       mode="contained" 
                       compact 
-                      buttonColor="#4CAF50"
+                      buttonColor="#10B981"
                       style={{ borderRadius: 8 }}
                       onPress={() => {
                         setDemos(demos.map(item => item.id === d.id ? { ...item, status: 'Completed' } : item));
@@ -1225,38 +1279,38 @@ export function SuperAdminDashboard() {
       <Card style={[styles.card, { backgroundColor: cardBg, borderColor: border }]} elevation={0}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={[styles.chartIconBadge, { backgroundColor: '#E8F5E9' }]}>
-              <Icon name="storefront" size={16} color="#2E7D32" />
+            <View style={[styles.chartIconBadge, { backgroundColor: '#ECFDF5' }]}>
+              <Icon name="storefront" size={16} color="#10B981" />
             </View>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', color: text }}>Registered Shops Directory</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-            <DataTable style={{ minWidth: 850 }}>
-              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Shop Brand</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Manager Email</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Phone</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Category</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Platform Status</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Admin Actions</Text></DataTable.Title>
+            <DataTable style={{ minWidth: 920 }}>
+              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                <DataTable.Title style={{ minWidth: 190, flex: 1.9 }}><Text style={styles.tableHeaderText}>Shop Brand</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 190, flex: 1.9 }}><Text style={styles.tableHeaderText}>Manager Email</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Phone</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Category</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Platform Status</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Admin Actions</Text></DataTable.Title>
               </DataTable.Header>
 
               {customers.map((c) => (
-                <DataTable.Row key={c.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                  <DataTable.Cell style={{ flex: 1.5 }}><Text style={{ fontWeight: '700', color: text }}>{c.store}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text }}>{c.email}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text }}>{c.phone}</Text></DataTable.Cell>
-                  <DataTable.Cell>
-                    <Text style={{ color: text }}>{c.id === '1' || c.id === '5' ? 'Grocery Store' : c.id === '2' ? 'Apparels' : 'Retail General'}</Text>
+                <DataTable.Row key={c.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 56, alignItems: 'center' }]}>
+                  <DataTable.Cell style={{ minWidth: 190, flex: 1.9 }}><Text style={{ fontWeight: '700', color: text }} numberOfLines={1}>{c.store}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 190, flex: 1.9 }}><Text style={{ color: text }} numberOfLines={1}>{c.email}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}><Text style={{ color: text }} numberOfLines={1}>{c.phone}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}>
+                    <Text style={{ color: text }} numberOfLines={1}>{c.id === '1' || c.id === '5' ? 'Grocery Store' : c.id === '2' ? 'Apparels' : 'Retail General'}</Text>
                   </DataTable.Cell>
-                  <DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 120, flex: 1.2 }}>
                     <StatusBadge status={c.status !== 'Suspended' ? 'Enabled' : 'Disabled'} />
                   </DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1.5 }}>
+                  <DataTable.Cell numeric style={{ minWidth: 120, flex: 1.2 }}>
                     <Button 
                       mode="contained" 
                       compact 
-                      buttonColor={c.status === 'Suspended' ? '#4CAF50' : '#D81B60'}
+                      buttonColor={c.status === 'Suspended' ? '#10B981' : '#EF4444'}
                       style={{ borderRadius: 8 }}
                       onPress={() => {
                         const updated = customers.map(cust => {
@@ -1288,30 +1342,30 @@ export function SuperAdminDashboard() {
       <Card style={[styles.card, { backgroundColor: cardBg, borderColor: border }]} elevation={0}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={[styles.chartIconBadge, { backgroundColor: '#FFF3E0' }]}>
-              <Icon name="account-group" size={16} color="#E65100" />
+            <View style={[styles.chartIconBadge, { backgroundColor: '#EFF6FF' }]}>
+              <Icon name="account-group" size={16} color="#2563EB" />
             </View>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', color: text }}>Active Store Worker Sessions</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-            <DataTable style={{ minWidth: 850 }}>
-              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Staff Name</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Shop Location</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Worker Role</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Login Activity</Text></DataTable.Title>
-                <DataTable.Title numeric><Text style={styles.tableHeaderText}>Transactions</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
+            <DataTable style={{ minWidth: 880 }}>
+              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                <DataTable.Title style={{ minWidth: 160, flex: 1.6 }}><Text style={styles.tableHeaderText}>Staff Name</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 190, flex: 1.9 }}><Text style={styles.tableHeaderText}>Shop Location</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 140, flex: 1.4 }}><Text style={styles.tableHeaderText}>Worker Role</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Login Activity</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Transactions</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
               </DataTable.Header>
 
               {workers.map((w) => (
-                <DataTable.Row key={w.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                  <DataTable.Cell><Text style={{ fontWeight: '700', color: text }}>{w.name}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1.5 }}><Text style={{ color: text }}>{w.store}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text }}>{w.role}</Text></DataTable.Cell>
-                  <DataTable.Cell><Text style={{ color: text, fontSize: 12 }}>{w.login}</Text></DataTable.Cell>
-                  <DataTable.Cell numeric><Text style={{ color: text, fontWeight: '600' }}>{w.sales}</Text></DataTable.Cell>
-                  <DataTable.Cell><StatusBadge status={w.status} /></DataTable.Cell>
+                <DataTable.Row key={w.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 56, alignItems: 'center' }]}>
+                  <DataTable.Cell style={{ minWidth: 160, flex: 1.6 }}><Text style={{ fontWeight: '700', color: text }} numberOfLines={1}>{w.name}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 190, flex: 1.9 }}><Text style={{ color: text }} numberOfLines={1}>{w.store}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 140, flex: 1.4 }}><Text style={{ color: text }} numberOfLines={1}>{w.role}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}><Text style={{ color: text, fontSize: 12 }} numberOfLines={1}>{w.login}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ minWidth: 110, flex: 1.1 }}><Text style={{ color: text, fontWeight: '600' }}>{w.sales}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><StatusBadge status={w.status} /></DataTable.Cell>
                 </DataTable.Row>
               ))}
             </DataTable>
@@ -1432,19 +1486,19 @@ export function SuperAdminDashboard() {
                 <Text variant="titleSmall" style={{ fontWeight: 'bold', color: text }}>Revenue Stream Details</Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-                <DataTable style={{ minWidth: 700 }}>
-                  <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                    <DataTable.Title><Text style={styles.tableHeaderText}>Revenue Category</Text></DataTable.Title>
-                    <DataTable.Title><Text style={styles.tableHeaderText}>Transaction Count</Text></DataTable.Title>
-                    <DataTable.Title><Text style={styles.tableHeaderText}>Percentage Share</Text></DataTable.Title>
-                    <DataTable.Title numeric><Text style={styles.tableHeaderText}>Amount Collected</Text></DataTable.Title>
+                <DataTable style={{ minWidth: 780 }}>
+                  <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                    <DataTable.Title style={{ minWidth: 260, flex: 2.6 }}><Text style={styles.tableHeaderText}>Revenue Category</Text></DataTable.Title>
+                    <DataTable.Title style={{ minWidth: 160, flex: 1.6 }}><Text style={styles.tableHeaderText}>Transaction Count</Text></DataTable.Title>
+                    <DataTable.Title style={{ minWidth: 140, flex: 1.4 }}><Text style={styles.tableHeaderText}>Percentage Share</Text></DataTable.Title>
+                    <DataTable.Title numeric style={{ minWidth: 160, flex: 1.6 }}><Text style={styles.tableHeaderText}>Amount Collected</Text></DataTable.Title>
                   </DataTable.Header>
 
-                  <DataTable.Row style={[styles.tableRow, { borderBottomColor: border }]}>
-                    <DataTable.Cell><Text style={{ color: text }}>Platform Sales (SaaS & Shop Sales)</Text></DataTable.Cell>
-                    <DataTable.Cell><Text style={{ color: text }}>{totalTransactionsCount} sales</Text></DataTable.Cell>
-                    <DataTable.Cell><Text style={{ color: text }}>100%</Text></DataTable.Cell>
-                    <DataTable.Cell numeric><Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>₹{totalRevenueSum.toLocaleString('en-IN')}</Text></DataTable.Cell>
+                  <DataTable.Row style={[styles.tableRow, { borderBottomColor: border, minHeight: 56, alignItems: 'center' }]}>
+                    <DataTable.Cell style={{ minWidth: 260, flex: 2.6 }}><Text style={{ color: text, fontWeight: '600' }} numberOfLines={1}>Platform Sales (SaaS & Shop Sales)</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ minWidth: 160, flex: 1.6 }}><Text style={{ color: text }} numberOfLines={1}>{totalTransactionsCount} sales</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ minWidth: 140, flex: 1.4 }}><Text style={{ color: text }} numberOfLines={1}>100%</Text></DataTable.Cell>
+                    <DataTable.Cell numeric style={{ minWidth: 160, flex: 1.6 }}><Text style={{ fontWeight: 'bold', color: '#10B981' }}>₹{totalRevenueSum.toLocaleString('en-IN')}</Text></DataTable.Cell>
                   </DataTable.Row>
                 </DataTable>
               </ScrollView>
@@ -1462,8 +1516,8 @@ export function SuperAdminDashboard() {
       <Card style={[styles.card, { backgroundColor: cardBg, borderColor: border }]} elevation={0}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={[styles.chartIconBadge, { backgroundColor: '#E0F7FA' }]}>
-              <Icon name="barcode-scan" size={16} color="#00695C" />
+            <View style={[styles.chartIconBadge, { backgroundColor: '#EFF6FF' }]}>
+              <Icon name="barcode-scan" size={16} color="#2563EB" />
             </View>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', color: text }}>Barcode Engine Usage Logs</Text>
           </View>
@@ -1475,35 +1529,35 @@ export function SuperAdminDashboard() {
           ) : (
             <View style={{ gap: 20 }}>
               <View style={styles.metricsRow}>
-                <View style={[styles.metricCard, { backgroundColor: isDark ? '#1A2E2E' : '#E0F2F1', borderColor: isDark ? '#2D4444' : '#B2DFDB' }]}>
-                  <Icon name="barcode" size={24} color="#00695C" style={{ marginBottom: 6 }} />
+                <View style={[styles.metricCard, { backgroundColor: isDark ? '#111827' : '#F0FDF4', borderColor: isDark ? '#1F2937' : '#DCFCE7' }]}>
+                  <Icon name="barcode" size={24} color="#10B981" style={{ marginBottom: 6 }} />
                   <Text style={{ color: subText, fontWeight: '500' }}>Total Barcodes Printed</Text>
                   <Text style={{ fontSize: 24, fontWeight: 'bold', color: text, marginTop: 4 }}>{totalBarcodesCount.toLocaleString('en-IN')}</Text>
                 </View>
-                <View style={[styles.metricCard, { backgroundColor: isDark ? '#2E1A1A' : '#FFEBEE', borderColor: isDark ? '#442D2D' : '#FFCDD2' }]}>
-                  <Icon name="alert-circle" size={24} color="#C62828" style={{ marginBottom: 6 }} />
+                <View style={[styles.metricCard, { backgroundColor: isDark ? '#111827' : '#FEF2F2', borderColor: isDark ? '#1F2937' : '#FEE2E2' }]}>
+                  <Icon name="alert-circle" size={24} color="#EF4444" style={{ marginBottom: 6 }} />
                   <Text style={{ color: subText, fontWeight: '500' }}>Failed Print Reports</Text>
-                  <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#F44336', marginTop: 4 }}>0</Text>
+                  <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#EF4444', marginTop: 4 }}>0</Text>
                 </View>
               </View>
 
               <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-                <DataTable style={{ minWidth: 750 }}>
-                  <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                    <DataTable.Title><Text style={styles.tableHeaderText}>Store Client</Text></DataTable.Title>
-                    <DataTable.Title numeric><Text style={styles.tableHeaderText}>Generated</Text></DataTable.Title>
-                    <DataTable.Title><Text style={styles.tableHeaderText}>Format</Text></DataTable.Title>
-                    <DataTable.Title><Text style={styles.tableHeaderText}>Print Status</Text></DataTable.Title>
-                    <DataTable.Title><Text style={styles.tableHeaderText}>Timestamp</Text></DataTable.Title>
+                <DataTable style={{ minWidth: 800 }}>
+                  <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                    <DataTable.Title style={{ minWidth: 200, flex: 2 }}><Text style={styles.tableHeaderText}>Store Client</Text></DataTable.Title>
+                    <DataTable.Title numeric style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Generated</Text></DataTable.Title>
+                    <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Format</Text></DataTable.Title>
+                    <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Print Status</Text></DataTable.Title>
+                    <DataTable.Title style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Timestamp</Text></DataTable.Title>
                   </DataTable.Header>
 
                   {barcodesList.map((b) => (
-                    <DataTable.Row key={b.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                      <DataTable.Cell><Text style={{ color: text }}>{b.storeName}</Text></DataTable.Cell>
-                      <DataTable.Cell numeric><Text style={{ color: text, fontWeight: '600' }}>{b.generated}</Text></DataTable.Cell>
-                      <DataTable.Cell><Text style={{ color: text }}>{b.format}</Text></DataTable.Cell>
-                      <DataTable.Cell><StatusBadge status={b.status} /></DataTable.Cell>
-                      <DataTable.Cell><Text style={{ color: text, fontSize: 12 }}>{b.timestamp}</Text></DataTable.Cell>
+                    <DataTable.Row key={b.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 56, alignItems: 'center' }]}>
+                      <DataTable.Cell style={{ minWidth: 200, flex: 2 }}><Text style={{ color: text, fontWeight: '600' }} numberOfLines={1}>{b.storeName}</Text></DataTable.Cell>
+                      <DataTable.Cell numeric style={{ minWidth: 110, flex: 1.1 }}><Text style={{ color: text, fontWeight: '600' }}>{b.generated}</Text></DataTable.Cell>
+                      <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}><Text style={{ color: text }} numberOfLines={1}>{b.format}</Text></DataTable.Cell>
+                      <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><StatusBadge status={b.status} /></DataTable.Cell>
+                      <DataTable.Cell style={{ minWidth: 130, flex: 1.3 }}><Text style={{ color: text, fontSize: 12 }} numberOfLines={1}>{b.timestamp}</Text></DataTable.Cell>
                     </DataTable.Row>
                   ))}
                 </DataTable>
@@ -1518,19 +1572,19 @@ export function SuperAdminDashboard() {
   // --- REPORTS CENTER ---
   const renderReports = () => {
     const reportCategories = [
-      { id: '1', name: 'Customer Report', desc: 'Customer activity and account statuses.', icon: 'account-group', color: '#1565C0' },
-      { id: '2', name: 'Subscription Report', desc: 'Active subscriptions, renewals, and expired plans.', icon: 'calendar-sync', color: '#2E7D32' },
-      { id: '3', name: 'Revenue Report', desc: 'Actual revenue collected from active platform sales.', icon: 'currency-inr', color: '#C2185B' },
-      { id: '4', name: 'Support Ticket Report', desc: 'Open, resolved, and pending support issues.', icon: 'face-agent', color: '#E65100' },
-      { id: '5', name: 'Vendor Activity Report', desc: 'Total shops, products added, and bills generated.', icon: 'storefront', color: '#6A1B9A' }
+      { id: '1', name: 'Customer Report', desc: 'Customer activity and account statuses.', icon: 'account-group', color: '#2563EB' },
+      { id: '2', name: 'Subscription Report', desc: 'Active subscriptions, renewals, and expired plans.', icon: 'calendar-sync', color: '#10B981' },
+      { id: '3', name: 'Revenue Report', desc: 'Actual revenue collected from active platform sales.', icon: 'currency-inr', color: '#6366F1' },
+      { id: '4', name: 'Support Ticket Report', desc: 'Open, resolved, and pending support issues.', icon: 'face-agent', color: '#F59E0B' },
+      { id: '5', name: 'Vendor Activity Report', desc: 'Total shops, products added, and bills generated.', icon: 'storefront', color: '#8B5CF6' }
     ];
 
     return (
       <Card style={[styles.card, { backgroundColor: cardBg, borderColor: border }]} elevation={0}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={[styles.chartIconBadge, { backgroundColor: '#FFF3E0' }]}>
-              <Icon name="file-chart" size={16} color="#E65100" />
+            <View style={[styles.chartIconBadge, { backgroundColor: '#EFF6FF' }]}>
+              <Icon name="file-chart" size={16} color="#2563EB" />
             </View>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', color: text }}>Downloadable Platform Reports Center</Text>
           </View>
@@ -1545,8 +1599,8 @@ export function SuperAdminDashboard() {
                     <Icon name={rep.icon} size={22} color={rep.color} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: '700', color: text, fontSize: 13 }}>{rep.name}</Text>
-                    <Text style={{ fontSize: 11, color: subText, marginTop: 3 }}>{rep.desc}</Text>
+                    <Text style={{ fontWeight: '700', color: text, fontSize: 13 }} numberOfLines={1}>{rep.name}</Text>
+                    <Text style={{ fontSize: 11, color: subText, marginTop: 3 }} numberOfLines={2}>{rep.desc}</Text>
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -1573,52 +1627,52 @@ export function SuperAdminDashboard() {
     );
   };
 
-  // --- PAYMENT MANAGEMENT ---
+  // --- SUPPORT MANAGEMENT ---
   const renderSupport = () => {
     return (
       <Card style={[styles.card, { backgroundColor: cardBg, borderColor: border }]} elevation={0}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <View style={[styles.chartIconBadge, { backgroundColor: '#FCE4EC' }]}>
-              <Icon name="face-agent" size={16} color="#AD1457" />
+            <View style={[styles.chartIconBadge, { backgroundColor: '#EFF6FF' }]}>
+              <Icon name="face-agent" size={16} color="#2563EB" />
             </View>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', color: text }}>Active Technical & Billing Support Tickets</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-            <DataTable style={{ minWidth: 900 }}>
-              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#FAFAFE' }]}>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Ticket ID</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Store</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 2 }}><Text style={styles.tableHeaderText}>Issue Subject</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Priority</Text></DataTable.Title>
-                <DataTable.Title><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1.5 }}><Text style={styles.tableHeaderText}>Reply</Text></DataTable.Title>
+            <DataTable style={{ minWidth: 940 }}>
+              <DataTable.Header style={[styles.tableHeader, { backgroundColor: isDark ? '#1A1B2D' : '#F8FAFC' }]}>
+                <DataTable.Title style={{ minWidth: 110, flex: 1.1 }}><Text style={styles.tableHeaderText}>Ticket ID</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 180, flex: 1.8 }}><Text style={styles.tableHeaderText}>Store</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 230, flex: 2.3 }}><Text style={styles.tableHeaderText}>Issue Subject</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Priority</Text></DataTable.Title>
+                <DataTable.Title style={{ minWidth: 120, flex: 1.2 }}><Text style={styles.tableHeaderText}>Status</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ minWidth: 130, flex: 1.3 }}><Text style={styles.tableHeaderText}>Reply</Text></DataTable.Title>
               </DataTable.Header>
 
               {tickets.map((t) => (
-                <DataTable.Row key={t.id} style={[styles.tableRow, { borderBottomColor: border }]}>
-                  <DataTable.Cell><Text style={{ fontFamily: 'monospace', color: text, fontWeight: '600' }}>{t.id}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1.5 }}><Text style={{ color: text }}>{t.store}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 2 }}><Text style={{ color: text }}>{t.subject}</Text></DataTable.Cell>
-                  <DataTable.Cell>
+                <DataTable.Row key={t.id} style={[styles.tableRow, { borderBottomColor: border, minHeight: 56, alignItems: 'center' }]}>
+                  <DataTable.Cell style={{ minWidth: 110, flex: 1.1 }}><Text style={{ fontFamily: 'monospace', color: text, fontWeight: '600' }} numberOfLines={1}>{t.id}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 180, flex: 1.8 }}><Text style={{ color: text, fontWeight: '600' }} numberOfLines={1}>{t.store}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 230, flex: 2.3 }}><Text style={{ color: text }} numberOfLines={1}>{t.subject}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ minWidth: 120, flex: 1.2 }}>
                     <View style={[styles.priorityBadge, { 
-                      backgroundColor: t.priority === 'Urgent' ? '#FFEBEE' : t.priority === 'High' ? '#FFF3E0' : t.priority === 'Medium' ? '#FFF8E1' : '#F1F8E9'
+                      backgroundColor: t.priority === 'Urgent' ? '#FEF2F2' : t.priority === 'High' ? '#FFFBEB' : t.priority === 'Medium' ? '#EFF6FF' : '#F0FDF4'
                     }]}>
                       <Text style={{ 
                         fontWeight: 'bold', 
                         fontSize: 11,
-                        color: t.priority === 'Urgent' ? '#C62828' : t.priority === 'High' ? '#E65100' : t.priority === 'Medium' ? '#F57F17' : '#33691E'
+                        color: t.priority === 'Urgent' ? '#EF4444' : t.priority === 'High' ? '#D97706' : t.priority === 'Medium' ? '#2563EB' : '#10B981'
                       }}>
                         {t.priority}
                       </Text>
                     </View>
                   </DataTable.Cell>
-                  <DataTable.Cell><StatusBadge status={t.status} /></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1.5 }}>
+                  <DataTable.Cell style={{ minWidth: 120, flex: 1.2 }}><StatusBadge status={t.status} /></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ minWidth: 130, flex: 1.3 }}>
                     <Button 
                       mode="contained" 
                       compact 
-                      buttonColor="#1565C0"
+                      buttonColor="#2563EB"
                       style={{ borderRadius: 8 }}
                       onPress={() => {
                         setSelectedTicket(t);
@@ -2333,16 +2387,24 @@ const styles = StyleSheet.create({
   // Tables
   tableHeader: {
     borderRadius: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
   tableHeaderText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#757575',
+    color: '#64748B',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   tableRow: {
     borderBottomWidth: 1,
+  },
+  planBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
   },
 
   // Empty State

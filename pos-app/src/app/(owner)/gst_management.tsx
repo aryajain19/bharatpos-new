@@ -418,7 +418,7 @@ export default function GSTManagementScreen() {
             </View>
             <Text style={styles.sectionSub}>Supplies to registered persons</Text>
           </View>
-          <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
             <DataTable style={{ minWidth: 850 }}>
               <DataTable.Header style={styles.dataHeader}>
                 <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.colHead}>GSTIN</Text></DataTable.Title>
@@ -474,7 +474,7 @@ export default function GSTManagementScreen() {
             </View>
             <Text style={styles.sectionSub}>Rate-wise summary of supplies to unregistered persons</Text>
           </View>
-          <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
             <DataTable style={{ minWidth: 600 }}>
               <DataTable.Header style={styles.dataHeader}>
                 <DataTable.Title style={{ flex: 0.6 }}><Text style={styles.colHead}>Rate (%)</Text></DataTable.Title>
@@ -519,7 +519,7 @@ export default function GSTManagementScreen() {
             </View>
             <Text style={styles.sectionSub}>HSN-wise summary of outward supplies</Text>
           </View>
-          <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
             <DataTable style={{ minWidth: 800 }}>
               <DataTable.Header style={styles.dataHeader}>
                 <DataTable.Title style={{ flex: 0.6 }}><Text style={styles.colHead}>HSN Code</Text></DataTable.Title>
@@ -600,7 +600,7 @@ export default function GSTManagementScreen() {
             </View>
             <Text style={styles.sectionSub}>Details of inter-state and intra-state supplies</Text>
           </View>
-          <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
             <DataTable style={{ minWidth: 700 }}>
               <DataTable.Header style={styles.dataHeader}>
                 <DataTable.Title style={{ flex: 2.5 }}><Text style={styles.colHead}>Nature of Supplies</Text></DataTable.Title>
@@ -681,7 +681,7 @@ export default function GSTManagementScreen() {
             </View>
             <Text style={styles.sectionSub}>Tax payable and paid details</Text>
           </View>
-          <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
             <DataTable style={{ minWidth: 700 }}>
               <DataTable.Header style={styles.dataHeader}>
                 <DataTable.Title style={{ flex: 1 }}><Text style={styles.colHead}>Description</Text></DataTable.Title>
@@ -815,7 +815,7 @@ export default function GSTManagementScreen() {
 
         <Card style={styles.card} elevation={1}>
           <Card.Content style={{ padding: 0 }}>
-            <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
               <DataTable style={{ minWidth: 900 }}>
                 <DataTable.Header>
                   <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.colHead}>Customer GSTIN</Text></DataTable.Title>

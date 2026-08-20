@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { DS } from '../../../constants/designTokens';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert, Switch, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert, Switch, Platform, ActivityIndicator } from 'react-native';
 import { Text, Surface, Divider, useTheme, TextInput } from 'react-native-paper';
 import { useAuth } from '../../../providers/AuthProvider';
 import { auth, db, isFirebaseConfigured } from '../../../lib/firebase';

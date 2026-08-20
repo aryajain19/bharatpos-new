@@ -69,45 +69,45 @@ export default function InventoryManagementScreen() {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch Locations list (fail silently if permission denied)
-      try {
-        const locRef = doc(db, 'settings', tenantId);
-        const locSnap = await getDoc(locRef);
-        if (locSnap.exists() && locSnap.data()?.locations) {
-          setLocations(locSnap.data().locations);
-        } else {
-          setLocations(['Main Shop']);
-        }
-      } catch (locErr) {
-        console.warn("Could not fetch inventory locations, using defaults:", locErr);
-        setLocations(['Main Shop']);
-      }
-
-      // 2. Fetch Products (tenant filter only; sorting done client-side)
+      const locRef = doc(db, 'settings', tenantId);
       const q = query(
         collection(db, 'products'),
         where('tenant_id', '==', tenantId)
       );
-      const snapshot = await getDocs(q);
-      const fetchedProds: Product[] = snapshot.docs.map(dSnap => {
-        const p = dSnap.data();
-        const stockVal = p.stock_qty !== undefined ? p.stock_qty : (p.stock || 0);
-        return {
-          id: dSnap.id,
-          name: p.name || 'Unnamed Product',
-          price: p.selling_price || p.price || 0,
-          barcode: p.barcode || '',
-          category: p.category || '',
-          gst_pct: p.gst_pct || 0,
-          hsn: p.hsn || '',
-          stock_qty: stockVal,
-          min_stock: p.min_stock || 0,
-          location_stocks: p.location_stocks || { 'Main Shop': stockVal }
-        };
-      });
-      // Client-side sort by stock_qty ascending
-      fetchedProds.sort((a, b) => a.stock_qty - b.stock_qty);
-      setProducts(fetchedProds);
+
+      const [locRes, prodsRes] = await Promise.allSettled([
+        getDoc(locRef),
+        getDocs(q)
+      ]);
+
+      if (locRes.status === 'fulfilled' && locRes.value.exists && locRes.value.exists()) {
+        const d = locRes.value.data();
+        if (d?.locations) setLocations(d.locations);
+        else setLocations(['Main Shop']);
+      } else {
+        setLocations(['Main Shop']);
+      }
+
+      if (prodsRes.status === 'fulfilled') {
+        const fetchedProds: Product[] = prodsRes.value.docs.map((dSnap: any) => {
+          const p = dSnap.data();
+          const stockVal = p.stock_qty !== undefined ? p.stock_qty : (p.stock || 0);
+          return {
+            id: dSnap.id,
+            name: p.name || 'Unnamed Product',
+            price: p.selling_price || p.price || 0,
+            barcode: p.barcode || '',
+            category: p.category || '',
+            gst_pct: p.gst_pct || 0,
+            hsn: p.hsn || '',
+            stock_qty: stockVal,
+            min_stock: p.min_stock || 0,
+            location_stocks: p.location_stocks || { 'Main Shop': stockVal }
+          };
+        });
+        fetchedProds.sort((a, b) => a.stock_qty - b.stock_qty);
+        setProducts(fetchedProds);
+      }
     } catch (err: any) {
       console.error("Error fetching inventory data:", err);
       setError(err.message || "Failed to load inventory details.");
@@ -285,49 +285,51 @@ export default function InventoryManagementScreen() {
       {activeTab === 'stock' && (
         <Card style={styles.card} elevation={0}>
           <Card.Content style={{ padding: 0 }}>
-            <DataTable>
-              <DataTable.Header>
-                <DataTable.Title style={{ flex: 3 }}><Text style={styles.colHeader}>Product</Text></DataTable.Title>
-                <DataTable.Title numeric><Text style={styles.colHeader}>Total Stock</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 3 }}><Text style={styles.colHeader}>Godown Breakdown</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1.5, justifyContent: 'center' }}><Text style={styles.colHeader}>Status</Text></DataTable.Title>
-              </DataTable.Header>
+            <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
+              <DataTable style={{ minWidth: 720 }}>
+                <DataTable.Header>
+                  <DataTable.Title style={{ minWidth: 220, flex: 2.2 }}><Text style={styles.colHeader}>Product</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ minWidth: 100, flex: 1 }}><Text style={styles.colHeader}>Total Stock</Text></DataTable.Title>
+                  <DataTable.Title style={{ minWidth: 240, flex: 2.4 }}><Text style={styles.colHeader}>Godown Breakdown</Text></DataTable.Title>
+                  <DataTable.Title style={{ minWidth: 130, flex: 1.3, justifyContent: 'center' }}><Text style={styles.colHeader}>Status</Text></DataTable.Title>
+                </DataTable.Header>
 
-              {products.map((item) => {
-                const statusColor = item.stock_qty <= 0 ? '#EF4444' : (item.stock_qty <= 5 ? '#F59E0B' : '#10B981');
-                const statusText = item.stock_qty <= 0 ? 'Out of Stock' : (item.stock_qty <= 5 ? 'Low Stock' : 'In Stock');
+                {products.map((item) => {
+                  const statusColor = item.stock_qty <= 0 ? '#EF4444' : (item.stock_qty <= 5 ? '#F59E0B' : '#10B981');
+                  const statusText = item.stock_qty <= 0 ? 'Out of Stock' : (item.stock_qty <= 5 ? 'Low Stock' : 'In Stock');
 
-                // Generate breakdown string
-                const breakdown = Object.entries(item.location_stocks)
-                  .filter(([_, qty]) => qty > 0)
-                  .map(([loc, qty]) => `${loc}: ${qty}`)
-                  .join(' | ') || 'No Stock';
+                  // Generate breakdown string
+                  const breakdown = Object.entries(item.location_stocks)
+                    .filter(([_, qty]) => qty > 0)
+                    .map(([loc, qty]) => `${loc}: ${qty}`)
+                    .join(' | ') || 'No Stock';
 
-                return (
-                  <DataTable.Row key={item.id} style={{ minHeight: 60 }}>
-                    <DataTable.Cell style={{ flex: 3 }}>
-                      <View style={{ paddingVertical: 8 }}>
-                        <Text style={{ fontWeight: 'bold', color: appTheme.colors.onSurface }}>{item.name}</Text>
-                        <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{item.barcode || 'No Barcode'}</Text>
-                      </View>
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>{item.stock_qty}</DataTable.Cell>
-                    <DataTable.Cell style={{ flex: 3 }}>
-                      <Text style={{ fontSize: 12, color: '#475569' }} numberOfLines={2}>{breakdown}</Text>
-                    </DataTable.Cell>
-                    <DataTable.Cell style={{ flex: 1.5, justifyContent: 'center' }}>
-                      <Text style={{ color: statusColor, fontWeight: '700' }}>{statusText}</Text>
-                    </DataTable.Cell>
+                  return (
+                    <DataTable.Row key={item.id} style={{ minHeight: 60, alignItems: 'center' }}>
+                      <DataTable.Cell style={{ minWidth: 220, flex: 2.2 }}>
+                        <View style={{ paddingVertical: 8, width: '100%' }}>
+                          <Text style={{ fontWeight: 'bold', color: appTheme.colors.onSurface }} numberOfLines={1}>{item.name}</Text>
+                          <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }} numberOfLines={1}>{item.barcode || 'No Barcode'}</Text>
+                        </View>
+                      </DataTable.Cell>
+                      <DataTable.Cell numeric style={{ minWidth: 100, flex: 1 }}><Text style={{ fontWeight: '600' }}>{item.stock_qty}</Text></DataTable.Cell>
+                      <DataTable.Cell style={{ minWidth: 240, flex: 2.4 }}>
+                        <Text style={{ fontSize: 12, color: '#475569' }} numberOfLines={2}>{breakdown}</Text>
+                      </DataTable.Cell>
+                      <DataTable.Cell style={{ minWidth: 130, flex: 1.3, justifyContent: 'center' }}>
+                        <Text style={{ color: statusColor, fontWeight: '700' }}>{statusText}</Text>
+                      </DataTable.Cell>
+                    </DataTable.Row>
+                  );
+                })}
+
+                {products.length === 0 && (
+                  <DataTable.Row>
+                    <DataTable.Cell><Text style={{ fontStyle: 'italic', color: '#94A3B8' }}>No Products Registered</Text></DataTable.Cell>
                   </DataTable.Row>
-                );
-              })}
-
-              {products.length === 0 && (
-                <DataTable.Row>
-                  <DataTable.Cell><Text style={{ fontStyle: 'italic', color: '#94A3B8' }}>No Products Registered</Text></DataTable.Cell>
-                </DataTable.Row>
-              )}
-            </DataTable>
+                )}
+              </DataTable>
+            </ScrollView>
           </Card.Content>
         </Card>
       )}

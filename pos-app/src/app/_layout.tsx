@@ -61,9 +61,10 @@ if (Platform.OS === 'web' && typeof console !== 'undefined') {
   };
 }
 
-// Inject MaterialCommunityIcons font for React Native Web
-if (Platform.OS === 'web' && typeof document !== 'undefined') {
+// Inject MaterialCommunityIcons font for React Native Web with duplicate check
+if (Platform.OS === 'web' && typeof document !== 'undefined' && !document.getElementById('mdi-font-web')) {
   const link = document.createElement('link');
+  link.id = 'mdi-font-web';
   link.rel = 'stylesheet';
   link.href = 'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css';
   document.head.appendChild(link);

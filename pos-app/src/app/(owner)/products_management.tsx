@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { useAuth } from '../../providers/AuthProvider';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Text, useTheme, Card, DataTable, Button, IconButton, TextInput } from 'react-native-paper';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
 import { collection, query, where, orderBy, getDocs, addDoc, doc, updateDoc, deleteDoc } from '../../lib/firestore_adapter';
@@ -17,7 +17,15 @@ export default function ProductsManagementScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
   const appTheme = useTheme();
 
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const cached = window.localStorage.getItem('cachedProductsList');
+        if (cached) return JSON.parse(cached);
+      } catch (_) {}
+    }
+    return [];
+  });
   const [showImportModal, setShowImportModal] = useState(false);
   const [rawInvoiceText, setRawInvoiceText] = useState('');
   const [driveUrl, setDriveUrl] = useState('');
@@ -319,12 +327,15 @@ export default function ProductsManagementScreen() {
       if (!tenantId) return;
       const q = query(
         collection(db, 'products'),
-        where('tenant_id', '==', tenantId),
-        orderBy('created_at', 'desc')
+        where('tenant_id', '==', tenantId)
       );
       const snapshot = await getDocs(q);
       const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      productsData.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
       setProducts(productsData);
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.localStorage.setItem('cachedProductsList', JSON.stringify(productsData));
+      }
     } catch (error) {
       console.error("Error fetching products:", error);
     }

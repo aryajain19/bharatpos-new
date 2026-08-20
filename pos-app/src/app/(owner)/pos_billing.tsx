@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
 import { useLocalSearchParams, router } from 'expo-router';
 import { DS } from '../../constants/designTokens';
+import POSAssistantModal from '../../components/POSAssistantModal';
 
 // ── Category colors ────────────────────────────────────────────────────
 const categoryColors: Record<string, string> = {
@@ -39,12 +40,21 @@ export default function POSBillingScreen() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<RNTextInput>(null);
   
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const cached = window.localStorage.getItem('cachedProductsList');
+        if (cached) return JSON.parse(cached);
+      } catch (_) {}
+    }
+    return [];
+  });
   // Weighing Scale Calculator States
   const [weighProduct, setWeighProduct] = useState<any>(null);
   const [weighWeight, setWeighWeight] = useState('1000');
   const [showWeighModal, setShowWeighModal] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const [showAssistantModal, setShowAssistantModal] = useState(false);
   
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -214,10 +224,10 @@ export default function POSBillingScreen() {
     return { cgst, sgst, totalGst };
   }, [cart, isGstRegistered]);
 
-  const discount = 0; // Configurable discount can be implemented later
+  const [discount, setDiscount] = useState(0);
   const finalTotal = isGstRegistered
-    ? (subtotal - discount + gstBreakdown.totalGst)
-    : (subtotal - discount);
+    ? Math.max(0, subtotal - discount + gstBreakdown.totalGst)
+    : Math.max(0, subtotal - discount);
 
   const handleSearchSubmitWithText = async (barcodeText: string) => {
     if (!barcodeText.trim()) return;
@@ -560,6 +570,15 @@ export default function POSBillingScreen() {
             </View>
           </View>
           <View style={styles.headerRight}>
+            <Chip
+              icon="robot"
+              mode="flat"
+              onPress={() => setShowAssistantModal(true)}
+              textStyle={[styles.chipText, { color: '#0D9488', fontWeight: '700' }]}
+              style={[styles.chip, { backgroundColor: isDarkMode ? 'rgba(13, 148, 136, 0.2)' : '#CCFBF1' }]}
+            >
+              AI Voice Copilot 🎙️
+            </Chip>
             <Chip icon="receipt" mode="outlined" onPress={() => setShowSessionModal(true)} textStyle={styles.chipText} style={styles.chip}>
               Active Session
             </Chip>
@@ -581,7 +600,7 @@ export default function POSBillingScreen() {
               </View>
               <TextInput
                 mode="flat"
-                placeholder="Scan barcode or type product name..."
+                placeholder="Scan barcode, type, or speak to AI..."
                 value={search}
                 onChangeText={(text: any) => { 
                   const cleaned = text.replace(/[\r\n]/g, '');
@@ -602,7 +621,7 @@ export default function POSBillingScreen() {
                   search ? (
                     <TextInput.Icon icon="close" color="#999" onPress={() => { setSearch(''); setShowSuggestions(false); }} />
                   ) : (
-                    <TextInput.Icon icon="camera" color="#10B981" onPress={handleOpenScanner} />
+                    <TextInput.Icon icon="microphone" color="#0D9488" onPress={() => setShowAssistantModal(true)} />
                   )
                 }
               />
@@ -1124,6 +1143,52 @@ export default function POSBillingScreen() {
           </View>
         </Modal>
       )}
+
+      {/* Floating AI Voice Copilot FAB */}
+      <TouchableOpacity
+        style={styles.floatingAiFab}
+        onPress={() => setShowAssistantModal(true)}
+        activeOpacity={0.85}
+      >
+        <Icon name="robot-happy" size={24} color="#FFFFFF" />
+        <View style={styles.floatingAiPulse} />
+      </TouchableOpacity>
+
+      {/* POS Conversational AI Assistant Modal */}
+      <POSAssistantModal
+        visible={showAssistantModal}
+        onClose={() => setShowAssistantModal(false)}
+        products={products}
+        onAddToCart={(item, qty) => {
+          for (let i = 0; i < qty; i++) {
+            addToCart({
+              id: item.id,
+              name: item.name,
+              price: item.price || item.selling_price || 0,
+              qty: 1,
+              gst_pct: isGstRegistered ? (item.gst_pct || 0) : 0,
+              hsn: item.hsn || '',
+              image_url: item.image_url,
+            });
+          }
+        }}
+        onClearCart={clearCart}
+        onApplyDiscount={(d) => {
+          if (d.type === 'percent') {
+            setDiscount((subtotal * d.value) / 100);
+          } else {
+            setDiscount(d.value);
+          }
+        }}
+        onCheckout={(mode) => {
+          if (['cash', 'upi', 'card', 'credit'].includes(mode)) {
+            setPayMethod(mode.toUpperCase() as any);
+          }
+        }}
+        contextData={{
+          cartItems: cart,
+        }}
+      />
     </View>
   );
 }
@@ -1373,5 +1438,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 40,
+  },
+  floatingAiFab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0D9488',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 999,
+  },
+  floatingAiPulse: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });

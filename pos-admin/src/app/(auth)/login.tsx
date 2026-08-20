@@ -229,7 +229,7 @@ export default function AdminLoginScreen() {
 
               <View style={styles.createAccountRow}>
                 <Text style={styles.noAccountText}>Don't have an account? </Text>
-                <Link href="/signup" asChild>
+                <Link href={'/(auth)/signup' as any} asChild>
                   <TouchableOpacity>
                     <Text style={styles.createAccountLink}>Create Account</Text>
                   </TouchableOpacity>

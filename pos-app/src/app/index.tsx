@@ -1227,8 +1227,8 @@ export default function Index() {
                 value={gstType}
                 onValueChange={setGstType}
                 buttons={[
-                  { value: 'GST', label: 'GST Registered', activeStyle: { backgroundColor: '#F0FDF4' } },
-                  { value: 'NON-GST', label: 'Non-GST Business', activeStyle: { backgroundColor: '#F0FDF4' } }
+                  { value: 'GST', label: 'GST Registered' },
+                  { value: 'NON-GST', label: 'Non-GST Business' }
                 ]}
                 style={{ marginBottom: 12 }}
               />

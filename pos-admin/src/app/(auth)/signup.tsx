@@ -28,7 +28,7 @@ export default function SignupScreen() {
     // TODO: Connect to your backend /api/create-owner or Firebase
     setTimeout(() => {
       setLoading(false);
-      router.push('/success');
+      router.push('/(auth)/success' as any);
     }, 1000);
   };
 
@@ -295,11 +295,10 @@ export default function SignupScreen() {
                   onPress={handleSignup}
                   loading={loading}
                   style={styles.submitBtn}
-                  contentStyle={styles.btnContent}
+                  contentStyle={[styles.btnContent, { flexDirection: 'row-reverse' }]}
                   labelStyle={styles.btnLabel}
                   buttonColor="#1E293B"
                   icon="arrow-right"
-                  contentStyle={{ flexDirection: 'row-reverse' }}
                 >
                   Create Free Account
                 </Button>

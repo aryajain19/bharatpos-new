@@ -8,6 +8,9 @@ import { collection, addDoc, doc, updateDoc, increment } from '../../lib/firesto
 import { useAuth } from '../../providers/AuthProvider';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import POSAssistantModal from '../../components/POSAssistantModal';
+import { query, where, getDocs } from '../../lib/firestore_adapter';
 
 export default function PaymentScreen() {
   const { isDarkMode, toggleTheme } = useAppTheme();
@@ -24,13 +27,21 @@ export default function PaymentScreen() {
   const [custPhone, setCustPhone] = useState('');
   const [custName, setCustName] = useState('');
   const [custGstin, setCustGstin] = useState('');
+  const [showAssistantModal, setShowAssistantModal] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const val = window.localStorage.getItem('isGstRegistered');
       setIsGstRegistered(val !== 'false');
     }
-  }, []);
+    if (isFirebaseConfigured && tenantId) {
+      getDocs(query(collection(db, 'products'), where('tenant_id', '==', tenantId))).then(snap => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data(), price: d.data().selling_price || d.data().price || 0 }));
+        setProducts(list);
+      }).catch(() => {});
+    }
+  }, [tenantId]);
 
   const subtotal = getSubtotal();
   const discount = subtotal * 0.05;
@@ -202,8 +213,17 @@ export default function PaymentScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <IconButton icon="arrow-left" size={24} onPress={() => router.back()} style={{ marginLeft: -10 }} />
-        <Text style={styles.headerTitle}>Payment</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <IconButton icon="arrow-left" size={24} onPress={() => router.back()} style={{ marginLeft: -10 }} />
+          <Text style={styles.headerTitle}>Payment & Checkout</Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.headerAiBtn, { backgroundColor: isDarkMode ? '#0F766E' : '#E6FFFA' }]}
+          onPress={() => setShowAssistantModal(true)}
+        >
+          <Icon name="robot-happy" size={16} color={isDarkMode ? '#5EEAD4' : '#0D9488'} />
+          <Text style={[styles.headerAiText, { color: isDarkMode ? '#5EEAD4' : '#0D9488' }]}>Voice AI</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
@@ -284,6 +304,31 @@ export default function PaymentScreen() {
           <Text style={styles.payButtonText}>{loading ? 'Processing...' : 'Complete Payment'}</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Floating AI Voice Assistant Button */}
+      <TouchableOpacity
+        style={styles.floatingAiFab}
+        onPress={() => setShowAssistantModal(true)}
+        activeOpacity={0.85}
+      >
+        <Icon name="robot-happy" size={22} color="#FFFFFF" />
+        <View style={styles.floatingAiPulse} />
+      </TouchableOpacity>
+
+      {/* POS Conversational AI Assistant Modal */}
+      <POSAssistantModal
+        visible={showAssistantModal}
+        onClose={() => setShowAssistantModal(false)}
+        products={products}
+        onCheckout={(method) => {
+          if (['Cash', 'UPI', 'Card', 'Credit'].includes(method.toUpperCase())) {
+            setPaymentMethod(method.charAt(0).toUpperCase() + method.slice(1).toLowerCase());
+          }
+        }}
+        contextData={{
+          cartItems: cart,
+        }}
+      />
     </View>
   );
 }
@@ -292,6 +337,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 10, backgroundColor: DS.colors.cardBg },
   headerTitle: { fontSize: 18, fontWeight: 'bold' },
+  headerAiBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  headerAiText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   content: { padding: 24 },
   totalLabel: { color: 'gray', fontSize: 13, marginBottom: 4 },
   totalValue: { fontSize: 24, fontWeight: 'bold', marginBottom: 30 },
@@ -303,6 +360,34 @@ const styles = StyleSheet.create({
   changeLabel: { color: 'gray', fontSize: 14 },
   changeValue: { fontWeight: 'bold', fontSize: 16, },
   footer: { padding: 20 },
-  payButton: { paddingVertical: 16, borderRadius: DS.radius.md, alignItems: 'center' },
+  payButton: { paddingVertical: 16, borderRadius: DS.radius.md, alignItems: 'center', backgroundColor: '#0D9488' },
   payButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  floatingAiFab: {
+    position: 'absolute',
+    bottom: 90,
+    right: 20,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#0D9488',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 999,
+  },
+  floatingAiPulse: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
 });

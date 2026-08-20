@@ -10,6 +10,7 @@ import { useAppTheme } from '../../providers/ThemeProvider';
 import { useAuth } from '../../providers/AuthProvider';
 import { router } from 'expo-router';
 import { DS } from '../../constants/designTokens';
+import POSAssistantModal from '../../components/POSAssistantModal';
 
 // ── Animated Counter Hook ──────────────────────────────────────────────
 function useAnimatedCounter(target: number, duration: number = 1200) {
@@ -162,6 +163,8 @@ export default function AdminDashboard() {
   
   const [shopMode, setShopMode] = useState('Mobile Only');
   const [isGstRegistered, setIsGstRegistered] = useState(true);
+  const [showAssistantModal, setShowAssistantModal] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -318,62 +321,76 @@ export default function AdminDashboard() {
     setError(null);
     try {
       if (!tenantId) return;
-      
-      
-      // Fetch Workers
-      const workersSnapshot = await getDocs(query(
-        collection(db, 'users'),
-        where('role', '==', 'salesperson'),
-        where('tenant_id', '==', tenantId)
-      ));
-      const wList: any[] = [];
-      workersSnapshot.forEach((doc: any) => {
-        wList.push({ id: doc.id, ...doc.data() });
-      });
-      setWorkersList(wList);
 
-      // Fetch Shop Metadata for sync code
-      let sCode = '';
-      try {
-        const shopSnap = await getDoc(doc(db, 'shops', tenantId));
-        if (shopSnap.exists && shopSnap.exists()) {
-          const shopData = shopSnap.data();
-          sCode = shopData.syncCode || shopData.sync_code;
-        }
-      } catch (err) {
-        console.warn("Error fetching shop sync code:", err);
-      }
-      if (!sCode) {
-        sCode = `POS-${tenantId.substring(0, 6).toUpperCase()}`;
-      }
-      setShopSyncCode(sCode);
-
-      // Fetch Products for Low Stock Alert
-      const prodSnapshot = await getDocs(query(collection(db, 'products'), where('tenant_id', '==', tenantId)));
-      let lowStock = 0;
-      prodSnapshot.forEach((doc: any) => {
-        if ((doc.data().stock_qty || 0) < 5) lowStock++;
-      });
-      setLowStockAlertCount(lowStock);
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        window.localStorage.setItem('cachedLowStock', String(lowStock));
-      }
-
-      // Fetch Sales (constrained range)
       const now = new Date();
       const sevenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
       const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const startDate = sevenDaysAgo < firstOfMonth ? sevenDaysAgo : firstOfMonth;
       const startDateISO = startDate.toISOString();
 
-      const q = query(
+      // Fire all 4 queries concurrently in parallel
+      const workersQuery = query(
+        collection(db, 'users'),
+        where('role', '==', 'salesperson'),
+        where('tenant_id', '==', tenantId)
+      );
+      const shopDocRef = doc(db, 'shops', tenantId);
+      const productsQuery = query(collection(db, 'products'), where('tenant_id', '==', tenantId));
+      const salesQuery = query(
         collection(db, 'sales'),
         where('tenant_id', '==', tenantId),
         where('created_at', '>=', startDateISO)
       );
 
-      const salesSnapshot = await getDocs(q);
-      processSalesData(salesSnapshot.docs);
+      const [workersRes, shopRes, prodsRes, salesRes] = await Promise.allSettled([
+        getDocs(workersQuery),
+        getDoc(shopDocRef),
+        getDocs(productsQuery),
+        getDocs(salesQuery),
+      ]);
+
+      // Process Workers
+      if (workersRes.status === 'fulfilled') {
+        const wList: any[] = [];
+        workersRes.value.forEach((d: any) => {
+          wList.push({ id: d.id, ...d.data() });
+        });
+        setWorkersList(wList);
+      }
+
+      // Process Shop Metadata
+      let sCode = '';
+      if (shopRes.status === 'fulfilled' && shopRes.value.exists && shopRes.value.exists()) {
+        const shopData = shopRes.value.data();
+        sCode = shopData.syncCode || shopData.sync_code;
+      }
+      if (!sCode) {
+        sCode = `POS-${tenantId.substring(0, 6).toUpperCase()}`;
+      }
+      setShopSyncCode(sCode);
+
+      // Process Products for Low Stock & AI Copilot
+      if (prodsRes.status === 'fulfilled') {
+        let lowStock = 0;
+        const pList: any[] = [];
+        prodsRes.value.forEach((d: any) => {
+          const pData = d.data();
+          const pObj = { id: d.id, ...pData, price: pData.selling_price || pData.price || 0 };
+          pList.push(pObj);
+          if ((pData.stock_qty || pData.stock_quantity || 0) < 5) lowStock++;
+        });
+        setProducts(pList);
+        setLowStockAlertCount(lowStock);
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.localStorage.setItem('cachedLowStock', String(lowStock));
+        }
+      }
+
+      // Process Sales
+      if (salesRes.status === 'fulfilled') {
+        processSalesData(salesRes.value.docs);
+      }
+
     } catch (error: any) {
       console.error("Error fetching metrics:", error);
       setError(error.message || "Unable to sync dashboard stats from Firebase database.");
@@ -573,11 +590,56 @@ export default function AdminDashboard() {
               <Text style={styles.greetingText}>{getGreeting()}, {userName}! </Text>
               <Text style={styles.greetingSubtext}>{getFormattedDate()}</Text>
             </View>
-            <View style={styles.greetingBadge}>
-              <Icon name="store" size={16} color="#10B981" />
-              <Text style={styles.greetingBadgeText}>Main Branch</Text>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <TouchableOpacity
+                style={[styles.greetingBadge, { backgroundColor: isDarkMode ? '#0D9488' : '#E6FFFA' }]}
+                onPress={() => setShowAssistantModal(true)}
+              >
+                <Icon name="robot-happy" size={16} color={isDarkMode ? '#FFFFFF' : '#0D9488'} />
+                <Text style={[styles.greetingBadgeText, { color: isDarkMode ? '#FFFFFF' : '#0D9488', fontWeight: '700' }]}>
+                  AI Copilot 🎙️
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.greetingBadge}>
+                <Icon name="store" size={16} color="#10B981" />
+                <Text style={styles.greetingBadgeText}>Main Branch</Text>
+              </View>
             </View>
           </View>
+        </FadeInSection>
+
+        {/* ── Conversational AI Copilot Bar ──────────────────────── */}
+        <FadeInSection delay={50}>
+          <TouchableOpacity
+            style={[
+              styles.aiCopilotBanner,
+              { backgroundColor: isDarkMode ? '#0F172A' : '#F0FDFA', borderColor: isDarkMode ? '#1E293B' : '#CCFBF1' }
+            ]}
+            onPress={() => setShowAssistantModal(true)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.aiCopilotLeft}>
+              <View style={[styles.aiCopilotIconBox, { backgroundColor: '#0D9488' }]}>
+                <Icon name="robot-happy" size={20} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={[styles.aiCopilotTitle, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>
+                    BharatPOS AI Voice Assistant
+                  </Text>
+                  <View style={styles.aiNewPill}>
+                    <Text style={styles.aiNewPillText}>AI COPILOT</Text>
+                  </View>
+                </View>
+                <Text style={[styles.aiCopilotSub, { color: isDarkMode ? '#94A3B8' : '#0F766E' }]}>
+                  Speak or type: "Add 2 Milk and 1 Bread", "Check stock for Sugar", "Today's sales"
+                </Text>
+              </View>
+            </View>
+            <View style={styles.aiMicBtn}>
+              <Icon name="microphone" size={18} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
         </FadeInSection>
  
         {/* ── Metric Cards ────────────────────────────────────────── */}
@@ -725,6 +787,27 @@ export default function AdminDashboard() {
         </View>
 
       </View>
+
+      {/* Floating AI Voice Assistant Button */}
+      <TouchableOpacity
+        style={styles.floatingAiFab}
+        onPress={() => setShowAssistantModal(true)}
+        activeOpacity={0.85}
+      >
+        <Icon name="robot-happy" size={24} color="#FFFFFF" />
+        <View style={styles.floatingAiPulse} />
+      </TouchableOpacity>
+
+      {/* POS Conversational AI Assistant Modal */}
+      <POSAssistantModal
+        visible={showAssistantModal}
+        onClose={() => setShowAssistantModal(false)}
+        products={products}
+        contextData={{
+          todaySales: salesValue,
+          todayBills: ordersValue,
+        }}
+      />
     </ScrollView>
   );
 }
@@ -830,4 +913,85 @@ const styles = StyleSheet.create({
   syncRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: DS.radius.md, borderLeftWidth: 4, borderLeftColor: DS.colors.brand, backgroundColor: DS.colors.brandLight },
   syncText: { fontSize: 12, fontWeight: '700', color: DS.colors.brand },
   modeIconCircle: { width: 42, height: 42, borderRadius: DS.radius.md, alignItems: 'center', justifyContent: 'center' },
+
+  // AI Copilot Banner & Floating Button
+  aiCopilotBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  aiCopilotLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  aiCopilotIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiCopilotTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  aiNewPill: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  aiNewPillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  aiCopilotSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  aiMicBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0D9488',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
+  floatingAiFab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0D9488',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 999,
+  },
+  floatingAiPulse: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
 });

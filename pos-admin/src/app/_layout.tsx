@@ -65,9 +65,10 @@ if (Platform.OS === 'web' && typeof console !== 'undefined') {
   };
 }
 
-// Inject MaterialCommunityIcons font for React Native Web
-if (Platform.OS === 'web' && typeof document !== 'undefined') {
+// Inject MaterialCommunityIcons font for React Native Web with duplicate check
+if (Platform.OS === 'web' && typeof document !== 'undefined' && !document.getElementById('mdi-font-web')) {
   const link = document.createElement('link');
+  link.id = 'mdi-font-web';
   link.rel = 'stylesheet';
   link.href = 'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css';
   document.head.appendChild(link);
@@ -80,6 +81,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   }`;
 
   const style = document.createElement('style');
+  style.id = 'mdi-font-style';
   style.type = 'text/css';
   if ((style as any).styleSheet) {
     (style as any).styleSheet.cssText = iconFontStyles;
@@ -342,15 +344,15 @@ function AdminLayout() {
               onPress={() => setIsSidebarOpen(!isSidebarOpen)}
               activeOpacity={0.7}
             >
-              <Icon name={isSidebarOpen ? "menu-open" : "menu"} size={22} color={isDarkMode ? '#B0B3D6' : '#5E35B1'} />
+              <Icon name={isSidebarOpen ? "menu-open" : "menu"} size={22} color={isDarkMode ? '#94A3B8' : '#2563EB'} />
             </TouchableOpacity>
             <View style={styles.topBarTitleWrap}>
               <Text style={[styles.topBarTitle, { color: textPrimary }]}>
                 Super Admin Control
               </Text>
               <View style={styles.topBarDateRow}>
-                <Icon name="clock-outline" size={12} color={isDarkMode ? '#6B6F96' : '#9E9E9E'} />
-                <Text style={[styles.topBarDate, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>
+                <Icon name="clock-outline" size={12} color={isDarkMode ? '#64748B' : '#94A3B8'} />
+                <Text style={[styles.topBarDate, { color: isDarkMode ? '#64748B' : '#94A3B8' }]}>
                   {formatDate(currentTime)} · {formatTime(currentTime)}
                 </Text>
               </View>
@@ -358,16 +360,16 @@ function AdminLayout() {
           </View>
           <View style={styles.topBarRight}>
             {/* Search */}
-            <TouchableOpacity style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#252640' : '#F5F3FF' }]}>
-              <Icon name="magnify" size={19} color={isDarkMode ? '#8B8FAD' : '#7E57C2'} />
+            <TouchableOpacity style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}>
+              <Icon name="magnify" size={19} color={isDarkMode ? '#94A3B8' : '#475569'} />
             </TouchableOpacity>
 
             {/* Notification Bell with Badge */}
             <TouchableOpacity 
-              style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#252640' : '#F5F3FF' }]}
+              style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}
               onPress={() => handleNav('notifications')}
             >
-              <Icon name="bell-outline" size={19} color={isDarkMode ? '#8B8FAD' : '#7E57C2'} />
+              <Icon name="bell-outline" size={19} color={isDarkMode ? '#94A3B8' : '#475569'} />
               {notificationCount > 0 && (
                 <View style={styles.notifBadge}>
                   <Text style={styles.notifBadgeText}>{notificationCount}</Text>
@@ -377,10 +379,10 @@ function AdminLayout() {
 
             {/* Security */}
             <TouchableOpacity 
-              style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#252640' : '#F5F3FF' }]}
+              style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}
               onPress={() => handleNav('security')}
             >
-              <Icon name="shield-check-outline" size={19} color={isDarkMode ? '#8B8FAD' : '#7E57C2'} />
+              <Icon name="shield-check-outline" size={19} color={isDarkMode ? '#94A3B8' : '#475569'} />
             </TouchableOpacity>
 
             {/* Divider */}

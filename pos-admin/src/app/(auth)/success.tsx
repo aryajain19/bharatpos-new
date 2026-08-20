@@ -96,11 +96,10 @@ export default function SuccessScreen() {
               mode="contained"
               onPress={() => router.push('/' as any)}
               style={styles.primaryBtn}
-              contentStyle={styles.primaryBtnContent}
+              contentStyle={[styles.primaryBtnContent, { flexDirection: 'row-reverse', height: 48, paddingHorizontal: 16 }]}
               labelStyle={styles.btnLabel}
               buttonColor="#1E293B"
               icon="arrow-right"
-              contentStyle={{ flexDirection: 'row-reverse', height: 48, paddingHorizontal: 16 }}
             >
               Open Dashboard
             </Button>

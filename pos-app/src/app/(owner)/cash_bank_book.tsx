@@ -277,7 +277,7 @@ export default function CashBankBookScreen() {
 
           <Divider style={{ marginVertical: 12 }} />
 
-          <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
             <DataTable style={{ minWidth: 800 }}>
               <DataTable.Header style={styles.dataHeader}>
                 <DataTable.Title style={{ flex: 0.8 }}><Text style={styles.colHead}>Date</Text></DataTable.Title>
