@@ -11,6 +11,6 @@ admin/node_modules/
 admin/.expo/
 backend/node_modules/
 *.js
-*.bat
-*.sh
+!start_all.bat
+!START_SERVERS.sh
 backend/serviceAccountKey.json
