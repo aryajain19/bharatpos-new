@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://pos-app-red.vercel.app/",
+      "permanent": false
+    }
+  ]
+}
