@@ -65,8 +65,30 @@ if (Platform.OS === 'web' && typeof console !== 'undefined') {
   };
 }
 
-// Inject MaterialCommunityIcons font for React Native Web with duplicate check
+// Preconnect & Inject Fonts for Web for ultra-fast rendering
 if (Platform.OS === 'web' && typeof document !== 'undefined' && !document.getElementById('mdi-font-web')) {
+  const preconnect1 = document.createElement('link');
+  preconnect1.rel = 'preconnect';
+  preconnect1.href = 'https://cdn.jsdelivr.net';
+  document.head.appendChild(preconnect1);
+
+  const preconnect2 = document.createElement('link');
+  preconnect2.rel = 'preconnect';
+  preconnect2.href = 'https://fonts.googleapis.com';
+  document.head.appendChild(preconnect2);
+
+  const preconnect3 = document.createElement('link');
+  preconnect3.rel = 'preconnect';
+  preconnect3.href = 'https://fonts.gstatic.com';
+  preconnect3.crossOrigin = 'anonymous';
+  document.head.appendChild(preconnect3);
+
+  const fontLink = document.createElement('link');
+  fontLink.id = 'jakarta-font-web';
+  fontLink.rel = 'stylesheet';
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
+  document.head.appendChild(fontLink);
+
   const link = document.createElement('link');
   link.id = 'mdi-font-web';
   link.rel = 'stylesheet';

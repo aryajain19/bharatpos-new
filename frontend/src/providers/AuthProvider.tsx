@@ -87,16 +87,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // Fail-safe timeout: if loading is still true after 5 seconds, resolve it to prevent hanging
+    // Fail-safe timeout: resolve loading state fast to prevent UI blocking
     const failSafeTimeout = setTimeout(() => {
-      setLoading(prev => {
-        if (prev) {
-          console.warn("Auth initialization timed out. Resolving loading state.");
-          return false;
-        }
-        return prev;
-      });
-    }, 5000);
+      setLoading(false);
+    }, 1000);
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
@@ -152,9 +146,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const userDocRef = doc(db, 'users', uid);
       
-      // Use Promise.race to prevent hanging if Firestore is misconfigured
+      // Fast timeout to prevent blocking UI
       const dbPromise = getDoc(userDocRef);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('firestore-timeout')), 4000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('firestore-timeout')), 1500));
       const userSnap: any = await Promise.race([dbPromise, timeoutPromise]);
 
       if (userSnap && userSnap.exists && userSnap.exists()) {
