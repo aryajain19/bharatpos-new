@@ -197,83 +197,73 @@ export default function LoginScreen() {
     >
       <View style={styles.splitWrapper}>
         {/* LEFT PANEL: Branding & Highlights */}
-        {isDesktop && (
-          <View style={styles.leftBanner}>
-            <View style={styles.bannerContent}>
-              {/* Brand Logo Row */}
-              <View style={styles.bannerBrandRow}>
-                <Icon name="cash-register" size={28} color="#10B981" />
-                <Text style={styles.bannerBrandName}>SmartPOS</Text>
+        <View style={styles.leftBanner}>
+          <View style={styles.bannerContent}>
+            {/* Brand Logo Row */}
+            <View style={styles.bannerBrandRow}>
+              <Icon name="cash-register" size={28} color="#10B981" />
+              <Text style={styles.bannerBrandName}>SmartPOS</Text>
+            </View>
+
+            {/* Slogan */}
+            <Text style={styles.bannerSlogan}>
+              Manage Your Store{"\n"}
+              <Text style={{ color: '#10B981' }}>Anywhere</Text>
+            </Text>
+            <Text style={styles.bannerSubTitle}>
+              The complete cloud POS & Inventory solution for modern Indian retailers.
+            </Text>
+
+            {/* Highlights list */}
+            <View style={styles.highlightsList}>
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="lightning-bolt-outline" size={18} color="#10B981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
+                  <Text style={styles.highlightText}>Create bills in seconds with barcode scanning and quick product search.</Text>
+                </View>
               </View>
 
-              {/* Slogan */}
-              <Text style={styles.bannerSlogan}>
-                Manage Your Store{"\n"}
-                <Text style={{ color: '#10B981' }}>Anywhere</Text>
-              </Text>
-              <Text style={styles.bannerSubTitle}>
-                The complete cloud POS & Inventory solution for modern Indian retailers.
-              </Text>
-
-              {/* Highlights list */}
-              <View style={styles.highlightsList}>
-                <View style={styles.highlightRow}>
-                  <View style={styles.highlightIconWrap}>
-                    <Icon name="lightning-bolt-outline" size={18} color="#10B981" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
-                    <Text style={styles.highlightText}>Create bills in seconds with barcode scanning and quick product search.</Text>
-                  </View>
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="store-outline" size={18} color="#10B981" />
                 </View>
-
-                <View style={styles.highlightRow}>
-                  <View style={styles.highlightIconWrap}>
-                    <Icon name="store-outline" size={18} color="#10B981" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.highlightTitle}>Real-time Inventory</Text>
-                    <Text style={styles.highlightText}>Track stock, get low stock alerts and manage multiple locations.</Text>
-                  </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>Real-time Inventory</Text>
+                  <Text style={styles.highlightText}>Track stock, get low stock alerts and manage multiple locations.</Text>
                 </View>
+              </View>
 
-                <View style={styles.highlightRow}>
-                  <View style={styles.highlightIconWrap}>
-                    <Icon name="file-document-outline" size={18} color="#10B981" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
-                    <Text style={styles.highlightText}>Generate GST invoices, GSTR reports and downloadable ledgers.</Text>
-                  </View>
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="file-document-outline" size={18} color="#10B981" />
                 </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
+                  <Text style={styles.highlightText}>Generate GST invoices, GSTR reports and downloadable ledgers.</Text>
+                </View>
+              </View>
 
-                <View style={styles.highlightRow}>
-                  <View style={styles.highlightIconWrap}>
-                    <Icon name="account-group-outline" size={18} color="#10B981" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
-                    <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
-                  </View>
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="account-group-outline" size={18} color="#10B981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
+                  <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
                 </View>
               </View>
             </View>
           </View>
-        )}
+        </View>
 
         {/* RIGHT PANEL: Form Container */}
-        <View style={[styles.rightPanel, { width: isDesktop ? '50%' : '100%' }]}>
-          {isDesktop ? (
-            <Surface style={styles.cardContainer} elevation={0}>
-              {renderLoginForm()}
-            </Surface>
-          ) : (
-            <ScrollView contentContainerStyle={styles.mobileScrollContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.mobileFormContainer}>
-                {renderLoginForm()}
-              </View>
-            </ScrollView>
-          )}
+        <View style={styles.rightPanel}>
+          <Surface style={styles.cardContainer} elevation={0}>
+            {renderLoginForm()}
+          </Surface>
         </View>
       </View>
 
@@ -341,6 +331,7 @@ const styles = StyleSheet.create({
 
   // Right Panel
   rightPanel: {
+    width: '50%',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
