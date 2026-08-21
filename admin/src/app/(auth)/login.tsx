@@ -126,82 +126,103 @@ export default function AdminLoginScreen() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.splitWrapper}>
         
-        {/* Left Panel: Enterprise Admin Value Proposition */}
+        {/* Left Panel: Deep Warm Obsidian Telemetry & Infrastructure */}
         <View style={styles.leftBanner}>
           <View style={styles.bannerContent}>
-            {/* Brand Logo Row */}
+            {/* Brand Header */}
             <View style={styles.bannerBrandRow}>
-              <Icon name="shield-crown" size={30} color="#6366F1" />
-              <Text style={styles.bannerBrandName}>BharatPOS HQ</Text>
+              <View style={styles.brandIconContainer}>
+                <Icon name="shield-crown" size={22} color="#F59E0B" />
+              </View>
+              <View style={styles.brandTitleWrap}>
+                <Text style={styles.bannerBrandName}>BharatPOS</Text>
+                <View style={styles.hqBadge}>
+                  <Text style={styles.hqBadgeText}>HQ</Text>
+                </View>
+              </View>
             </View>
 
             {/* Slogan */}
             <Text style={styles.bannerSlogan}>
-              Enterprise SaaS{"\n"}
-              <Text style={{ color: '#6366F1' }}>Command Center</Text>
+              Platform Control &{"\n"}
+              <Text style={{ color: '#F59E0B' }}>Core Infrastructure</Text>
             </Text>
             <Text style={styles.bannerSubTitle}>
-              Global multi-tenant governance, billing orchestration, telemetry and infrastructure controls.
+              Real-time multi-tenant telemetry, high-throughput liquidity settlement, and platform-wide security governance.
             </Text>
 
-            {/* Highlights list */}
-            <View style={styles.highlightsList}>
-              <View style={styles.highlightRow}>
-                <View style={[styles.highlightIconWrap, { backgroundColor: '#EEF2FF', borderColor: '#E0E7FF' }]}>
-                  <Icon name="domain" size={18} color="#6366F1" />
+            {/* Live Telemetry Glass Console */}
+            <View style={styles.telemetryCard}>
+              <View style={styles.telemetryHeader}>
+                <View style={styles.livePulseDot} />
+                <Text style={styles.telemetryStatusText}>SYSTEM STATUS: ALL CLUSTERS OPERATIONAL</Text>
+              </View>
+
+              {/* Metric stats row */}
+              <View style={styles.metricsGrid}>
+                <View style={styles.metricBox}>
+                  <Text style={styles.metricLabel}>Daily Platform GMV</Text>
+                  <Text style={styles.metricValue}>₹14.82 Cr</Text>
+                  <Text style={styles.metricGrowth}>+18.4% vs last week</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>Multi-Tenant Governance</Text>
-                  <Text style={styles.highlightText}>Manage store instances, provision organizations, and audit access permissions.</Text>
+                <View style={styles.metricBox}>
+                  <Text style={styles.metricLabel}>Live Terminals</Text>
+                  <Text style={styles.metricValue}>12,840</Text>
+                  <Text style={styles.metricGrowth}>Across 28 states</Text>
+                </View>
+                <View style={styles.metricBox}>
+                  <Text style={styles.metricLabel}>P99 Query Latency</Text>
+                  <Text style={styles.metricValue}>0.12 ms</Text>
+                  <Text style={styles.metricGrowth}>Global edge routing</Text>
                 </View>
               </View>
 
-              <View style={styles.highlightRow}>
-                <View style={[styles.highlightIconWrap, { backgroundColor: '#F5F3FF', borderColor: '#EDE9FE' }]}>
-                  <Icon name="chart-line" size={18} color="#8B5CF6" />
+              {/* Cluster nodes health */}
+              <View style={styles.clusterList}>
+                <View style={styles.clusterItem}>
+                  <Icon name="server-network" size={15} color="#F59E0B" />
+                  <Text style={styles.clusterName}>Cluster-BOM-1 (Mumbai)</Text>
+                  <Text style={styles.clusterMetric}>24.2k req/s · 99.99%</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>Subscription & MRR Engine</Text>
-                  <Text style={styles.highlightText}>Track recurring revenue, license activations, and gateway settlements.</Text>
+                <View style={styles.clusterItem}>
+                  <Icon name="server-network" size={15} color="#F59E0B" />
+                  <Text style={styles.clusterName}>Cluster-BLR-1 (Bangalore)</Text>
+                  <Text style={styles.clusterMetric}>19.6k req/s · 99.99%</Text>
+                </View>
+                <View style={styles.clusterItem}>
+                  <Icon name="shield-check-outline" size={15} color="#10B981" />
+                  <Text style={styles.clusterName}>NPCI / UPI Settlement Rail</Text>
+                  <Text style={[styles.clusterMetric, { color: '#10B981' }]}>Active · Zero Queue</Text>
                 </View>
               </View>
+            </View>
 
-              <View style={styles.highlightRow}>
-                <View style={[styles.highlightIconWrap, { backgroundColor: '#ECFEFF', borderColor: '#CFFAFE' }]}>
-                  <Icon name="server-network" size={18} color="#06B6D4" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>System Telemetry & Health</Text>
-                  <Text style={styles.highlightText}>Monitor database replication, API latency, uptime and traffic loads.</Text>
-                </View>
-              </View>
-
-              <View style={styles.highlightRow}>
-                <View style={[styles.highlightIconWrap, { backgroundColor: '#FFF1F2', borderColor: '#FFE4E6' }]}>
-                  <Icon name="shield-check" size={18} color="#F43F5E" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>Security & Broadcast Governance</Text>
-                  <Text style={styles.highlightText}>Enforce 2FA policies, inspect audit logs, and dispatch global alerts.</Text>
-                </View>
-              </View>
+            {/* Compliance Badge */}
+            <View style={styles.complianceRow}>
+              <Icon name="security" size={14} color="#D97706" />
+              <Text style={styles.complianceText}>ISO 27001 & SOC-2 Type II Certified Platform Infrastructure</Text>
             </View>
           </View>
         </View>
 
-        {/* Right Panel: Admin Login Form */}
+        {/* Right Panel: Warm Luxury Login Form */}
         <View style={styles.rightPanel}>
-          <Surface style={styles.formCard} elevation={2}>
+          <Surface style={styles.formCard} elevation={3}>
             <View style={styles.formLogoRow}>
-              <Icon name="shield-crown" size={26} color="#6366F1" />
-              <Text style={styles.formLogoText}>BharatPOS HQ</Text>
+              <View style={styles.formIconContainer}>
+                <Icon name="shield-crown" size={24} color="#D97706" />
+              </View>
+              <Text style={styles.formLogoText}>BharatPOS</Text>
+              <View style={styles.formHqBadge}>
+                <Text style={styles.formHqBadgeText}>HQ</Text>
+              </View>
             </View>
             
-            <Text style={styles.welcomeTitle}>Admin Portal Login</Text>
-            <Text style={styles.welcomeSubtitle}>Authorized access for platform administrators</Text>
+            <Text style={styles.welcomeTitle}>Executive Authorization</Text>
+            <Text style={styles.welcomeSubtitle}>Enter administrative security credentials to proceed</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Admin Email or ID</Text>
+              <Text style={styles.inputLabel}>Admin Access Email</Text>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -209,33 +230,33 @@ export default function AdminLoginScreen() {
                 autoCapitalize="none"
                 style={styles.input}
                 mode="outlined"
-                outlineColor="#E2E8F0"
-                activeOutlineColor="#6366F1"
-                textColor="#0F172A"
-                placeholderTextColor="#94A3B8"
-                placeholder="e.g. admin@bharatpos.com"
-                theme={{ roundness: 8, colors: { background: '#FFF' } }}
-                left={<TextInput.Icon icon="account-shield-outline" color="#6366F1" />}
+                outlineColor="#E7E5E4"
+                activeOutlineColor="#D97706"
+                textColor="#1C1917"
+                placeholderTextColor="#A8A29E"
+                placeholder="admin@bharatpos.com"
+                theme={{ roundness: 10, colors: { background: '#FFF' } }}
+                left={<TextInput.Icon icon="account-shield-outline" color="#D97706" />}
                 dense
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Security Password</Text>
+              <Text style={styles.inputLabel}>Security Passcode</Text>
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={isSecure}
                 style={styles.input}
                 mode="outlined"
-                outlineColor="#E2E8F0"
-                activeOutlineColor="#6366F1"
-                textColor="#0F172A"
-                placeholderTextColor="#94A3B8"
-                placeholder="Enter admin password"
-                theme={{ roundness: 8, colors: { background: '#FFF' } }}
-                left={<TextInput.Icon icon="lock-outline" color="#6366F1" />}
-                right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#94A3B8" onPress={() => setIsSecure(!isSecure)} />}
+                outlineColor="#E7E5E4"
+                activeOutlineColor="#D97706"
+                textColor="#1C1917"
+                placeholderTextColor="#A8A29E"
+                placeholder="Enter security passcode"
+                theme={{ roundness: 10, colors: { background: '#FFF' } }}
+                left={<TextInput.Icon icon="lock-outline" color="#D97706" />}
+                right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#A8A29E" onPress={() => setIsSecure(!isSecure)} />}
                 dense
               />
             </View>
@@ -245,14 +266,14 @@ export default function AdminLoginScreen() {
                 <Checkbox.Android
                   status={rememberMe ? 'checked' : 'unchecked'}
                   onPress={() => setRememberMe(!rememberMe)}
-                  color="#6366F1"
-                  uncheckedColor="#CBD5E1"
+                  color="#D97706"
+                  uncheckedColor="#D6D3D1"
                 />
                 <Text style={styles.rememberText}>Keep session active</Text>
               </TouchableOpacity>
               
               <TouchableOpacity>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>Reset Token?</Text>
               </TouchableOpacity>
             </View>
 
@@ -263,14 +284,14 @@ export default function AdminLoginScreen() {
               style={styles.primaryBtn}
               contentStyle={styles.btnContent}
               labelStyle={styles.btnLabel}
-              buttonColor="#4F46E5"
+              buttonColor="#1C1917"
             >
-              {'Log In to Command Center'}
+              {'Authenticate & Enter HQ'}
             </Button>
 
             <View style={styles.secureBadgeRow}>
-              <Icon name="lock-check" size={13} color="#6366F1" />
-              <Text style={styles.secureBadgeText}>256-Bit SSL Encrypted Admin Gateway</Text>
+              <Icon name="lock-check" size={13} color="#D97706" />
+              <Text style={styles.secureBadgeText}>TLS 1.3 Encrypted High-Assurance Gateway</Text>
             </View>
           </Surface>
         </View>
@@ -283,7 +304,7 @@ export default function AdminLoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0B0F19',
     height: '100%',
     maxHeight: '100%',
     overflow: 'hidden',
@@ -294,15 +315,15 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   
-  // Left Banner (Desktop)
+  // Left Banner: Deep Warm Obsidian Telemetry
   leftBanner: {
     width: '50%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0B0F19',
     justifyContent: 'center',
-    paddingHorizontal: '7%',
+    paddingHorizontal: '6%',
     paddingVertical: 20,
     borderRightWidth: 1,
-    borderRightColor: '#E2E8F0',
+    borderRightColor: 'rgba(255,255,255,0.06)',
   },
   bannerContent: {
     maxWidth: 520,
@@ -312,109 +333,236 @@ const styles = StyleSheet.create({
   bannerBrandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 16,
+    gap: 10,
+  },
+  brandIconContainer: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  brandTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   bannerBrandName: {
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#FFFFFF',
+    fontFamily: 'Plus Jakarta Sans',
+    letterSpacing: -0.3,
+  },
+  hqBadge: {
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.3)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  hqBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#F59E0B',
     fontFamily: 'Plus Jakarta Sans',
   },
   bannerSlogan: {
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 32,
+    lineHeight: 38,
     marginBottom: 8,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#F8FAFC',
     letterSpacing: -0.5,
     fontFamily: 'Plus Jakarta Sans',
   },
   bannerSubTitle: {
-    fontSize: 14,
-    color: '#475569',
+    fontSize: 13.5,
+    color: '#94A3B8',
     lineHeight: 20,
-    marginBottom: 24,
+    marginBottom: 20,
     fontFamily: 'Plus Jakarta Sans',
   },
-  highlightsList: {
-    gap: 16,
-  },
-  highlightRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  highlightIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#ECFDF5',
+  
+  // Telemetry Console Widget
+  telemetryCard: {
+    backgroundColor: 'rgba(17,24,39,0.85)',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#D1FAE5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: 16,
+    marginBottom: 16,
   },
-  highlightTitle: {
-    fontSize: 14,
+  telemetryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  livePulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+  },
+  telemetryStatusText: {
+    fontSize: 10.5,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#10B981',
+    letterSpacing: 0.8,
+    fontFamily: 'Plus Jakarta Sans',
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  metricBox: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: '500',
     marginBottom: 2,
     fontFamily: 'Plus Jakarta Sans',
   },
-  highlightText: {
-    fontSize: 12,
+  metricValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: -0.2,
+    fontFamily: 'Plus Jakarta Sans',
+  },
+  metricGrowth: {
+    fontSize: 9,
+    color: '#F59E0B',
+    fontWeight: '600',
+    marginTop: 2,
+    fontFamily: 'Plus Jakarta Sans',
+  },
+  clusterList: {
+    gap: 7,
+  },
+  clusterItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  clusterName: {
+    fontSize: 11.5,
+    color: '#CBD5E1',
+    fontWeight: '600',
+    flex: 1,
+    fontFamily: 'Plus Jakarta Sans',
+  },
+  clusterMetric: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontFamily: 'monospace',
+  },
+  complianceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  complianceText: {
+    fontSize: 11,
     color: '#64748B',
-    lineHeight: 17,
+    fontWeight: '500',
     fontFamily: 'Plus Jakarta Sans',
   },
 
-  // Right Panel
+  // Right Panel: Deep Warm Obsidian Form Card
   rightPanel: {
     width: '50%',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: '5%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#070A12',
   },
   formCard: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0F1523',
     borderRadius: 20,
     paddingHorizontal: 32,
     paddingVertical: 28,
-    elevation: 4,
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.15)',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.4,
+    shadowRadius: 28,
   },
   formLogoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
     gap: 8,
+  },
+  formIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   formLogoText: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#F8FAFC',
+    fontFamily: 'Plus Jakarta Sans',
+  },
+  formHqBadge: {
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.3)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  formHqBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#F59E0B',
     fontFamily: 'Plus Jakarta Sans',
   },
   welcomeTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#F8FAFC',
     textAlign: 'center',
     marginBottom: 4,
     fontFamily: 'Plus Jakarta Sans',
   },
   welcomeSubtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#94A3B8',
     textAlign: 'center',
     marginBottom: 20,
     fontFamily: 'Plus Jakarta Sans',
@@ -423,14 +571,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   inputLabel: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#334155',
+    color: '#E2E8F0',
     marginBottom: 6,
     fontFamily: 'Plus Jakarta Sans',
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#131A2B',
     fontSize: 13.5,
   },
   rowBetween: {
@@ -447,33 +595,33 @@ const styles = StyleSheet.create({
   },
   rememberText: {
     fontSize: 13,
-    color: '#475569',
+    color: '#94A3B8',
     fontFamily: 'Plus Jakarta Sans',
   },
   forgotText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#3B82F6',
+    color: '#F59E0B',
     fontFamily: 'Plus Jakarta Sans',
   },
   primaryBtn: {
     borderRadius: 10,
-    marginTop: 8,
-    marginBottom: 16,
-    backgroundColor: '#4F46E5',
-    elevation: 2,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    marginTop: 6,
+    marginBottom: 14,
+    backgroundColor: '#F59E0B',
+    elevation: 4,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
   },
   btnContent: {
     paddingVertical: 7,
   },
   btnLabel: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#0F172A',
     fontFamily: 'Plus Jakarta Sans',
     letterSpacing: 0.2,
   },
@@ -482,12 +630,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   secureBadgeText: {
     fontSize: 11.5,
     fontWeight: '600',
-    color: '#6366F1',
+    color: '#D97706',
     fontFamily: 'Plus Jakarta Sans',
   },
 });

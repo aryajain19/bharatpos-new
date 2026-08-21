@@ -311,12 +311,12 @@ function AdminLayout() {
         <View style={styles.sidebarInner}>
           {/* Logo Area */}
           <View style={styles.logoContainer}>
-            <View style={[styles.logoIconWrap, { backgroundColor: 'rgba(99,102,241,0.2)' }]}>
-              <Icon name="shield-crown" size={22} color="#818CF8" />
+            <View style={[styles.logoIconWrap, { backgroundColor: 'rgba(245,158,11,0.15)', borderColor: 'rgba(245,158,11,0.25)', borderWidth: 1 }]}>
+              <Icon name="shield-crown" size={22} color="#F59E0B" />
             </View>
             <View style={styles.logoTextWrap}>
               <Text style={styles.logoText}>BharatPOS HQ</Text>
-              <Text style={styles.logoSubText}>Enterprise SaaS Control</Text>
+              <Text style={styles.logoSubText}>Platform Command Center</Text>
             </View>
           </View>
 
@@ -369,15 +369,15 @@ function AdminLayout() {
               onPress={() => setIsSidebarOpen(!isSidebarOpen)}
               activeOpacity={0.7}
             >
-              <Icon name={isSidebarOpen ? "menu-open" : "menu"} size={22} color={isDarkMode ? '#94A3B8' : '#4F46E5'} />
+              <Icon name={isSidebarOpen ? "menu-open" : "menu"} size={22} color={isDarkMode ? '#94A3B8' : '#D97706'} />
             </TouchableOpacity>
             <View style={styles.topBarTitleWrap}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={[styles.topBarTitle, { color: textPrimary }]}>
-                  Enterprise HQ
+                  Platform Command HQ
                 </Text>
-                <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: '#E0E7FF' }}>
-                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#4F46E5', letterSpacing: 0.5 }}>PROD ADMIN</Text>
+                <View style={{ backgroundColor: 'rgba(245,158,11,0.12)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#D97706', letterSpacing: 0.5 }}>PROD ADMIN</Text>
                 </View>
               </View>
               <View style={styles.topBarDateRow}>
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   menuItemActive: {
-    backgroundColor: 'rgba(99,102,241,0.22)',
+    backgroundColor: 'rgba(245,158,11,0.15)',
   },
   activeIndicatorDot: {
     position: 'absolute',
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 24,
     borderRadius: 2,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#F59E0B',
   },
   menuIconWrap: {
     width: 30,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   menuIconWrapActive: {
-    backgroundColor: 'rgba(99,102,241,0.3)',
+    backgroundColor: 'rgba(245,158,11,0.25)',
   },
   menuText: {
     color: 'rgba(255,255,255,0.5)',
