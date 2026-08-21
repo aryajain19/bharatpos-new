@@ -67,168 +67,177 @@ export default function AdminLoginScreen() {
     }
   }
 
-  const FeatureItem = ({ icon, title, desc }: { icon: string, title: string, desc: string }) => (
-    <View style={styles.featureItem}>
-      <View style={styles.featureIconContainer}>
-        <Icon name={icon} size={20} color="#10B981" />
-      </View>
-      <View style={styles.featureTextContainer}>
-        <Text style={styles.featureTitle}>{title}</Text>
-        <Text style={styles.featureDesc}>{desc}</Text>
-      </View>
-    </View>
-  );
-
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.scrollContent}>
+      <View style={styles.splitWrapper}>
         
-        <View style={styles.splitLayout}>
-          
-          {/* Left Panel: Value Proposition & Illustration */}
-          <View style={styles.leftPanel}>
-            <View style={styles.logoRow}>
-               <Icon name="cash-register" size={28} color="#10B981" />
-               <Text style={styles.logoText}>SmartPOS</Text>
+        {/* Left Panel: Value Proposition */}
+        <View style={styles.leftBanner}>
+          <View style={styles.bannerContent}>
+            {/* Brand Logo Row */}
+            <View style={styles.bannerBrandRow}>
+              <Icon name="cash-register" size={28} color="#10B981" />
+              <Text style={styles.bannerBrandName}>SmartPOS</Text>
             </View>
 
-            <View style={styles.leftPanelInner}>
-              <View style={styles.heroContent}>
-                <Text style={styles.heroTitle}>Manage Your Store{'\n'}<Text style={{ color: '#10B981' }}>Anywhere</Text></Text>
-                <Text style={styles.heroSubtitle}>The complete cloud POS & Inventory solution{'\n'}for modern Indian retailers.</Text>
-                
-                <View style={styles.featuresList}>
-                  <FeatureItem 
-                    icon="lightning-bolt-outline" 
-                    title="Lightning Fast Billing" 
-                    desc="Create bills in seconds with barcode scanning and quick product search." 
-                  />
-                  <FeatureItem 
-                    icon="store-outline" 
-                    title="Real-time Inventory" 
-                    desc="Track stock, get low stock alerts and manage multiple locations." 
-                  />
-                  <FeatureItem 
-                    icon="file-document-outline" 
-                    title="GST Invoicing & Reports" 
-                    desc="Generate GST invoices, GSTR reports and downloadable ledgers." 
-                  />
-                  <FeatureItem 
-                    icon="account-group-outline" 
-                    title="Staff & Customer Management" 
-                    desc="Manage staff access, customers, due payments and loyalty points." 
-                  />
+            {/* Slogan */}
+            <Text style={styles.bannerSlogan}>
+              Manage Your Store{"\n"}
+              <Text style={{ color: '#10B981' }}>Anywhere</Text>
+            </Text>
+            <Text style={styles.bannerSubTitle}>
+              The complete cloud POS & Inventory solution for modern Indian retailers.
+            </Text>
+
+            {/* Highlights list */}
+            <View style={styles.highlightsList}>
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="lightning-bolt-outline" size={18} color="#10B981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
+                  <Text style={styles.highlightText}>Create bills in seconds with barcode scanning and quick product search.</Text>
+                </View>
+              </View>
+
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="store-outline" size={18} color="#10B981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>Real-time Inventory</Text>
+                  <Text style={styles.highlightText}>Track stock, get low stock alerts and manage multiple locations.</Text>
+                </View>
+              </View>
+
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="file-document-outline" size={18} color="#10B981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
+                  <Text style={styles.highlightText}>Generate GST invoices, GSTR reports and downloadable ledgers.</Text>
+                </View>
+              </View>
+
+              <View style={styles.highlightRow}>
+                <View style={styles.highlightIconWrap}>
+                  <Icon name="account-group-outline" size={18} color="#10B981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
+                  <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
                 </View>
               </View>
             </View>
           </View>
+        </View>
 
-          {/* Right Panel: Login Form */}
-          <View style={styles.rightPanel}>
-            <Surface style={styles.formCard} elevation={2}>
-              <View style={styles.formLogoRow}>
-                 <Icon name="cash-register" size={24} color="#10B981" />
-                 <Text style={styles.formLogoText}>SmartPOS</Text>
-              </View>
-              
-              <Text style={styles.welcomeTitle}>Welcome Back</Text>
-              <Text style={styles.welcomeSubtitle}>Sign in to access your SmartPOS account</Text>
+        {/* Right Panel: Login Form */}
+        <View style={styles.rightPanel}>
+          <Surface style={styles.formCard} elevation={2}>
+            <View style={styles.formLogoRow}>
+              <Icon name="cash-register" size={24} color="#10B981" />
+              <Text style={styles.formLogoText}>SmartPOS</Text>
+            </View>
+            
+            <Text style={styles.welcomeTitle}>Welcome Back</Text>
+            <Text style={styles.welcomeSubtitle}>Sign in to access your SmartPOS account</Text>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email or Mobile Number</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  style={styles.input}
-                  mode="outlined"
-                  outlineColor="#E2E8F0"
-                  activeOutlineColor="#10B981"
-                  textColor="#1E293B"
-                  placeholderTextColor="#94A3B8"
-                  placeholder="e.g. owner@shop.com"
-                  theme={{ roundness: 8, colors: { background: '#FFF' } }}
-                  left={<TextInput.Icon icon="account-outline" color="#94A3B8" />}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <TextInput
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={isSecure}
-                  style={styles.input}
-                  mode="outlined"
-                  outlineColor="#E2E8F0"
-                  activeOutlineColor="#10B981"
-                  textColor="#1E293B"
-                  placeholderTextColor="#94A3B8"
-                  placeholder="Enter your password"
-                  theme={{ roundness: 8, colors: { background: '#FFF' } }}
-                  left={<TextInput.Icon icon="lock-outline" color="#94A3B8" />}
-                  right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#94A3B8" onPress={() => setIsSecure(!isSecure)} />}
-                />
-              </View>
-
-              <View style={styles.rowBetween}>
-                <TouchableOpacity style={styles.checkboxRow} onPress={() => setRememberMe(!rememberMe)} activeOpacity={0.8}>
-                  <Checkbox.Android
-                    status={rememberMe ? 'checked' : 'unchecked'}
-                    onPress={() => setRememberMe(!rememberMe)}
-                    color="#10B981"
-                    uncheckedColor="#CBD5E1"
-                  />
-                  <Text style={styles.rememberText}>Remember me</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity>
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Button
-                mode="contained"
-                onPress={handleLogin}
-                loading={loading}
-                style={styles.primaryBtn}
-                contentStyle={styles.btnContent}
-                labelStyle={styles.btnLabel}
-                buttonColor="#1E293B"
-              >
-                {'Log In to Dashboard'}
-              </Button>
-
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or continue with</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <Button
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email or Mobile Number</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
                 mode="outlined"
-                onPress={() => Alert.alert('Coming Soon', 'Google Sign-in is not configured yet.')}
-                style={styles.googleBtn}
-                contentStyle={styles.btnContent}
-                labelStyle={styles.googleBtnLabel}
-                icon="google"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#10B981"
                 textColor="#1E293B"
-              >
-                Sign in with Google
-              </Button>
+                placeholderTextColor="#94A3B8"
+                placeholder="e.g. owner@shop.com"
+                theme={{ roundness: 8, colors: { background: '#FFF' } }}
+                left={<TextInput.Icon icon="account-outline" color="#94A3B8" />}
+                dense
+              />
+            </View>
 
-              <View style={styles.createAccountRow}>
-                <Text style={styles.noAccountText}>Don't have an account? </Text>
-                <Link href={'/(auth)/signup' as any} asChild>
-                  <TouchableOpacity>
-                    <Text style={styles.createAccountLink}>Create Account</Text>
-                  </TouchableOpacity>
-                </Link>
-              </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={isSecure}
+                style={styles.input}
+                mode="outlined"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#10B981"
+                textColor="#1E293B"
+                placeholderTextColor="#94A3B8"
+                placeholder="Enter your password"
+                theme={{ roundness: 8, colors: { background: '#FFF' } }}
+                left={<TextInput.Icon icon="lock-outline" color="#94A3B8" />}
+                right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#94A3B8" onPress={() => setIsSecure(!isSecure)} />}
+                dense
+              />
+            </View>
 
-            </Surface>
-          </View>
+            <View style={styles.rowBetween}>
+              <TouchableOpacity style={styles.checkboxRow} onPress={() => setRememberMe(!rememberMe)} activeOpacity={0.8}>
+                <Checkbox.Android
+                  status={rememberMe ? 'checked' : 'unchecked'}
+                  onPress={() => setRememberMe(!rememberMe)}
+                  color="#10B981"
+                  uncheckedColor="#CBD5E1"
+                />
+                <Text style={styles.rememberText}>Remember me</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Button
+              mode="contained"
+              onPress={handleLogin}
+              loading={loading}
+              style={styles.primaryBtn}
+              contentStyle={styles.btnContent}
+              labelStyle={styles.btnLabel}
+              buttonColor="#1E293B"
+            >
+              {'Log In to Dashboard'}
+            </Button>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or continue with</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Button
+              mode="outlined"
+              onPress={() => Alert.alert('Coming Soon', 'Google Sign-in is not configured yet.')}
+              icon={() => <Icon name="google" size={18} color="#EA4335" />}
+              style={styles.googleBtn}
+              contentStyle={styles.btnContent}
+              labelStyle={styles.googleBtnLabel}
+              textColor="#334155"
+            >
+              Sign in with Google
+            </Button>
+
+            <View style={styles.createAccountRow}>
+              <Text style={styles.noAccountText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/signup' as any)}>
+                <Text style={styles.createAccountLink}>Create Account</Text>
+              </TouchableOpacity>
+            </View>
+          </Surface>
         </View>
 
       </View>
@@ -244,124 +253,94 @@ const styles = StyleSheet.create({
     maxHeight: '100%',
     overflow: 'hidden',
   },
-  scrollContent: {
+  splitWrapper: {
     flex: 1,
-    overflow: 'hidden',
+    flexDirection: 'row',
+    height: '100%',
   },
-  splitLayout: {
-    flex: 1,
-    flexDirection: width > 900 ? 'row' : 'column',
-  },
-  leftPanel: {
-    flex: 1,
-    padding: width > 900 ? 40 : 20,
+  
+  // Left Banner (Desktop)
+  leftBanner: {
+    width: '50%',
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
+    paddingHorizontal: '7%',
+    paddingVertical: 20,
+    borderRightWidth: 1,
+    borderRightColor: '#E2E8F0',
   },
-  logoRow: {
+  bannerContent: {
+    maxWidth: 520,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  bannerBrandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'absolute',
-    top: 24,
-    left: width > 900 ? 40 : 20,
-    zIndex: 10,
+    marginBottom: 18,
+    gap: 8,
   },
-  logoText: {
+  bannerBrandName: {
     fontSize: 20,
     fontWeight: '800',
     color: '#0F172A',
-    marginLeft: 8,
+    fontFamily: 'Plus Jakarta Sans',
   },
-  leftPanelInner: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 50,
-  },
-  heroContent: {
-    width: width > 600 ? 480 : '100%',
-    zIndex: 2,
-  },
-  heroTitle: {
-    fontSize: width > 900 ? 36 : 28,
+  bannerSlogan: {
+    fontSize: 34,
+    lineHeight: 40,
+    marginBottom: 8,
     fontWeight: '800',
     color: '#0F172A',
-    lineHeight: width > 900 ? 42 : 34,
-    letterSpacing: -1,
+    letterSpacing: -0.5,
+    fontFamily: 'Plus Jakarta Sans',
   },
-  heroSubtitle: {
+  bannerSubTitle: {
     fontSize: 14,
     color: '#475569',
-    marginTop: 10,
     lineHeight: 20,
+    marginBottom: 24,
+    fontFamily: 'Plus Jakarta Sans',
   },
-  featuresList: {
-    marginTop: 24,
+  highlightsList: {
     gap: 16,
   },
-  featureItem: {
+  highlightRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    gap: 12,
   },
-  featureIconContainer: {
+  highlightIconWrap: {
     width: 36,
     height: 36,
     borderRadius: 8,
     backgroundColor: '#ECFDF5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
     borderWidth: 1,
     borderColor: '#D1FAE5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 1,
   },
-  featureTextContainer: {
-    flex: 1,
-  },
-  featureTitle: {
+  highlightTitle: {
     fontSize: 14,
     fontWeight: '700',
     color: '#1E293B',
     marginBottom: 2,
+    fontFamily: 'Plus Jakarta Sans',
   },
-  featureDesc: {
+  highlightText: {
     fontSize: 12,
     color: '#64748B',
     lineHeight: 17,
+    fontFamily: 'Plus Jakarta Sans',
   },
-  trustBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 24,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#ECFDF5',
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  trustText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#065F46',
-  },
-  illustrationWrapper: {
-    flex: 1,
-    height: 400,
-    marginLeft: 40,
-    zIndex: 1,
-    display: width > 1300 ? 'flex' : 'none',
-  },
-  illustration: {
-    width: '100%',
-    height: '100%',
-  },
+
+  // Right Panel
   rightPanel: {
-    flex: 1,
+    width: '50%',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: width > 900 ? 40 : 20,
+    paddingHorizontal: '5%',
     backgroundColor: '#FFFFFF',
   },
   formCard: {
@@ -369,7 +348,8 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 28,
+    paddingHorizontal: 32,
+    paddingVertical: 28,
     elevation: 4,
     shadowColor: '#64748B',
     shadowOffset: { width: 0, height: 12 },
@@ -381,25 +361,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    gap: 8,
   },
   formLogoText: {
     fontSize: 20,
     fontWeight: '800',
     color: '#0F172A',
-    marginLeft: 8,
+    fontFamily: 'Plus Jakarta Sans',
   },
   welcomeTitle: {
     fontSize: 22,
     fontWeight: '800',
     color: '#0F172A',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
+    fontFamily: 'Plus Jakarta Sans',
   },
   welcomeSubtitle: {
     fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
     marginBottom: 20,
+    fontFamily: 'Plus Jakarta Sans',
   },
   inputGroup: {
     marginBottom: 14,
@@ -409,16 +392,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#334155',
     marginBottom: 6,
+    fontFamily: 'Plus Jakarta Sans',
   },
   input: {
     backgroundColor: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13.5,
   },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
     marginTop: -4,
   },
   checkboxRow: {
@@ -427,30 +411,34 @@ const styles = StyleSheet.create({
     marginLeft: -8,
   },
   rememberText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#475569',
-    marginLeft: 2,
+    fontFamily: 'Plus Jakarta Sans',
   },
   forgotText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#3B82F6', // Blue like the design
+    color: '#3B82F6',
+    fontFamily: 'Plus Jakarta Sans',
   },
   primaryBtn: {
     borderRadius: 8,
+    marginVertical: 6,
+    backgroundColor: '#1E293B',
   },
   btnContent: {
-    height: 48,
+    paddingVertical: 6,
   },
   btnLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    fontFamily: 'Plus Jakarta Sans',
   },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: 14,
   },
   dividerLine: {
     flex: 1,
@@ -458,31 +446,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0',
   },
   dividerText: {
-    marginHorizontal: 16,
-    fontSize: 13,
+    marginHorizontal: 10,
+    fontSize: 11,
+    fontWeight: '500',
     color: '#94A3B8',
+    fontFamily: 'Plus Jakarta Sans',
   },
   googleBtn: {
     borderRadius: 8,
     borderColor: '#E2E8F0',
   },
   googleBtnLabel: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
+    color: '#1E293B',
+    fontFamily: 'Plus Jakarta Sans',
   },
   createAccountRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 18,
   },
   noAccountText: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: 13,
+    color: '#475569',
+    fontFamily: 'Plus Jakarta Sans',
   },
   createAccountLink: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#10B981',
+    fontFamily: 'Plus Jakarta Sans',
   },
 });
