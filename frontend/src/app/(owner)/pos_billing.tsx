@@ -54,6 +54,9 @@ export default function POSBillingScreen() {
   const [weighWeight, setWeighWeight] = useState('1000');
   const [showWeighModal, setShowWeighModal] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const [showSavedModal, setShowSavedModal] = useState(false);
+  const [savedBillData, setSavedBillData] = useState<any>(null);
+  const [savedDraftList, setSavedDraftList] = useState<any[]>([]);
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   
   const [showCameraScanner, setShowCameraScanner] = useState(false);
@@ -419,20 +422,55 @@ export default function POSBillingScreen() {
     setCustGstin('');
   };
 
-  const handlePrintPdf = async () => {
+  const loadDrafts = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const key = `saved_draft_bills_${tenantId || 'default'}`;
+        const stored = window.localStorage.getItem(key);
+        if (stored) {
+          setSavedDraftList(JSON.parse(stored));
+        } else {
+          setSavedDraftList([]);
+        }
+      } catch (e) {
+        setSavedDraftList([]);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadDrafts();
+  }, [tenantId]);
+
+  const handlePrintPdf = async (customBill?: any) => {
+    const items = customBill ? customBill.items : cart;
+    const bNo = customBill ? customBill.billNo : activeBillNo;
+    const bSubtotal = customBill ? customBill.subtotal : subtotal;
+    const bDiscount = customBill ? customBill.discount : discount;
+    const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
+    const bCustName = customBill ? customBill.custName : custName;
+    const bCustPhone = customBill ? customBill.custPhone : custPhone;
+    const bCustGstin = customBill ? customBill.custGstin : custGstin;
+    const bPayMethod = customBill ? customBill.payMethod : payMethod;
+
+    if (!items || items.length === 0) {
+      Alert.alert('Empty Cart', 'Please add products to the cart before printing.');
+      return;
+    }
+
     try {
-      const itemsRows = cart.map(item => `
+      const itemsRows = items.map((item: any) => `
         <tr>
           <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">${item.name}</td>
           <td style="text-align: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">${item.qty}</td>
-          <td style="text-align: right; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">₹${item.price.toFixed(2)}</td>
-          <td style="text-align: right; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">₹${(item.price * item.qty).toFixed(2)}</td>
+          <td style="text-align: right; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">₹${Number(item.price).toFixed(2)}</td>
+          <td style="text-align: right; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">₹${(Number(item.price) * Number(item.qty)).toFixed(2)}</td>
         </tr>
       `).join('');
 
       const gstRows = isGstRegistered ? `
-        <div class="total-row"><span>CGST:</span> <span>₹${gstBreakdown.cgst.toFixed(2)}</span></div>
-        <div class="total-row"><span>SGST:</span> <span>₹${gstBreakdown.sgst.toFixed(2)}</span></div>
+        <div class="total-row"><span>CGST:</span> <span>₹${(Number(bFinalTotal) * 0.025).toFixed(2)}</span></div>
+        <div class="total-row"><span>SGST:</span> <span>₹${(Number(bFinalTotal) * 0.025).toFixed(2)}</span></div>
       ` : '';
 
       const htmlString = `
@@ -441,7 +479,7 @@ export default function POSBillingScreen() {
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Invoice ${activeBillNo}</title>
+            <title>Invoice ${bNo}</title>
             <style>
               body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #334155; background-color: #f8fafc; margin: 0; }
               .receipt-box { max-width: 450px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
@@ -471,12 +509,12 @@ export default function POSBillingScreen() {
                 ${isGstRegistered && gstNum ? `<div class="gstin">GSTIN: ${gstNum}</div>` : ''}
               </div>
               <div class="invoice-details">
-                <div class="details-row"><span>Invoice No:</span> <strong>${activeBillNo}</strong></div>
+                <div class="details-row"><span>Invoice No:</span> <strong>${bNo}</strong></div>
                 <div class="details-row"><span>Date:</span> <span>${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</span></div>
-                <div class="details-row"><span>Customer Name:</span> <span>${custName || 'Walk-in Customer'}</span></div>
-                ${custPhone ? `<div class="details-row"><span>Mobile No:</span> <span>+91 ${custPhone}</span></div>` : ''}
-                ${custGstin ? `<div class="details-row"><span>Customer GSTIN:</span> <span>${custGstin}</span></div>` : ''}
-                <div class="details-row"><span>Payment Mode:</span> <span>${payMethod}</span></div>
+                <div class="details-row"><span>Customer Name:</span> <span>${bCustName || 'Walk-in Customer'}</span></div>
+                ${bCustPhone ? `<div class="details-row"><span>Mobile No:</span> <span>+91 ${bCustPhone}</span></div>` : ''}
+                ${bCustGstin ? `<div class="details-row"><span>Customer GSTIN:</span> <span>${bCustGstin}</span></div>` : ''}
+                <div class="details-row"><span>Payment Mode:</span> <span>${bPayMethod || 'Cash'}</span></div>
               </div>
               <table class="items-table">
                 <thead>
@@ -492,19 +530,33 @@ export default function POSBillingScreen() {
                 </tbody>
               </table>
               <div class="totals-section">
-                <div class="total-row"><span>Subtotal:</span> <span>₹${subtotal.toFixed(2)}</span></div>
-                ${discount > 0 ? `<div class="total-row"><span>Discount:</span> <span>-₹${discount.toFixed(2)}</span></div>` : ''}
+                <div class="total-row"><span>Subtotal:</span> <span>₹${Number(bSubtotal).toFixed(2)}</span></div>
+                ${Number(bDiscount) > 0 ? `<div class="total-row"><span>Discount:</span> <span>-₹${Number(bDiscount).toFixed(2)}</span></div>` : ''}
                 ${gstRows}
-                <div class="total-row grand-total"><span>GRAND TOTAL:</span> <span>₹${finalTotal.toFixed(2)}</span></div>
+                <div class="total-row grand-total"><span>GRAND TOTAL:</span> <span>₹${Number(bFinalTotal).toFixed(2)}</span></div>
               </div>
               <div class="footer">
                 <p>Thank you for shopping with us!</p>
-                <p style="font-size: 9px; color: #cbd5e1; margin-top: 8px;">Powered by BharatPOS POS billing software</p>
+                <p style="font-size: 9px; color: #cbd5e1; margin-top: 8px;">Powered by BharatPOS</p>
               </div>
             </div>
           </body>
         </html>
       `;
+
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(htmlString);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+          }, 300);
+          return;
+        }
+      }
+
       await Print.printAsync({ html: htmlString });
     } catch (e) {
       console.error(e);
@@ -512,45 +564,189 @@ export default function POSBillingScreen() {
     }
   };
 
-  const handleWhatsAppShare = () => {
-    const itemsText = cart.map(item => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
-    const message = `Thank you for shopping at *${storeName}*!\n\n*Invoice No:* ${activeBillNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${payMethod}\n\n*Items:*\n${itemsText}\n\n*Subtotal:* ₹${subtotal.toFixed(2)}\n*Discount:* ₹${discount.toFixed(2)}\n${isGstRegistered ? `*GST:* ₹${gstBreakdown.totalGst.toFixed(2)}\n` : ''}*Grand Total:* *₹${finalTotal.toFixed(2)}*\n\nWe look forward to serving you again!`;
+  const handleWhatsAppShare = (customBill?: any) => {
+    const items = customBill ? customBill.items : cart;
+    const bNo = customBill ? customBill.billNo : activeBillNo;
+    const bSubtotal = customBill ? customBill.subtotal : subtotal;
+    const bDiscount = customBill ? customBill.discount : discount;
+    const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
+    const bPhone = customBill ? customBill.custPhone : custPhone;
+    const bPayMethod = customBill ? customBill.payMethod : payMethod;
+
+    if (!items || items.length === 0) {
+      Alert.alert('Empty Cart', 'Please add items before sharing via WhatsApp.');
+      return;
+    }
+
+    const itemsText = items.map((item: any) => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
+    const message = `Thank you for shopping at *${storeName}*!\n\n*Invoice No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'Cash'}\n\n*Items:*\n${itemsText}\n\n*Subtotal:* ₹${Number(bSubtotal).toFixed(2)}\n${Number(bDiscount) > 0 ? `*Discount:* -₹${Number(bDiscount).toFixed(2)}\n` : ''}*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\nWe look forward to serving you again!`;
     
     let url = '';
-    if (custPhone) {
-      const cleanPhone = custPhone.replace(/[^0-9]/g, '');
+    if (bPhone) {
+      const cleanPhone = bPhone.replace(/[^0-9]/g, '');
       url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
     } else {
       url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     }
 
-    Linking.openURL(url).catch(() => {
-      Alert.alert('Error', 'Make sure WhatsApp is installed on your device to share invoices.');
-    });
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    } else {
+      Linking.openURL(url).catch(() => {
+        Alert.alert('Error', 'Make sure WhatsApp is installed on your device to share invoices.');
+      });
+    }
   };
 
-  const handleSmsShare = () => {
-    const smsMessage = `Thank you for shopping at ${storeName}. Invoice: ${activeBillNo}, Total: ₹${finalTotal.toFixed(2)}.`;
+  const handleSmsShare = (customBill?: any) => {
+    const bNo = customBill ? customBill.billNo : activeBillNo;
+    const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
+    const bPhone = customBill ? customBill.custPhone : custPhone;
+
+    const smsMessage = `Thank you for shopping at ${storeName}. Invoice: ${bNo}, Total: ₹${Number(bFinalTotal).toFixed(2)}.`;
     let url = '';
-    if (custPhone) {
-      const cleanPhone = custPhone.replace(/[^0-9]/g, '');
+    if (bPhone) {
+      const cleanPhone = bPhone.replace(/[^0-9]/g, '');
       url = Platform.OS === 'ios' ? `sms:${cleanPhone}&body=${encodeURIComponent(smsMessage)}` : `sms:${cleanPhone}?body=${encodeURIComponent(smsMessage)}`;
     } else {
       url = Platform.OS === 'ios' ? `sms:&body=${encodeURIComponent(smsMessage)}` : `sms:?body=${encodeURIComponent(smsMessage)}`;
     }
-    Linking.openURL(url).catch(() => {
-      Alert.alert('Error', 'SMS composer could not be opened.');
-    });
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    } else {
+      Linking.openURL(url).catch(() => {
+        Alert.alert('Error', 'SMS composer could not be opened.');
+      });
+    }
   };
 
   const handlePrint = () => {
-    if (cart.length === 0) return;
-    Alert.alert('Thermal Printer', 'Bill sent to local thermal printer.');
+    if (cart.length === 0) {
+      Alert.alert('Empty Cart', 'Please add products to the cart before printing.');
+      return;
+    }
+    handlePrintPdf();
   };
 
-  const handleSave = () => {
-    if (cart.length === 0) return;
-    Alert.alert('Bill Saved', 'Bill saved as draft. You can resume later.');
+  const handleSave = async () => {
+    if (cart.length === 0) {
+      Alert.alert('Empty Cart', 'Please add products to the cart before saving.');
+      return;
+    }
+
+    const draft = {
+      id: 'draft_' + Date.now(),
+      billNo: activeBillNo,
+      date: new Date().toISOString(),
+      displayDate: new Date().toLocaleDateString('en-IN') + ' ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      items: [...cart],
+      subtotal,
+      discount,
+      finalTotal,
+      custName,
+      custPhone,
+      custGstin,
+      payMethod
+    };
+
+    setSavedBillData(draft);
+
+    if (typeof window !== 'undefined') {
+      try {
+        const key = `saved_draft_bills_${tenantId || 'default'}`;
+        const stored = window.localStorage.getItem(key);
+        const list = stored ? JSON.parse(stored) : [];
+        list.unshift(draft);
+        window.localStorage.setItem(key, JSON.stringify(list));
+        setSavedDraftList(list);
+      } catch (e) {}
+    }
+
+    if (isFirebaseConfigured && tenantId) {
+      try {
+        await addDoc(collection(db, 'saved_drafts'), {
+          ...draft,
+          tenant_id: tenantId,
+          created_at: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn('Firebase draft save skipped:', e);
+      }
+    }
+
+    setShowSavedModal(true);
+  };
+
+  const handleHoldBill = async () => {
+    if (cart.length === 0) {
+      Alert.alert('Empty Cart', 'Add items to the cart before putting a bill on hold.');
+      return;
+    }
+
+    const draft = {
+      id: 'draft_' + Date.now(),
+      billNo: activeBillNo,
+      date: new Date().toISOString(),
+      displayDate: new Date().toLocaleDateString('en-IN') + ' ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      items: [...cart],
+      subtotal,
+      discount,
+      finalTotal,
+      custName,
+      custPhone,
+      custGstin,
+      payMethod
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        const key = `saved_draft_bills_${tenantId || 'default'}`;
+        const stored = window.localStorage.getItem(key);
+        const list = stored ? JSON.parse(stored) : [];
+        list.unshift(draft);
+        window.localStorage.setItem(key, JSON.stringify(list));
+        setSavedDraftList(list);
+      } catch (e) {}
+    }
+
+    if (isFirebaseConfigured && tenantId) {
+      try {
+        await addDoc(collection(db, 'saved_drafts'), {
+          ...draft,
+          tenant_id: tenantId,
+          created_at: new Date().toISOString()
+        });
+      } catch (e) {}
+    }
+
+    clearCart();
+    Alert.alert('Bill on Hold', `Bill #${activeBillNo} (₹${finalTotal.toFixed(2)}) has been put on hold. You can resume it anytime from 'Active Session'.`);
+  };
+
+  const handleResumeDraft = (draft: any) => {
+    clearCart();
+    draft.items.forEach((item: any) => {
+      addToCart(item);
+    });
+    setDiscount(draft.discount || 0);
+    setCustName(draft.custName || '');
+    setCustPhone(draft.custPhone || '');
+    setCustGstin(draft.custGstin || '');
+    if (draft.payMethod) setPayMethod(draft.payMethod);
+    setShowSessionModal(false);
+    Alert.alert('Bill Resumed', `Draft bill #${draft.billNo} has been restored to your cart.`);
+  };
+
+  const handleDeleteDraft = (draftId: string) => {
+    if (typeof window !== 'undefined') {
+      try {
+        const key = `saved_draft_bills_${tenantId || 'default'}`;
+        const updated = savedDraftList.filter(d => d.id !== draftId);
+        window.localStorage.setItem(key, JSON.stringify(updated));
+        setSavedDraftList(updated);
+      } catch (e) {}
+    }
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -816,13 +1012,7 @@ export default function POSBillingScreen() {
 
               {/* Action Buttons */}
               <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.holdBtn} onPress={() => {
-                  if (cart.length === 0) {
-                    Alert.alert('Empty Cart', 'Add items to the cart before holding a bill.');
-                  } else {
-                    Alert.alert('Bill Held', 'Current cart put on hold.');
-                  }
-                }} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.holdBtn} onPress={handleHoldBill} activeOpacity={0.7}>
                   <Icon name="pause-circle-outline" size={18} color="#10B981" />
                   <Text style={styles.holdBtnText}>Hold</Text>
                 </TouchableOpacity>
@@ -849,26 +1039,49 @@ export default function POSBillingScreen() {
                 <Text style={styles.payBtnText}>Pay ₹{finalTotal.toFixed(2)}</Text>
               </TouchableOpacity>
 
-              {/* Print & Save */}
-              <View style={styles.secondaryActions}>
-                <TouchableOpacity
-                  style={[styles.secondaryBtn, cart.length === 0 && { opacity: 0.4 }]}
-                  onPress={handlePrint}
-                  disabled={cart.length === 0}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="printer" size={18} color="#10B981" />
-                  <Text style={styles.secondaryBtnText}>Print Bill</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.secondaryBtn, cart.length === 0 && { opacity: 0.4 }]}
-                  onPress={handleSave}
-                  disabled={cart.length === 0}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="content-save-outline" size={18} color="#10B981" />
-                  <Text style={[styles.secondaryBtnText, { color: appTheme.colors.onSurface }]}>Save Bill</Text>
-                </TouchableOpacity>
+              {/* Quick Bill Actions: Print, Save, WhatsApp, SMS */}
+              <View style={{ marginTop: 12, gap: 8 }}>
+                <View style={styles.secondaryActions}>
+                  <TouchableOpacity
+                    style={[styles.secondaryBtn, cart.length === 0 && { opacity: 0.4 }]}
+                    onPress={handlePrint}
+                    disabled={cart.length === 0}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="printer" size={16} color="#10B981" />
+                    <Text style={styles.secondaryBtnText}>Print Bill</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.secondaryBtn, cart.length === 0 && { opacity: 0.4 }]}
+                    onPress={handleSave}
+                    disabled={cart.length === 0}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="content-save-outline" size={16} color="#10B981" />
+                    <Text style={[styles.secondaryBtnText, { color: appTheme.colors.onSurface }]}>Save Bill</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.secondaryActions}>
+                  <TouchableOpacity
+                    style={[styles.secondaryBtn, { backgroundColor: isDarkMode ? 'rgba(46, 125, 50, 0.2)' : '#E8F5E9' }, cart.length === 0 && { opacity: 0.4 }]}
+                    onPress={() => handleWhatsAppShare()}
+                    disabled={cart.length === 0}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="whatsapp" size={16} color="#2E7D32" />
+                    <Text style={[styles.secondaryBtnText, { color: '#2E7D32' }]}>WhatsApp</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.secondaryBtn, { backgroundColor: isDarkMode ? 'rgba(2, 132, 199, 0.2)' : '#E0F2FE' }, cart.length === 0 && { opacity: 0.4 }]}
+                    onPress={() => handleSmsShare()}
+                    disabled={cart.length === 0}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="message-text-outline" size={16} color="#0284C7" />
+                    <Text style={[styles.secondaryBtnText, { color: '#0284C7' }]}>Send SMS</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </Surface>
           </View>
@@ -1044,6 +1257,148 @@ export default function POSBillingScreen() {
             <Button mode="contained" onPress={handleResetCheckout} style={{ borderRadius: 10, flex: 1 }}>
               Start New Bill
             </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* ── 3. BILL SAVED MODAL ─────────────────────────────── */}
+      <Portal>
+        <Dialog visible={showSavedModal} onDismiss={() => setShowSavedModal(false)} style={[styles.dialog, { maxWidth: 480, alignSelf: 'center', width: '90%' }]}>
+          <Dialog.Title style={[styles.dialogTitle, { color: '#10B981' }]}>
+            <Icon name="check-decagram" size={24} color="#10B981" style={{ marginRight: 8 }} />
+            Bill Saved Successfully
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text style={{ fontSize: 13, color: appTheme.colors.onSurface, marginBottom: 12 }}>
+              Invoice <Text style={{ fontWeight: '700' }}>#{savedBillData?.billNo || activeBillNo}</Text> has been saved to your drafts. You can print, download PDF, share via WhatsApp/SMS, or resume editing at any time.
+            </Text>
+
+            <Surface style={{ padding: 14, borderRadius: 10, backgroundColor: appTheme.colors.surface, marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 12, color: '#64748B' }}>Total Amount:</Text>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: appTheme.colors.onSurface }}>₹{Number(savedBillData?.finalTotal || finalTotal).toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 12, color: '#64748B' }}>Items Count:</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: appTheme.colors.onSurface }}>{(savedBillData?.items || cart).length} items</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 12, color: '#64748B' }}>Billed To:</Text>
+                <Text style={{ fontSize: 12, color: appTheme.colors.onSurface }}>{savedBillData?.custName || custName || 'Walk-in Customer'}</Text>
+              </View>
+            </Surface>
+
+            <Text style={[styles.dialogLabel, { marginBottom: 10 }]}>Instant Transfer & Print Options</Text>
+            <View style={styles.sharingGrid}>
+              <TouchableOpacity
+                style={styles.shareOption}
+                onPress={() => handleWhatsAppShare(savedBillData)}
+              >
+                <View style={[styles.shareIcon, { backgroundColor: '#E8F5E9' }]}>
+                  <Icon name="whatsapp" size={24} color="#2E7D32" />
+                </View>
+                <Text style={styles.shareText}>WhatsApp</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.shareOption}
+                onPress={() => handleSmsShare(savedBillData)}
+              >
+                <View style={[styles.shareIcon, { backgroundColor: '#E0F2FE' }]}>
+                  <Icon name="message-text" size={24} color="#0284C7" />
+                </View>
+                <Text style={styles.shareText}>Direct SMS</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.shareOption}
+                onPress={() => handlePrintPdf(savedBillData)}
+              >
+                <View style={[styles.shareIcon, { backgroundColor: '#FCE4EC' }]}>
+                  <Icon name="printer-pos" size={24} color="#D81B60" />
+                </View>
+                <Text style={styles.shareText}>Print / PDF</Text>
+              </TouchableOpacity>
+            </View>
+          </Dialog.Content>
+          <Dialog.Actions style={styles.dialogActions}>
+            <Button onPress={() => setShowSavedModal(false)} textColor="#64748B">
+              Keep Editing
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => {
+                clearCart();
+                setShowSavedModal(false);
+              }}
+              style={{ borderRadius: 8, backgroundColor: '#10B981' }}
+            >
+              Start New Bill
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* ── 4. SAVED DRAFTS & HELD BILLS DIALOG ─────────────── */}
+      <Portal>
+        <Dialog visible={showSessionModal} onDismiss={() => setShowSessionModal(false)} style={[styles.dialog, { maxWidth: 560, alignSelf: 'center', width: '92%' }]}>
+          <Dialog.Title style={[styles.dialogTitle, { color: appTheme.colors.onSurface }]}>
+            <Icon name="history" size={24} color="#5E35B1" style={{ marginRight: 8 }} />
+            Saved Drafts & Held Bills ({savedDraftList.length})
+          </Dialog.Title>
+          <Dialog.Content style={{ maxHeight: 420 }}>
+            {savedDraftList.length === 0 ? (
+              <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 32, gap: 8 }}>
+                <Icon name="file-document-outline" size={44} color="#9E9E9E" />
+                <Text style={{ fontSize: 14, fontWeight: '700', color: appTheme.colors.onSurface }}>No Saved Bills</Text>
+                <Text style={{ fontSize: 12, color: '#757575', textAlign: 'center' }}>
+                  Click 'Save Bill' or 'Hold' on the billing screen to store drafts here.
+                </Text>
+              </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {savedDraftList.map((draft) => (
+                  <Surface key={draft.id} style={{ padding: 12, borderRadius: 10, marginBottom: 10, backgroundColor: appTheme.colors.surface, borderWidth: 1, borderColor: '#E2E8F0' }} elevation={0}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <View>
+                        <Text style={{ fontSize: 14, fontWeight: '800', color: appTheme.colors.onSurface }}>Invoice #{draft.billNo}</Text>
+                        <Text style={{ fontSize: 11, color: '#64748B' }}>{draft.displayDate || draft.date}</Text>
+                        <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                          {draft.custName ? `Customer: ${draft.custName}` : 'Walk-in'} {draft.custPhone ? `(+91 ${draft.custPhone})` : ''}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={{ fontSize: 15, fontWeight: '800', color: '#10B981' }}>₹{Number(draft.finalTotal).toFixed(2)}</Text>
+                        <Text style={{ fontSize: 11, color: '#64748B' }}>{draft.items?.length || 0} item(s)</Text>
+                      </View>
+                    </View>
+
+                    <Divider style={{ marginVertical: 8, backgroundColor: '#E2E8F0' }} />
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <Button
+                        mode="contained-tonal"
+                        compact
+                        icon="refresh"
+                        onPress={() => handleResumeDraft(draft)}
+                        style={{ borderRadius: 6 }}
+                      >
+                        Resume
+                      </Button>
+                      <View style={{ flexDirection: 'row', gap: 4 }}>
+                        <IconButton icon="printer" size={18} iconColor="#10B981" onPress={() => handlePrintPdf(draft)} />
+                        <IconButton icon="whatsapp" size={18} iconColor="#2E7D32" onPress={() => handleWhatsAppShare(draft)} />
+                        <IconButton icon="message-text" size={18} iconColor="#0284C7" onPress={() => handleSmsShare(draft)} />
+                        <IconButton icon="delete-outline" size={18} iconColor="#EF4444" onPress={() => handleDeleteDraft(draft.id)} />
+                      </View>
+                    </View>
+                  </Surface>
+                ))}
+              </ScrollView>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions style={styles.dialogActions}>
+            <Button onPress={() => setShowSessionModal(false)}>Close</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
