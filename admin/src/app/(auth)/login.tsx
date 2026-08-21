@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert, Dimensions, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text, Surface, Checkbox } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -81,7 +81,7 @@ export default function AdminLoginScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.scrollContent}>
         
         <View style={styles.splitLayout}>
           
@@ -236,7 +236,7 @@ export default function AdminLoginScreen() {
           </View>
         </View>
 
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -244,10 +244,14 @@ export default function AdminLoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC', // Light background matching image
+    backgroundColor: '#FFFFFF',
+    height: '100%',
+    maxHeight: '100%',
+    overflow: 'hidden',
   },
   scrollContent: {
-    flexGrow: 1,
+    flex: 1,
+    overflow: 'hidden',
   },
   splitLayout: {
     flex: 1,
@@ -255,7 +259,7 @@ const styles = StyleSheet.create({
   },
   leftPanel: {
     flex: 1,
-    padding: width > 900 ? 60 : 30,
+    padding: width > 900 ? 40 : 20,
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     position: 'relative',
@@ -265,12 +269,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     position: 'absolute',
-    top: 40,
-    left: width > 900 ? 60 : 30,
+    top: 24,
+    left: width > 900 ? 40 : 20,
     zIndex: 10,
   },
   logoText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#0F172A',
     marginLeft: 8,
@@ -280,41 +284,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 80,
+    marginTop: 50,
   },
   heroContent: {
     width: width > 600 ? 480 : '100%',
     zIndex: 2,
   },
   heroTitle: {
-    fontSize: width > 900 ? 46 : 36,
+    fontSize: width > 900 ? 36 : 28,
     fontWeight: '800',
     color: '#0F172A',
-    lineHeight: width > 900 ? 54 : 44,
+    lineHeight: width > 900 ? 42 : 34,
     letterSpacing: -1,
   },
   heroSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#475569',
-    marginTop: 16,
-    lineHeight: 24,
+    marginTop: 10,
+    lineHeight: 20,
   },
   featuresList: {
-    marginTop: 40,
-    gap: 24,
+    marginTop: 24,
+    gap: 16,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   featureIconContainer: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 8,
-    backgroundColor: '#ECFDF5', // Light emerald
+    backgroundColor: '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
     borderWidth: 1,
     borderColor: '#D1FAE5',
   },
@@ -322,28 +326,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: '#1E293B',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   featureDesc: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#64748B',
-    lineHeight: 20,
+    lineHeight: 17,
   },
   trustBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 48,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    marginTop: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     backgroundColor: '#ECFDF5',
     borderRadius: 8,
     alignSelf: 'flex-start',
   },
   trustText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#065F46',
   },
@@ -367,10 +371,10 @@ const styles = StyleSheet.create({
   },
   formCard: {
     width: '100%',
-    maxWidth: 440,
+    maxWidth: 420,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 40,
+    borderRadius: 20,
+    padding: 28,
     elevation: 4,
     shadowColor: '#64748B',
     shadowOffset: { width: 0, height: 12 },
@@ -381,7 +385,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   formLogoText: {
     fontSize: 20,
@@ -390,26 +394,26 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   welcomeTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: '#0F172A',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   welcomeSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    marginBottom: 32,
-  },
-  inputGroup: {
     marginBottom: 20,
   },
+  inputGroup: {
+    marginBottom: 14,
+  },
   inputLabel: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
     color: '#334155',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   input: {
     backgroundColor: '#FFFFFF',
@@ -419,7 +423,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 20,
     marginTop: -4,
   },
   checkboxRow: {
