@@ -83,6 +83,25 @@ export default function LoginScreen() {
     }
   }
 
+  async function handleResetPassword() {
+    if (!mobile || !mobile.trim() || !mobile.includes('@')) {
+      setErrorMsg('Please enter your email address in the field above, then click Forgot Password.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(auth, mobile.trim());
+      setErrorMsg('');
+      alert(`Password reset link dispatched to ${mobile.trim()}. Please check your email inbox and spam folder.`);
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Failed to send recovery email.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleGoogleLogin() {
     setLoading(true);
     setLoadingMessage('Signing in with Google...');
@@ -201,7 +220,7 @@ export default function LoginScreen() {
             />
             <Text style={styles.rememberMeText}>Remember me</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert('Launching password reset helper...')}>
+          <TouchableOpacity onPress={handleResetPassword} activeOpacity={0.7}>
             <Text style={styles.forgotPassLink}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>

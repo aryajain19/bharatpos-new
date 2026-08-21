@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert, Dimensions, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text, Surface, Checkbox } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc, setDoc } from '../../lib/firestore_adapter';
 import { router, Link } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -15,6 +15,29 @@ export default function AdminLoginScreen() {
   const [loading, setLoading] = useState(false);
   const [isSecure, setIsSecure] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
+
+  async function handleResetPassword() {
+    if (!email || !email.trim() || !email.includes('@')) {
+      Alert.alert(
+        'Email Required',
+        'Please enter your admin email in the email field above, then click Forgot Password to receive your reset link.'
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await sendPasswordResetEmail(auth, email.trim());
+      Alert.alert(
+        'Recovery Email Dispatched',
+        `A password reset link has been sent to ${email.trim()}. Please check your email inbox and spam folder.`
+      );
+    } catch (error: any) {
+      Alert.alert('Reset Request Failed', error.message || 'Failed to send recovery email.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleLogin() {
     setLoading(true);
@@ -185,8 +208,8 @@ export default function AdminLoginScreen() {
               <Text style={styles.rememberText}>Keep session active</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity>
-              <Text style={styles.forgotText}>Reset Token?</Text>
+            <TouchableOpacity onPress={handleResetPassword} activeOpacity={0.7}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
 
