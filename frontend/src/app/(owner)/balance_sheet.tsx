@@ -44,8 +44,12 @@ export default function BalanceSheetScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchFinancialData();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchFinancialData();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

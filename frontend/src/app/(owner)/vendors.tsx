@@ -71,8 +71,12 @@ export default function VendorManagementScreen() {
   const isLimitReached = workerCount >= workerLimit;
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchVendorsAndLogs();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchVendorsAndLogs();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId, activeTab]);
 

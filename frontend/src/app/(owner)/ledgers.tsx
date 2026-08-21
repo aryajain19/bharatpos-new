@@ -153,8 +153,12 @@ export default function LedgersScreen() {
   };
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchTransactions();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchTransactions();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

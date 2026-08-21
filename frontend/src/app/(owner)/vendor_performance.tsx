@@ -43,8 +43,12 @@ export default function VendorPerformanceScreen() {
   };
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchSales();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchSales();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

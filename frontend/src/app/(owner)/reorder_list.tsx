@@ -23,12 +23,20 @@ export default function ReorderProductsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchReorderItems();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchReorderItems();
+      } else {
+        setLoading(false);
+      }
     }
     const unsubscribe = navigation.addListener('focus', () => {
-      if (!authLoading && tenantId) {
-        fetchReorderItems();
+      if (!authLoading) {
+        if (tenantId) {
+          fetchReorderItems();
+        } else {
+          setLoading(false);
+        }
       }
     });
     return unsubscribe;

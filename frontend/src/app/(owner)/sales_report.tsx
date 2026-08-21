@@ -25,8 +25,12 @@ export default function SalesReportScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchSalesData();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchSalesData();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

@@ -42,8 +42,12 @@ export default function ReportsAnalyticsScreen() {
       const name = window.localStorage.getItem('storeName');
       if (name) setStoreName(name);
     }
-    if (!authLoading && tenantId) {
-      fetchReportData();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchReportData();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

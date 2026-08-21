@@ -99,8 +99,12 @@ export default function JournalEntryScreen() {
   };
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      loadTransactions();
+    if (!authLoading) {
+      if (tenantId) {
+        loadTransactions();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

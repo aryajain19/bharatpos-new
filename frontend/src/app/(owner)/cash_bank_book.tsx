@@ -73,8 +73,12 @@ export default function CashBankBookScreen() {
   };
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchTransactions();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchTransactions();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

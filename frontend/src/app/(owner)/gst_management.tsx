@@ -46,9 +46,13 @@ export default function GSTManagementScreen() {
   const [generatingEway, setGeneratingEway] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      loadSettings();
-      fetchSales();
+    if (!authLoading) {
+      if (tenantId) {
+        loadSettings();
+        fetchSales();
+      } else {
+        setLoading(false);
+      }
     }
   }, [authLoading, tenantId]);
 

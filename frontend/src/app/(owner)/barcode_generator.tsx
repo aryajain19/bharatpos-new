@@ -248,19 +248,26 @@ export default function BarcodeGeneratorScreen() {
     return unsubscribe;
   }, [navigation]);
 
+  const getQueueKey = () => `barcode_print_queue_${tenantId || 'default'}`;
+
   const loadPrintQueue = () => {
     if (typeof window !== 'undefined') {
-      const q = window.localStorage.getItem('barcode_print_queue');
+      const key = getQueueKey();
+      const q = window.localStorage.getItem(key);
       if (q) {
-        setPrintQueue(JSON.parse(q));
+        try {
+          setPrintQueue(JSON.parse(q));
+          return;
+        } catch (e) {}
       }
+      setPrintQueue([]);
     }
   };
 
   const savePrintQueue = (q: any[]) => {
     setPrintQueue(q);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('barcode_print_queue', JSON.stringify(q));
+      window.localStorage.setItem(getQueueKey(), JSON.stringify(q));
     }
     setPreviewPageIdx(0);
   };

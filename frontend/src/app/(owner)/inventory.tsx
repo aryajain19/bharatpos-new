@@ -50,12 +50,20 @@ export default function InventoryManagementScreen() {
   const [savingTransfer, setSavingTransfer] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && tenantId) {
-      fetchData();
+    if (!authLoading) {
+      if (tenantId) {
+        fetchData();
+      } else {
+        setLoading(false);
+      }
     }
     const unsubscribe = navigation.addListener('focus', () => {
-      if (!authLoading && tenantId) {
-        fetchData();
+      if (!authLoading) {
+        if (tenantId) {
+          fetchData();
+        } else {
+          setLoading(false);
+        }
       }
     });
     return unsubscribe;
