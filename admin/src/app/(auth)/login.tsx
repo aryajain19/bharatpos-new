@@ -126,82 +126,82 @@ export default function AdminLoginScreen() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.splitWrapper}>
         
-        {/* Left Panel: Value Proposition */}
+        {/* Left Panel: Enterprise Admin Value Proposition */}
         <View style={styles.leftBanner}>
           <View style={styles.bannerContent}>
             {/* Brand Logo Row */}
             <View style={styles.bannerBrandRow}>
-              <Icon name="cash-register" size={28} color="#10B981" />
-              <Text style={styles.bannerBrandName}>SmartPOS</Text>
+              <Icon name="shield-crown" size={30} color="#6366F1" />
+              <Text style={styles.bannerBrandName}>BharatPOS HQ</Text>
             </View>
 
             {/* Slogan */}
             <Text style={styles.bannerSlogan}>
-              Manage Your Store{"\n"}
-              <Text style={{ color: '#10B981' }}>Anywhere</Text>
+              Enterprise SaaS{"\n"}
+              <Text style={{ color: '#6366F1' }}>Command Center</Text>
             </Text>
             <Text style={styles.bannerSubTitle}>
-              The complete cloud POS & Inventory solution for modern Indian retailers.
+              Global multi-tenant governance, billing orchestration, telemetry and infrastructure controls.
             </Text>
 
             {/* Highlights list */}
             <View style={styles.highlightsList}>
               <View style={styles.highlightRow}>
-                <View style={styles.highlightIconWrap}>
-                  <Icon name="lightning-bolt-outline" size={18} color="#10B981" />
+                <View style={[styles.highlightIconWrap, { backgroundColor: '#EEF2FF', borderColor: '#E0E7FF' }]}>
+                  <Icon name="domain" size={18} color="#6366F1" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
-                  <Text style={styles.highlightText}>Create bills in seconds with barcode scanning and quick product search.</Text>
+                  <Text style={styles.highlightTitle}>Multi-Tenant Governance</Text>
+                  <Text style={styles.highlightText}>Manage store instances, provision organizations, and audit access permissions.</Text>
                 </View>
               </View>
 
               <View style={styles.highlightRow}>
-                <View style={styles.highlightIconWrap}>
-                  <Icon name="store-outline" size={18} color="#10B981" />
+                <View style={[styles.highlightIconWrap, { backgroundColor: '#F5F3FF', borderColor: '#EDE9FE' }]}>
+                  <Icon name="chart-line" size={18} color="#8B5CF6" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>Real-time Inventory</Text>
-                  <Text style={styles.highlightText}>Track stock, get low stock alerts and manage multiple locations.</Text>
+                  <Text style={styles.highlightTitle}>Subscription & MRR Engine</Text>
+                  <Text style={styles.highlightText}>Track recurring revenue, license activations, and gateway settlements.</Text>
                 </View>
               </View>
 
               <View style={styles.highlightRow}>
-                <View style={styles.highlightIconWrap}>
-                  <Icon name="file-document-outline" size={18} color="#10B981" />
+                <View style={[styles.highlightIconWrap, { backgroundColor: '#ECFEFF', borderColor: '#CFFAFE' }]}>
+                  <Icon name="server-network" size={18} color="#06B6D4" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
-                  <Text style={styles.highlightText}>Generate GST invoices, GSTR reports and downloadable ledgers.</Text>
+                  <Text style={styles.highlightTitle}>System Telemetry & Health</Text>
+                  <Text style={styles.highlightText}>Monitor database replication, API latency, uptime and traffic loads.</Text>
                 </View>
               </View>
 
               <View style={styles.highlightRow}>
-                <View style={styles.highlightIconWrap}>
-                  <Icon name="account-group-outline" size={18} color="#10B981" />
+                <View style={[styles.highlightIconWrap, { backgroundColor: '#FFF1F2', borderColor: '#FFE4E6' }]}>
+                  <Icon name="shield-check" size={18} color="#F43F5E" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
-                  <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
+                  <Text style={styles.highlightTitle}>Security & Broadcast Governance</Text>
+                  <Text style={styles.highlightText}>Enforce 2FA policies, inspect audit logs, and dispatch global alerts.</Text>
                 </View>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Right Panel: Login Form */}
+        {/* Right Panel: Admin Login Form */}
         <View style={styles.rightPanel}>
           <Surface style={styles.formCard} elevation={2}>
             <View style={styles.formLogoRow}>
-              <Icon name="cash-register" size={24} color="#10B981" />
-              <Text style={styles.formLogoText}>SmartPOS</Text>
+              <Icon name="shield-crown" size={26} color="#6366F1" />
+              <Text style={styles.formLogoText}>BharatPOS HQ</Text>
             </View>
             
-            <Text style={styles.welcomeTitle}>Welcome Back</Text>
-            <Text style={styles.welcomeSubtitle}>Sign in to access your SmartPOS account</Text>
+            <Text style={styles.welcomeTitle}>Admin Portal Login</Text>
+            <Text style={styles.welcomeSubtitle}>Authorized access for platform administrators</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email or Mobile Number</Text>
+              <Text style={styles.inputLabel}>Admin Email or ID</Text>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -210,18 +210,18 @@ export default function AdminLoginScreen() {
                 style={styles.input}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#10B981"
-                textColor="#1E293B"
+                activeOutlineColor="#6366F1"
+                textColor="#0F172A"
                 placeholderTextColor="#94A3B8"
-                placeholder="e.g. owner@shop.com"
+                placeholder="e.g. admin@bharatpos.com"
                 theme={{ roundness: 8, colors: { background: '#FFF' } }}
-                left={<TextInput.Icon icon="account-outline" color="#94A3B8" />}
+                left={<TextInput.Icon icon="account-shield-outline" color="#6366F1" />}
                 dense
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Password</Text>
+              <Text style={styles.inputLabel}>Security Password</Text>
               <TextInput
                 value={password}
                 onChangeText={setPassword}
@@ -229,12 +229,12 @@ export default function AdminLoginScreen() {
                 style={styles.input}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#10B981"
-                textColor="#1E293B"
+                activeOutlineColor="#6366F1"
+                textColor="#0F172A"
                 placeholderTextColor="#94A3B8"
-                placeholder="Enter your password"
+                placeholder="Enter admin password"
                 theme={{ roundness: 8, colors: { background: '#FFF' } }}
-                left={<TextInput.Icon icon="lock-outline" color="#94A3B8" />}
+                left={<TextInput.Icon icon="lock-outline" color="#6366F1" />}
                 right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#94A3B8" onPress={() => setIsSecure(!isSecure)} />}
                 dense
               />
@@ -245,10 +245,10 @@ export default function AdminLoginScreen() {
                 <Checkbox.Android
                   status={rememberMe ? 'checked' : 'unchecked'}
                   onPress={() => setRememberMe(!rememberMe)}
-                  color="#10B981"
+                  color="#6366F1"
                   uncheckedColor="#CBD5E1"
                 />
-                <Text style={styles.rememberText}>Remember me</Text>
+                <Text style={styles.rememberText}>Keep session active</Text>
               </TouchableOpacity>
               
               <TouchableOpacity>
@@ -263,10 +263,15 @@ export default function AdminLoginScreen() {
               style={styles.primaryBtn}
               contentStyle={styles.btnContent}
               labelStyle={styles.btnLabel}
-              buttonColor="#1E293B"
+              buttonColor="#4F46E5"
             >
-              {'Log In to Dashboard'}
+              {'Log In to Command Center'}
             </Button>
+
+            <View style={styles.secureBadgeRow}>
+              <Icon name="lock-check" size={13} color="#6366F1" />
+              <Text style={styles.secureBadgeText}>256-Bit SSL Encrypted Admin Gateway</Text>
+            </View>
           </Surface>
         </View>
 
@@ -452,61 +457,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Plus Jakarta Sans',
   },
   primaryBtn: {
-    borderRadius: 8,
-    marginVertical: 6,
-    backgroundColor: '#1E293B',
+    borderRadius: 10,
+    marginTop: 8,
+    marginBottom: 16,
+    backgroundColor: '#4F46E5',
+    elevation: 2,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
   btnContent: {
-    paddingVertical: 6,
+    paddingVertical: 7,
   },
   btnLabel: {
     fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
     fontFamily: 'Plus Jakarta Sans',
+    letterSpacing: 0.2,
   },
-  dividerRow: {
+  secureBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 14,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E2E8F0',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#94A3B8',
-    fontFamily: 'Plus Jakarta Sans',
-  },
-  googleBtn: {
-    borderRadius: 8,
-    borderColor: '#E2E8F0',
-  },
-  googleBtnLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1E293B',
-    fontFamily: 'Plus Jakarta Sans',
-  },
-  createAccountRow: {
-    flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 18,
+    gap: 6,
+    paddingVertical: 6,
   },
-  noAccountText: {
-    fontSize: 13,
-    color: '#475569',
-    fontFamily: 'Plus Jakarta Sans',
-  },
-  createAccountLink: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#10B981',
+  secureBadgeText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#6366F1',
     fontFamily: 'Plus Jakarta Sans',
   },
 });

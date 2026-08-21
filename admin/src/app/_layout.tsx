@@ -311,9 +311,12 @@ function AdminLayout() {
         <View style={styles.sidebarInner}>
           {/* Logo Area */}
           <View style={styles.logoContainer}>
+            <View style={[styles.logoIconWrap, { backgroundColor: 'rgba(99,102,241,0.2)' }]}>
+              <Icon name="shield-crown" size={22} color="#818CF8" />
+            </View>
             <View style={styles.logoTextWrap}>
-              <Text style={styles.logoText}>SmartPOS</Text>
-              <Text style={styles.logoSubText}>Admin Control</Text>
+              <Text style={styles.logoText}>BharatPOS HQ</Text>
+              <Text style={styles.logoSubText}>Enterprise SaaS Control</Text>
             </View>
           </View>
 
@@ -366,12 +369,17 @@ function AdminLayout() {
               onPress={() => setIsSidebarOpen(!isSidebarOpen)}
               activeOpacity={0.7}
             >
-              <Icon name={isSidebarOpen ? "menu-open" : "menu"} size={22} color={isDarkMode ? '#94A3B8' : '#2563EB'} />
+              <Icon name={isSidebarOpen ? "menu-open" : "menu"} size={22} color={isDarkMode ? '#94A3B8' : '#4F46E5'} />
             </TouchableOpacity>
             <View style={styles.topBarTitleWrap}>
-              <Text style={[styles.topBarTitle, { color: textPrimary }]}>
-                Super Admin Control
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={[styles.topBarTitle, { color: textPrimary }]}>
+                  Enterprise HQ
+                </Text>
+                <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: '#E0E7FF' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#4F46E5', letterSpacing: 0.5 }}>PROD ADMIN</Text>
+                </View>
+              </View>
               <View style={styles.topBarDateRow}>
                 <Icon name="clock-outline" size={12} color={isDarkMode ? '#64748B' : '#94A3B8'} />
                 <Text style={[styles.topBarDate, { color: isDarkMode ? '#64748B' : '#94A3B8' }]}>
@@ -604,7 +612,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   menuItemActive: {
-    backgroundColor: 'rgba(37,99,235,0.25)',
+    backgroundColor: 'rgba(99,102,241,0.22)',
   },
   activeIndicatorDot: {
     position: 'absolute',
@@ -612,7 +620,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 24,
     borderRadius: 2,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#6366F1',
   },
   menuIconWrap: {
     width: 30,
@@ -624,7 +632,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   menuIconWrapActive: {
-    backgroundColor: 'rgba(37,99,235,0.3)',
+    backgroundColor: 'rgba(99,102,241,0.3)',
   },
   menuText: {
     color: 'rgba(255,255,255,0.5)',
