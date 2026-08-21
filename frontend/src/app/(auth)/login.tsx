@@ -3,7 +3,7 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Touchable
 import { Text, useTheme, Button, Surface, TextInput, Checkbox } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from '../../lib/firestore_adapter';
+import { doc, getDoc, setDoc } from '../../lib/firestore_adapter';
 import { useAppTheme } from '../../providers/ThemeProvider';
 import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -78,6 +78,66 @@ export default function LoginScreen() {
         errorMessage = 'No account found with this email or mobile number.';
       }
       setErrorMsg(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setLoading(true);
+    setLoadingMessage('Signing in with Google...');
+    setErrorMsg('');
+
+    if (!isFirebaseConfigured) {
+      setErrorMsg('Firebase is not configured. Please contact administrator.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userSnap = await getDoc(userDocRef);
+
+      if (userSnap && userSnap.exists && userSnap.exists()) {
+        const data = userSnap.data();
+        if (data.role === 'admin') {
+          setErrorMsg('Access Denied: Super Admins must log in through the Admin Portal.');
+          await auth.signOut();
+        } else if (data.role === 'owner') {
+          router.replace('/(owner)' as any);
+        } else {
+          router.replace('/(vendor)/(tabs)' as any);
+        }
+      } else {
+        // Create new owner profile
+        const newOwnerData = {
+          email: firebaseUser.email || '',
+          owner_name: firebaseUser.displayName || 'Store Owner',
+          role: 'owner',
+          store_name: 'My Retail Store',
+          created_at: new Date().toISOString(),
+          subscription_plan: 'free_trial',
+          subscription_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          permissions: {
+            pos_access: true,
+            stock_management: true,
+            barcode_generation: true,
+            reporting: true
+          }
+        };
+        await setDoc(userDocRef, newOwnerData);
+        router.replace('/(owner)' as any);
+      }
+    } catch (err: any) {
+      console.error('Google Sign-In Error:', err);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setErrorMsg(err.message || 'Google sign-in was cancelled or failed.');
+      }
     } finally {
       setLoading(false);
     }
@@ -174,7 +234,7 @@ export default function LoginScreen() {
           icon={() => <Icon name="google" size={18} color="#EA4335" />}
           style={styles.googleButton}
           labelStyle={styles.googleBtnLabel}
-          onPress={() => alert('Starting Google OAuth sign-in...')}
+          onPress={handleGoogleLogin}
         >
           Sign in with Google
         </Button>

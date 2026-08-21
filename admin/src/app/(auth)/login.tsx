@@ -67,6 +67,61 @@ export default function AdminLoginScreen() {
     }
   }
 
+  async function handleGoogleLogin() {
+    setLoading(true);
+
+    if (!isFirebaseConfigured) {
+      setTimeout(() => {
+        if (typeof window !== 'undefined') window.localStorage.setItem('adminBypass', 'true');
+        setLoading(false);
+        router.replace('/' as any);
+      }, 400);
+      return;
+    }
+
+    try {
+      const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const userCredential = result.user;
+
+      const userDocRef = doc(db, 'users', userCredential.uid);
+      const userSnap = await getDoc(userDocRef);
+
+      if (userCredential.email === 'aryajain1906@gmail.com') {
+        const adminData = userSnap.exists() ? userSnap.data() : {};
+        if (adminData.role !== 'admin') {
+          adminData.role = 'admin';
+          adminData.email = userCredential.email;
+          adminData.owner_name = userCredential.displayName || 'Arya';
+          adminData.created_at = adminData.created_at || new Date().toISOString();
+          await setDoc(userDocRef, adminData);
+        }
+        router.replace('/' as any);
+        return;
+      }
+
+      if (userSnap.exists()) {
+        const role = userSnap.data().role;
+        if (role === 'admin' || role === 'owner') {
+          router.replace('/' as any);
+        } else {
+          Alert.alert('Access Denied', 'You do not have admin privileges.');
+          await auth.signOut();
+        }
+      } else {
+        Alert.alert('Access Denied', 'Admin profile not found for this Google account.');
+        await auth.signOut();
+      }
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        Alert.alert('Google Login Failed', error.message || 'Google sign-in failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.splitWrapper}>
@@ -221,7 +276,7 @@ export default function AdminLoginScreen() {
 
             <Button
               mode="outlined"
-              onPress={() => Alert.alert('Coming Soon', 'Google Sign-in is not configured yet.')}
+              onPress={handleGoogleLogin}
               icon={() => <Icon name="google" size={18} color="#EA4335" />}
               style={styles.googleBtn}
               contentStyle={styles.btnContent}
