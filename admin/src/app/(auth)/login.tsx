@@ -267,24 +267,6 @@ export default function AdminLoginScreen() {
             >
               {'Log In to Dashboard'}
             </Button>
-
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <Button
-              mode="outlined"
-              onPress={handleGoogleLogin}
-              icon={() => <Icon name="google" size={18} color="#EA4335" />}
-              style={styles.googleBtn}
-              contentStyle={styles.btnContent}
-              labelStyle={styles.googleBtnLabel}
-              textColor="#334155"
-            >
-              Sign in with Google
-            </Button>
           </Surface>
         </View>
 

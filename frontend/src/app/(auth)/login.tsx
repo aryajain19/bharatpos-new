@@ -220,24 +220,6 @@ export default function LoginScreen() {
         >
           {loading ? 'Logging in...' : 'Log In to Dashboard'}
         </Button>
-
-        {/* Divider */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or continue with</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* Google sign-in */}
-        <Button
-          mode="outlined"
-          icon={() => <Icon name="google" size={18} color="#EA4335" />}
-          style={styles.googleButton}
-          labelStyle={styles.googleBtnLabel}
-          onPress={handleGoogleLogin}
-        >
-          Sign in with Google
-        </Button>
       </View>
     </View>
   );
