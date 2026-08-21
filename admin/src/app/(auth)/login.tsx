@@ -132,9 +132,6 @@ export default function AdminLoginScreen() {
               <Icon name="shield-crown" size={24} color="#F59E0B" />
             </View>
             <Text style={styles.formLogoText}>BharatPOS</Text>
-            <View style={styles.formHqBadge}>
-              <Text style={styles.formHqBadgeText}>HQ</Text>
-            </View>
           </View>
 
           <View style={styles.inputGroup}>

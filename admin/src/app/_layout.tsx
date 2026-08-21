@@ -315,8 +315,8 @@ function AdminLayout() {
               <Icon name="shield-crown" size={22} color="#F59E0B" />
             </View>
             <View style={styles.logoTextWrap}>
-              <Text style={styles.logoText}>BharatPOS HQ</Text>
-              <Text style={styles.logoSubText}>Platform Command Center</Text>
+              <Text style={styles.logoText}>BharatPOS</Text>
+              <Text style={styles.logoSubText}>Admin Portal</Text>
             </View>
           </View>
 
@@ -374,7 +374,7 @@ function AdminLayout() {
             <View style={styles.topBarTitleWrap}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={[styles.topBarTitle, { color: textPrimary }]}>
-                  Platform Command HQ
+                  Admin Dashboard
                 </Text>
                 <View style={{ backgroundColor: 'rgba(245,158,11,0.12)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)' }}>
                   <Text style={{ fontSize: 10, fontWeight: '800', color: '#D97706', letterSpacing: 0.5 }}>PROD ADMIN</Text>
