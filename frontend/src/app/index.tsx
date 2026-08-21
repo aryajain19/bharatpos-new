@@ -287,7 +287,7 @@ export default function Index() {
             <View style={[styles.heroLeft, { width: screenWidth > 992 ? '50%' : '100%', paddingRight: screenWidth > 992 ? 32 : 0 }]}>
               <View style={styles.trustBadge}>
                 <Icon name="check-decagram" size={14} color="#16A34A" />
-                <Text style={styles.trustBadgeText}>Trusted by 15,000+ Indian Businesses</Text>
+                <Text style={styles.trustBadgeText}>All-In-One Cloud Retail POS & Inventory Platform</Text>
               </View>
               
               <Text style={styles.heroTitle}>
