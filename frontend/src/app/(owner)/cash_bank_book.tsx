@@ -281,73 +281,83 @@ export default function CashBankBookScreen() {
 
           <Divider style={{ marginVertical: 12 }} />
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
-            <DataTable style={{ minWidth: 800 }}>
-              <DataTable.Header style={styles.dataHeader}>
-                <DataTable.Title style={{ flex: 0.8 }}><Text style={styles.colHead}>Date</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.colHead}>Particulars</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1 }}><Text style={styles.colHead}>Voucher Type</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 0.8 }}><Text style={styles.colHead}>Voucher No</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHead}>Receipt (₹)</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHead}>Payment (₹)</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHead}>Balance (₹)</Text></DataTable.Title>
-              </DataTable.Header>
+          {computed.rows.length === 0 ? (
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 10 }}>
+              <Icon name="book-open-blank-variant" size={40} color="#9E9E9E" />
+              <Text style={{ fontSize: 15, fontWeight: '700', color: appTheme.colors.onSurface }}>No Ledger Entries</Text>
+              <Text style={{ fontSize: 13, color: '#757575', maxWidth: 360, textAlign: 'center' }}>
+                No cash or bank transactions have been recorded for this period yet.
+              </Text>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={Platform.OS === 'web'}>
+              <DataTable style={{ minWidth: 800 }}>
+                <DataTable.Header style={styles.dataHeader}>
+                  <DataTable.Title style={{ flex: 0.8 }}><Text style={styles.colHead}>Date</Text></DataTable.Title>
+                  <DataTable.Title style={{ flex: 1.5 }}><Text style={styles.colHead}>Particulars</Text></DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}><Text style={styles.colHead}>Voucher Type</Text></DataTable.Title>
+                  <DataTable.Title style={{ flex: 0.8 }}><Text style={styles.colHead}>Voucher No</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHead}>Receipt (₹)</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHead}>Payment (₹)</Text></DataTable.Title>
+                  <DataTable.Title numeric style={{ flex: 1 }}><Text style={styles.colHead}>Balance (₹)</Text></DataTable.Title>
+                </DataTable.Header>
 
-              {/* Opening Balance Row */}
-              <DataTable.Row style={styles.openingRow}>
-                <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.openingText}>{fromDate}</Text></DataTable.Cell>
-                <DataTable.Cell style={{ flex: 1.5 }}><Text style={[styles.openingText, { fontWeight: 'bold' }]}>Opening Balance</Text></DataTable.Cell>
-                <DataTable.Cell style={{ flex: 1 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
-                <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
-                <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
-                <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
-                <DataTable.Cell numeric style={{ flex: 1 }}><Text style={[styles.openingText, { fontWeight: 'bold' }]}>{fmt(openingBalance)}</Text></DataTable.Cell>
-              </DataTable.Row>
+                {/* Opening Balance Row */}
+                <DataTable.Row style={styles.openingRow}>
+                  <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.openingText}>{fromDate}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 1.5 }}><Text style={[styles.openingText, { fontWeight: 'bold' }]}>Opening Balance</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 1 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 1 }}><Text style={styles.openingText}>—</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 1 }}><Text style={[styles.openingText, { fontWeight: 'bold' }]}>{fmt(openingBalance)}</Text></DataTable.Cell>
+                </DataTable.Row>
 
-              {computed.rows.map((txn, index) => (
-                <DataTable.Row key={txn.id} style={index % 2 === 0 ? styles.evenRow : undefined}>
-                  <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.cellText}>{txn.date}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1.5 }}><Text style={styles.cellText} numberOfLines={1}>{txn.particulars}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1 }}>
-                    <View style={[styles.voucherBadge, { backgroundColor: txn.receipt > 0 ? '#E8F5E9' : '#FFEBEE' }]}>
-                      <Text style={{ fontSize: 11, fontWeight: '600', color: txn.receipt > 0 ? '#2E7D32' : '#C62828' }}>{txn.voucherType}</Text>
-                    </View>
-                  </DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 0.8 }}><Text style={[styles.cellText, { color: appTheme.colors.onSurface }]}>{txn.voucherNo}</Text></DataTable.Cell>
+                {computed.rows.map((txn, index) => (
+                  <DataTable.Row key={txn.id} style={index % 2 === 0 ? styles.evenRow : undefined}>
+                    <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.cellText}>{txn.date}</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1.5 }}><Text style={styles.cellText} numberOfLines={1}>{txn.particulars}</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}>
+                      <View style={[styles.voucherBadge, { backgroundColor: txn.receipt > 0 ? '#E8F5E9' : '#FFEBEE' }]}>
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: txn.receipt > 0 ? '#2E7D32' : '#C62828' }}>{txn.voucherType}</Text>
+                      </View>
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 0.8 }}><Text style={[styles.cellText, { color: appTheme.colors.onSurface }]}>{txn.voucherNo}</Text></DataTable.Cell>
+                    <DataTable.Cell numeric style={{ flex: 1 }}>
+                      <Text style={[styles.cellText, { color: txn.receipt > 0 ? '#2E7D32' : '#AAA', fontWeight: txn.receipt > 0 ? '600' : '400' }]}>
+                        {txn.receipt > 0 ? fmt(txn.receipt) : '—'}
+                      </Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric style={{ flex: 1 }}>
+                      <Text style={[styles.cellText, { color: txn.payment > 0 ? '#C62828' : '#AAA', fontWeight: txn.payment > 0 ? '600' : '400' }]}>
+                        {txn.payment > 0 ? fmt(txn.payment) : '—'}
+                      </Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric style={{ flex: 1 }}>
+                      <Text style={[styles.cellText, { fontWeight: '600' }]}>{fmt(txn.balance)}</Text>
+                    </DataTable.Cell>
+                  </DataTable.Row>
+                ))}
+
+                {/* Closing Balance Row */}
+                <DataTable.Row style={styles.closingRow}>
+                  <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.closingText}>{toDate}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 1.5 }}><Text style={[styles.closingText, { fontWeight: 'bold' }]}>Closing Balance</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 1 }}><Text style={styles.closingText}>—</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.closingText}>—</Text></DataTable.Cell>
                   <DataTable.Cell numeric style={{ flex: 1 }}>
-                    <Text style={[styles.cellText, { color: txn.receipt > 0 ? '#2E7D32' : '#AAA', fontWeight: txn.receipt > 0 ? '600' : '400' }]}>
-                      {txn.receipt > 0 ? fmt(txn.receipt) : '—'}
-                    </Text>
+                    <Text style={[styles.closingText, { fontWeight: 'bold' }]}>{fmt(computed.totalReceipts)}</Text>
                   </DataTable.Cell>
                   <DataTable.Cell numeric style={{ flex: 1 }}>
-                    <Text style={[styles.cellText, { color: txn.payment > 0 ? '#C62828' : '#AAA', fontWeight: txn.payment > 0 ? '600' : '400' }]}>
-                      {txn.payment > 0 ? fmt(txn.payment) : '—'}
-                    </Text>
+                    <Text style={[styles.closingText, { fontWeight: 'bold' }]}>{fmt(computed.totalPayments)}</Text>
                   </DataTable.Cell>
                   <DataTable.Cell numeric style={{ flex: 1 }}>
-                    <Text style={[styles.cellText, { fontWeight: '600' }]}>{fmt(txn.balance)}</Text>
+                    <Text style={[styles.closingText, { fontWeight: 'bold', fontSize: 14 }]}>{fmt(computed.closingBalance)}</Text>
                   </DataTable.Cell>
                 </DataTable.Row>
-              ))}
-
-              {/* Closing Balance Row */}
-              <DataTable.Row style={styles.closingRow}>
-                <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.closingText}>{toDate}</Text></DataTable.Cell>
-                <DataTable.Cell style={{ flex: 1.5 }}><Text style={[styles.closingText, { fontWeight: 'bold' }]}>Closing Balance</Text></DataTable.Cell>
-                <DataTable.Cell style={{ flex: 1 }}><Text style={styles.closingText}>—</Text></DataTable.Cell>
-                <DataTable.Cell style={{ flex: 0.8 }}><Text style={styles.closingText}>—</Text></DataTable.Cell>
-                <DataTable.Cell numeric style={{ flex: 1 }}>
-                  <Text style={[styles.closingText, { fontWeight: 'bold' }]}>{fmt(computed.totalReceipts)}</Text>
-                </DataTable.Cell>
-                <DataTable.Cell numeric style={{ flex: 1 }}>
-                  <Text style={[styles.closingText, { fontWeight: 'bold' }]}>{fmt(computed.totalPayments)}</Text>
-                </DataTable.Cell>
-                <DataTable.Cell numeric style={{ flex: 1 }}>
-                  <Text style={[styles.closingText, { fontWeight: 'bold', fontSize: 14 }]}>{fmt(computed.closingBalance)}</Text>
-                </DataTable.Cell>
-              </DataTable.Row>
-            </DataTable>
-          </ScrollView>
+              </DataTable>
+            </ScrollView>
+          )}
         </Card.Content>
       </Card>
 

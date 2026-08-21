@@ -298,23 +298,25 @@ export default function DayBookScreen() {
                 ))}
 
                 {/* Totals Row */}
-                <DataTable.Row style={[styles.dtRow, { backgroundColor: appTheme.colors.surface }]}>
-                  <DataTable.Cell style={{ flex: 1.4 }}><Text style={styles.totalLabel}>TOTAL</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1 }}><Text> </Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1 }}><Text> </Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1.6 }}><Text> </Text></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1 }}>
-                    <Text style={[styles.totalAmount, { color: appTheme.colors.onSurface }]}>{fmt(totalDebits)}</Text>
-                  </DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1 }}>
-                    <Text style={[styles.totalAmount, { color: appTheme.colors.onSurface }]}>{fmt(totalCredits)}</Text>
-                  </DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1.1 }}>
-                    <Text style={[styles.totalAmount, { color: netBalance >= 0 ? '#1565C0' : '#C62828' }]}>
-                      {fmt(Math.abs(netBalance))} {netBalance >= 0 ? 'Dr' : 'Cr'}
-                    </Text>
-                  </DataTable.Cell>
-                </DataTable.Row>
+                {rows.length > 0 && (
+                  <DataTable.Row style={[styles.dtRow, { backgroundColor: appTheme.colors.surface }]}>
+                    <DataTable.Cell style={{ flex: 1.4 }}><Text style={styles.totalLabel}>TOTAL</Text></DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}><Text> </Text></DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}><Text> </Text></DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1.6 }}><Text> </Text></DataTable.Cell>
+                    <DataTable.Cell numeric style={{ flex: 1 }}>
+                      <Text style={[styles.totalAmount, { color: appTheme.colors.onSurface }]}>{fmt(totalDebits)}</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric style={{ flex: 1 }}>
+                      <Text style={[styles.totalAmount, { color: appTheme.colors.onSurface }]}>{fmt(totalCredits)}</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric style={{ flex: 1.1 }}>
+                      <Text style={[styles.totalAmount, { color: netBalance >= 0 ? '#1565C0' : '#C62828' }]}>
+                        {fmt(Math.abs(netBalance))} {netBalance >= 0 ? 'Dr' : 'Cr'}
+                      </Text>
+                    </DataTable.Cell>
+                  </DataTable.Row>
+                )}
 
                 {rows.length === 0 && (
                   <DataTable.Row>
