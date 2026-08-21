@@ -445,8 +445,13 @@ function AuthGuard() {
   const segments = useSegments();
   const inAuthGroup = segments[0] === '(auth)';
   
-  // Track bypass state
-  const [isDemoBypass, setIsDemoBypass] = useState(false);
+  // Track bypass state synchronously from localStorage
+  const [isDemoBypass, setIsDemoBypass] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('adminBypass') === 'true';
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -459,33 +464,17 @@ function AuthGuard() {
     if (loading) return;
     if ((user || isDemoBypass) && inAuthGroup) {
       router.replace('/' as any);
+    } else if (!user && !isDemoBypass && !inAuthGroup) {
+      router.replace('/(auth)/login' as any);
     }
   }, [user, loading, segments, isDemoBypass, inAuthGroup]);
 
-  // If already on auth routes (/login, /signup, etc.), render immediately without blocking!
+  // If already on auth routes (/login, /signup, etc.), render auth Slot directly
   if (inAuthGroup) {
     return <Slot />;
   }
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ alignItems: 'center', paddingVertical: 28, paddingHorizontal: 36, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#64748B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 4 }}>
-          <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: '#ECFDF5', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-            <Icon name="cash-register" size={24} color="#10B981" />
-          </View>
-          <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans', marginBottom: 2 }}>SmartPOS</Text>
-          <Text style={{ fontSize: 12, color: '#64748B', fontFamily: 'Plus Jakarta Sans', marginBottom: 14 }}>Super Admin Control</Text>
-          <ActivityIndicator size="small" color="#10B981" />
-        </View>
-      </View>
-    );
-  }
-
-  if (!user && !isDemoBypass) {
-    return <Slot />;
-  }
-
+  // Always wrap main admin routes with AdminLayout (which renders sidebar + topbar + content Slot)
   return <AdminLayout />;
 }
 
