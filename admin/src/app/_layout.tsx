@@ -129,12 +129,15 @@ const menuSections = [
   {
     label: 'Platform Control',
     items: [
-      { name: 'Dashboard', icon: 'view-dashboard', tab: 'overview' },
-      { name: 'Customers', icon: 'account-multiple', tab: 'customers' },
-      { name: 'Subscriptions', icon: 'calendar-sync', tab: 'subscriptions' },
+      { name: 'Overview & Analytics', icon: 'view-dashboard-outline', tab: 'overview' },
+      { name: 'Stores & Customers', icon: 'storefront-outline', tab: 'customers' },
+      { name: 'Subscription Plans', icon: 'credit-card-chip-outline', tab: 'subscriptions' },
+      { name: 'Billing & Invoices', icon: 'receipt-text-outline', tab: 'reports' },
+      { name: 'Live Barcodes & QR', icon: 'barcode-scan', tab: 'barcodes' },
+      { name: 'Staff & Roles', icon: 'account-group-outline', tab: 'workers' },
       { name: 'Support Tickets', icon: 'face-agent', tab: 'support' },
-      { name: 'Revenue', icon: 'file-chart', tab: 'reports' },
-      { name: 'Settings', icon: 'cog', tab: 'settings' },
+      { name: 'System Logs & Audit', icon: 'shield-check-outline', tab: 'permissions' },
+      { name: 'Platform Settings', icon: 'cog-outline', tab: 'settings' },
     ]
   }
 ];
@@ -207,6 +210,7 @@ function AdminLayout() {
   
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(Dimensions.get('window').width > 900);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const sidebarAnim = useRef(new Animated.Value(Dimensions.get('window').width > 900 ? 1 : 0)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -302,11 +306,13 @@ function AdminLayout() {
         </Animated.View>
       )}
 
-      {/* Animated Sidebar */}
+      {/* Main Sidebar */}
       <Animated.View style={[
         styles.sidebar,
-        { backgroundColor: sidebarBg, width: sidebarWidth },
-        Dimensions.get('window').width <= 900 ? { position: 'absolute', zIndex: 100, height: '100%' } : {},
+        {
+          width: sidebarWidth,
+          backgroundColor: sidebarBg,
+        }
       ]}>
         <View style={styles.sidebarInner}>
           {/* Logo Area */}
@@ -348,14 +354,10 @@ function AdminLayout() {
           <View style={styles.sidebarDivider} />
           
           <View style={styles.sidebarFooter}>
-
-
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
-              <View style={styles.logoutIconWrap}>
-                <Icon name="logout-variant" size={16} color="#FF6B6B" />
-              </View>
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
+            <View style={styles.systemStatusPill}>
+              <View style={styles.statusDotGreen} />
+              <Text style={styles.systemStatusText}>BharatPOS Cloud v2.6</Text>
+            </View>
           </View>
         </View>
       </Animated.View>
@@ -389,15 +391,29 @@ function AdminLayout() {
             </View>
           </View>
           <View style={styles.topBarRight}>
-            {/* Search */}
-            <TouchableOpacity style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}>
+            {/* Quick Search */}
+            <TouchableOpacity 
+              style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}
+              onPress={() => handleNav('overview')}
+              activeOpacity={0.7}
+            >
               <Icon name="magnify" size={19} color={isDarkMode ? '#94A3B8' : '#475569'} />
+            </TouchableOpacity>
+
+            {/* Dark / Light Theme Toggle */}
+            <TouchableOpacity 
+              style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}
+              onPress={() => setIsDarkMode(!isDarkMode)}
+              activeOpacity={0.7}
+            >
+              <Icon name={isDarkMode ? "weather-sunny" : "weather-night"} size={19} color={isDarkMode ? '#F59E0B' : '#475569'} />
             </TouchableOpacity>
 
             {/* Notification Bell with Badge */}
             <TouchableOpacity 
               style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}
               onPress={() => handleNav('notifications')}
+              activeOpacity={0.7}
             >
               <Icon name="bell-outline" size={19} color={isDarkMode ? '#94A3B8' : '#475569'} />
               {notificationCount > 0 && (
@@ -407,10 +423,11 @@ function AdminLayout() {
               )}
             </TouchableOpacity>
 
-            {/* Security */}
+            {/* Security Audit */}
             <TouchableOpacity 
               style={[styles.topBarAction, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}
-              onPress={() => handleNav('security')}
+              onPress={() => handleNav('permissions')}
+              activeOpacity={0.7}
             >
               <Icon name="shield-check-outline" size={19} color={isDarkMode ? '#94A3B8' : '#475569'} />
             </TouchableOpacity>
@@ -418,18 +435,98 @@ function AdminLayout() {
             {/* Divider */}
             <View style={[styles.topBarDivider, { backgroundColor: isDarkMode ? '#2D2D44' : '#EEF0F6' }]} />
 
-            {/* User Avatar Area */}
-            <TouchableOpacity style={styles.userSection} activeOpacity={0.7}>
-              <View style={styles.userInfo}>
-                <Text style={[styles.userName, { color: textPrimary }]}>Arya</Text>
-                <Text style={[styles.userRole, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>Super Admin</Text>
-              </View>
-              <View style={styles.avatarWrap}>
-                <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
-                <View style={styles.onlineDot} />
-              </View>
-              <Icon name="chevron-down" size={16} color={isDarkMode ? '#6B6F96' : '#9E9E9E'} />
-            </TouchableOpacity>
+            {/* User Avatar Section with Interactive Dropdown */}
+            <View style={{ position: 'relative', zIndex: 1000 }}>
+              <TouchableOpacity 
+                style={styles.userSection} 
+                activeOpacity={0.7}
+                onPress={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              >
+                <View style={styles.userInfo}>
+                  <Text style={[styles.userName, { color: textPrimary }]}>Arya</Text>
+                  <Text style={[styles.userRole, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>Super Admin</Text>
+                </View>
+                <View style={styles.avatarWrap}>
+                  <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
+                  <View style={styles.onlineDot} />
+                </View>
+                <Icon name={isProfileMenuOpen ? "chevron-up" : "chevron-down"} size={16} color={isDarkMode ? '#6B6F96' : '#9E9E9E'} />
+              </TouchableOpacity>
+
+              {/* Profile Dropdown Menu */}
+              {isProfileMenuOpen && (
+                <Surface 
+                  style={[
+                    styles.profileDropdown, 
+                    { 
+                      backgroundColor: isDarkMode ? '#1E2038' : '#FFFFFF', 
+                      borderColor: isDarkMode ? '#2D3050' : '#E2E8F0' 
+                    }
+                  ]} 
+                  elevation={5}
+                >
+                  {/* User Header */}
+                  <View style={styles.dropdownHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.dropdownUserName, { color: isDarkMode ? '#FFFFFF' : '#0F172A' }]}>Arya Jain</Text>
+                        <Text style={[styles.dropdownUserEmail, { color: isDarkMode ? '#94A3B8' : '#64748B' }]} numberOfLines={1}>aryajain1906@gmail.com</Text>
+                      </View>
+                    </View>
+                    <View style={styles.dropdownRolePill}>
+                      <Text style={styles.dropdownRolePillText}>SUPER ADMIN</Text>
+                    </View>
+                  </View>
+
+                  <Divider style={{ backgroundColor: isDarkMode ? '#2D3050' : '#F1F5F9', marginVertical: 6 }} />
+
+                  {/* Settings Item */}
+                  <TouchableOpacity 
+                    style={styles.dropdownItem}
+                    onPress={() => { setIsProfileMenuOpen(false); handleNav('settings'); }}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="cog-outline" size={17} color={isDarkMode ? '#94A3B8' : '#475569'} />
+                    <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>Platform Settings</Text>
+                  </TouchableOpacity>
+
+                  {/* Theme Switch Item */}
+                  <TouchableOpacity 
+                    style={styles.dropdownItem}
+                    onPress={() => { setIsDarkMode(!isDarkMode); }}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name={isDarkMode ? "weather-sunny" : "weather-night"} size={17} color={isDarkMode ? '#F59E0B' : '#475569'} />
+                    <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>
+                      {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Notifications Item */}
+                  <TouchableOpacity 
+                    style={styles.dropdownItem}
+                    onPress={() => { setIsProfileMenuOpen(false); handleNav('notifications'); }}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="bell-outline" size={17} color={isDarkMode ? '#94A3B8' : '#475569'} />
+                    <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>Broadcast Alerts</Text>
+                  </TouchableOpacity>
+
+                  <Divider style={{ backgroundColor: isDarkMode ? '#2D3050' : '#F1F5F9', marginVertical: 6 }} />
+
+                  {/* Logout Option */}
+                  <TouchableOpacity 
+                    style={[styles.dropdownItem, { backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: 8 }]}
+                    onPress={() => { setIsProfileMenuOpen(false); handleLogout(); }}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="logout-variant" size={17} color="#EF4444" />
+                    <Text style={[styles.dropdownItemText, { color: '#EF4444', fontWeight: '700' }]}>Sign Out</Text>
+                  </TouchableOpacity>
+                </Surface>
+              )}
+            </View>
           </View>
         </Surface>
         <View style={[styles.content, { backgroundColor: isDarkMode ? '#141522' : '#F4F5F9' }]}>
@@ -813,4 +910,84 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   content: { flex: 1, overflow: 'hidden' },
+  profileDropdown: {
+    position: 'absolute',
+    top: 50,
+    right: 0,
+    width: 250,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 8,
+    zIndex: 9999,
+  },
+  dropdownHeader: {
+    marginBottom: 4,
+    gap: 8,
+  },
+  dropdownUserName: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Plus Jakarta Sans',
+  },
+  dropdownUserEmail: {
+    fontSize: 11,
+    fontFamily: 'Plus Jakarta Sans',
+    maxWidth: 160,
+  },
+  dropdownRolePill: {
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.3)',
+    marginTop: 4,
+  },
+  dropdownRolePillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#D97706',
+    letterSpacing: 0.5,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 8,
+    gap: 10,
+    borderRadius: 8,
+  },
+  dropdownItemText: {
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: 'Plus Jakarta Sans',
+  },
+  systemStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 20,
+    alignSelf: 'center',
+  },
+  statusDotGreen: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  systemStatusText: {
+    fontSize: 10.5,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '600',
+    fontFamily: 'Plus Jakarta Sans',
+  },
 });
