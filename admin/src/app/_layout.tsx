@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated, ActivityIndicator } from 'react-native';
-import { Text, Divider, useTheme, IconButton, Avatar, Surface, PaperProvider, MD3LightTheme as DefaultTheme, Badge } from 'react-native-paper';
+import { Text, Divider, useTheme, IconButton, Avatar, Surface, PaperProvider, MD3LightTheme as DefaultTheme, Badge, Portal } from 'react-native-paper';
 import { Slot, router, usePathname, useLocalSearchParams, useSegments } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth, isFirebaseConfigured, db } from '../lib/firebase';
@@ -133,7 +133,6 @@ const menuSections = [
       { name: 'Stores & Customers', icon: 'storefront-outline', tab: 'customers' },
       { name: 'Subscription Plans', icon: 'credit-card-chip-outline', tab: 'subscriptions' },
       { name: 'Billing & Invoices', icon: 'receipt-text-outline', tab: 'reports' },
-      { name: 'Live Barcodes & QR', icon: 'barcode-scan', tab: 'barcodes' },
       { name: 'Staff & Roles', icon: 'account-group-outline', tab: 'workers' },
       { name: 'Support Tickets', icon: 'face-agent', tab: 'support' },
       { name: 'System Logs & Audit', icon: 'shield-check-outline', tab: 'permissions' },
@@ -353,12 +352,7 @@ function AdminLayout() {
           
           <View style={styles.sidebarDivider} />
           
-          <View style={styles.sidebarFooter}>
-            <View style={styles.systemStatusPill}>
-              <View style={styles.statusDotGreen} />
-              <Text style={styles.systemStatusText}>BharatPOS Cloud v2.6</Text>
-            </View>
-          </View>
+          <View style={styles.sidebarFooter} />
         </View>
       </Animated.View>
 
@@ -436,99 +430,108 @@ function AdminLayout() {
             <View style={[styles.topBarDivider, { backgroundColor: isDarkMode ? '#2D2D44' : '#EEF0F6' }]} />
 
             {/* User Avatar Section with Interactive Dropdown */}
-            <View style={{ position: 'relative', zIndex: 1000 }}>
-              <TouchableOpacity 
-                style={styles.userSection} 
-                activeOpacity={0.7}
-                onPress={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              >
-                <View style={styles.userInfo}>
-                  <Text style={[styles.userName, { color: textPrimary }]}>Arya</Text>
-                  <Text style={[styles.userRole, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>Super Admin</Text>
-                </View>
-                <View style={styles.avatarWrap}>
-                  <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
-                  <View style={styles.onlineDot} />
-                </View>
-                <Icon name={isProfileMenuOpen ? "chevron-up" : "chevron-down"} size={16} color={isDarkMode ? '#6B6F96' : '#9E9E9E'} />
-              </TouchableOpacity>
-
-              {/* Profile Dropdown Menu */}
-              {isProfileMenuOpen && (
-                <Surface 
-                  style={[
-                    styles.profileDropdown, 
-                    { 
-                      backgroundColor: isDarkMode ? '#1E2038' : '#FFFFFF', 
-                      borderColor: isDarkMode ? '#2D3050' : '#E2E8F0' 
-                    }
-                  ]} 
-                  elevation={5}
-                >
-                  {/* User Header */}
-                  <View style={styles.dropdownHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.dropdownUserName, { color: isDarkMode ? '#FFFFFF' : '#0F172A' }]}>Arya Jain</Text>
-                        <Text style={[styles.dropdownUserEmail, { color: isDarkMode ? '#94A3B8' : '#64748B' }]} numberOfLines={1}>aryajain1906@gmail.com</Text>
-                      </View>
-                    </View>
-                    <View style={styles.dropdownRolePill}>
-                      <Text style={styles.dropdownRolePillText}>SUPER ADMIN</Text>
-                    </View>
-                  </View>
-
-                  <Divider style={{ backgroundColor: isDarkMode ? '#2D3050' : '#F1F5F9', marginVertical: 6 }} />
-
-                  {/* Settings Item */}
-                  <TouchableOpacity 
-                    style={styles.dropdownItem}
-                    onPress={() => { setIsProfileMenuOpen(false); handleNav('settings'); }}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name="cog-outline" size={17} color={isDarkMode ? '#94A3B8' : '#475569'} />
-                    <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>Platform Settings</Text>
-                  </TouchableOpacity>
-
-                  {/* Theme Switch Item */}
-                  <TouchableOpacity 
-                    style={styles.dropdownItem}
-                    onPress={() => { setIsDarkMode(!isDarkMode); }}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name={isDarkMode ? "weather-sunny" : "weather-night"} size={17} color={isDarkMode ? '#F59E0B' : '#475569'} />
-                    <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>
-                      {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Notifications Item */}
-                  <TouchableOpacity 
-                    style={styles.dropdownItem}
-                    onPress={() => { setIsProfileMenuOpen(false); handleNav('notifications'); }}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name="bell-outline" size={17} color={isDarkMode ? '#94A3B8' : '#475569'} />
-                    <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>Broadcast Alerts</Text>
-                  </TouchableOpacity>
-
-                  <Divider style={{ backgroundColor: isDarkMode ? '#2D3050' : '#F1F5F9', marginVertical: 6 }} />
-
-                  {/* Logout Option */}
-                  <TouchableOpacity 
-                    style={[styles.dropdownItem, { backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: 8 }]}
-                    onPress={() => { setIsProfileMenuOpen(false); handleLogout(); }}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name="logout-variant" size={17} color="#EF4444" />
-                    <Text style={[styles.dropdownItemText, { color: '#EF4444', fontWeight: '700' }]}>Sign Out</Text>
-                  </TouchableOpacity>
-                </Surface>
-              )}
-            </View>
+            <TouchableOpacity 
+              style={styles.userSection} 
+              activeOpacity={0.7}
+              onPress={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            >
+              <View style={styles.userInfo}>
+                <Text style={[styles.userName, { color: textPrimary }]}>Arya</Text>
+                <Text style={[styles.userRole, { color: isDarkMode ? '#6B6F96' : '#9E9E9E' }]}>Super Admin</Text>
+              </View>
+              <View style={styles.avatarWrap}>
+                <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
+                <View style={styles.onlineDot} />
+              </View>
+              <Icon name={isProfileMenuOpen ? "chevron-up" : "chevron-down"} size={16} color={isDarkMode ? '#6B6F96' : '#9E9E9E'} />
+            </TouchableOpacity>
           </View>
         </Surface>
+
+        {/* Global Portal-based Profile Dropdown */}
+        {isProfileMenuOpen && (
+          <Portal>
+            <TouchableOpacity 
+              style={StyleSheet.absoluteFill} 
+              activeOpacity={1} 
+              onPress={() => setIsProfileMenuOpen(false)}
+            >
+              <Surface 
+                style={[
+                  styles.profileDropdown, 
+                  { 
+                    position: 'absolute',
+                    top: 66,
+                    right: 16,
+                    backgroundColor: isDarkMode ? '#1E2038' : '#FFFFFF', 
+                    borderColor: isDarkMode ? '#2D3050' : '#E2E8F0' 
+                  }
+                ]} 
+                elevation={5}
+              >
+                {/* User Header */}
+                <View style={styles.dropdownHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Avatar.Text size={36} label="A" style={styles.avatar} labelStyle={styles.avatarLabel} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.dropdownUserName, { color: isDarkMode ? '#FFFFFF' : '#0F172A' }]}>Arya Jain</Text>
+                      <Text style={[styles.dropdownUserEmail, { color: isDarkMode ? '#94A3B8' : '#64748B' }]} numberOfLines={1}>aryajain1906@gmail.com</Text>
+                    </View>
+                  </View>
+                  <View style={styles.dropdownRolePill}>
+                    <Text style={styles.dropdownRolePillText}>SUPER ADMIN</Text>
+                  </View>
+                </View>
+
+                <Divider style={{ backgroundColor: isDarkMode ? '#2D3050' : '#F1F5F9', marginVertical: 6 }} />
+
+                {/* Settings Item */}
+                <TouchableOpacity 
+                  style={styles.dropdownItem}
+                  onPress={() => { setIsProfileMenuOpen(false); handleNav('settings'); }}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="cog-outline" size={17} color={isDarkMode ? '#94A3B8' : '#475569'} />
+                  <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>Platform Settings</Text>
+                </TouchableOpacity>
+
+                {/* Theme Switch Item */}
+                <TouchableOpacity 
+                  style={styles.dropdownItem}
+                  onPress={() => { setIsDarkMode(!isDarkMode); }}
+                  activeOpacity={0.7}
+                >
+                  <Icon name={isDarkMode ? "weather-sunny" : "weather-night"} size={17} color={isDarkMode ? '#F59E0B' : '#475569'} />
+                  <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>
+                    {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Notifications Item */}
+                <TouchableOpacity 
+                  style={styles.dropdownItem}
+                  onPress={() => { setIsProfileMenuOpen(false); handleNav('notifications'); }}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="bell-outline" size={17} color={isDarkMode ? '#94A3B8' : '#475569'} />
+                  <Text style={[styles.dropdownItemText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>Broadcast Alerts</Text>
+                </TouchableOpacity>
+
+                <Divider style={{ backgroundColor: isDarkMode ? '#2D3050' : '#F1F5F9', marginVertical: 6 }} />
+
+                {/* Logout Option */}
+                <TouchableOpacity 
+                  style={[styles.dropdownItem, { backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: 8 }]}
+                  onPress={() => { setIsProfileMenuOpen(false); handleLogout(); }}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="logout-variant" size={17} color="#EF4444" />
+                  <Text style={[styles.dropdownItemText, { color: '#EF4444', fontWeight: '700' }]}>Sign Out</Text>
+                </TouchableOpacity>
+              </Surface>
+            </TouchableOpacity>
+          </Portal>
+        )}
         <View style={[styles.content, { backgroundColor: isDarkMode ? '#141522' : '#F4F5F9' }]}>
           <Slot />
         </View>
