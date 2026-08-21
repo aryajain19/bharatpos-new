@@ -136,7 +136,6 @@ const menuSections = [
       { name: 'Staff & Roles', icon: 'account-group-outline', tab: 'workers' },
       { name: 'Support Tickets', icon: 'face-agent', tab: 'support' },
       { name: 'System Logs & Audit', icon: 'shield-check-outline', tab: 'permissions' },
-      { name: 'Platform Settings', icon: 'cog-outline', tab: 'settings' },
     ]
   }
 ];
