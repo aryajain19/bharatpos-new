@@ -87,9 +87,7 @@ export default function LoginScreen() {
     <View style={styles.formWrapper}>
       {/* Brand Header */}
       <View style={styles.brandHeader}>
-        <View style={styles.logoIconBg}>
-          <Icon name="store" size={16} color="#FFFFFF" />
-        </View>
+        <Icon name="cash-register" size={24} color="#10B981" />
         <Text style={styles.brandTitle}>SmartPOS</Text>
       </View>
 
@@ -108,8 +106,8 @@ export default function LoginScreen() {
           style={styles.input}
           mode="outlined"
           outlineColor="#E2E8F0"
-          activeOutlineColor="#16A34A"
-          left={<TextInput.Icon icon="account-outline" color="#64748B" />}
+          activeOutlineColor="#10B981"
+          left={<TextInput.Icon icon="account-outline" color="#94A3B8" />}
           dense
         />
 
@@ -122,9 +120,9 @@ export default function LoginScreen() {
           style={styles.input}
           mode="outlined"
           outlineColor="#E2E8F0"
-          activeOutlineColor="#16A34A"
-          left={<TextInput.Icon icon="lock-outline" color="#64748B" />}
-          right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#64748B" onPress={() => setIsSecure(!isSecure)} />}
+          activeOutlineColor="#10B981"
+          left={<TextInput.Icon icon="lock-outline" color="#94A3B8" />}
+          right={<TextInput.Icon icon={isSecure ? "eye-outline" : "eye-off-outline"} color="#94A3B8" onPress={() => setIsSecure(!isSecure)} />}
           dense
         />
 
@@ -137,7 +135,8 @@ export default function LoginScreen() {
           >
             <Checkbox.Android 
               status={rememberMe ? 'checked' : 'unchecked'} 
-              color="#16A34A"
+              color="#10B981"
+              uncheckedColor="#CBD5E1"
               onPress={() => setRememberMe(!rememberMe)}
             />
             <Text style={styles.rememberMeText}>Remember me</Text>
@@ -157,9 +156,9 @@ export default function LoginScreen() {
           style={styles.primaryButton}
           contentStyle={styles.buttonPadding}
           labelStyle={styles.buttonLabel}
-          buttonColor="#0B192C"
+          buttonColor="#1E293B"
         >
-          {loading ? 'Logging in...' : 'Login to Dashboard'}
+          {loading ? 'Logging in...' : 'Log In to Dashboard'}
         </Button>
 
         {/* Divider */}
@@ -203,25 +202,24 @@ export default function LoginScreen() {
             <View style={styles.bannerContent}>
               {/* Brand Logo Row */}
               <View style={styles.bannerBrandRow}>
-                <View style={[styles.logoIconBg, { width: 32, height: 32, borderRadius: 8 }]}>
-                  <Icon name="store" size={18} color="#FFFFFF" />
-                </View>
+                <Icon name="cash-register" size={28} color="#10B981" />
                 <Text style={styles.bannerBrandName}>SmartPOS</Text>
               </View>
 
               {/* Slogan */}
               <Text style={styles.bannerSlogan}>
-                Manage Your Store{"\n"}Anywhere
+                Manage Your Store{"\n"}
+                <Text style={{ color: '#10B981' }}>Anywhere</Text>
               </Text>
               <Text style={styles.bannerSubTitle}>
-                The complete cloud POS & inventory solution for modern Indian retailers.
+                The complete cloud POS & Inventory solution for modern Indian retailers.
               </Text>
 
               {/* Highlights list */}
               <View style={styles.highlightsList}>
                 <View style={styles.highlightRow}>
                   <View style={styles.highlightIconWrap}>
-                    <Icon name="flash-outline" size={16} color="#16A34A" />
+                    <Icon name="lightning-bolt-outline" size={18} color="#10B981" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.highlightTitle}>Lightning Fast Billing</Text>
@@ -231,7 +229,7 @@ export default function LoginScreen() {
 
                 <View style={styles.highlightRow}>
                   <View style={styles.highlightIconWrap}>
-                    <Icon name="clipboard-list-outline" size={16} color="#16A34A" />
+                    <Icon name="store-outline" size={18} color="#10B981" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.highlightTitle}>Real-time Inventory</Text>
@@ -241,7 +239,7 @@ export default function LoginScreen() {
 
                 <View style={styles.highlightRow}>
                   <View style={styles.highlightIconWrap}>
-                    <Icon name="file-document-outline" size={16} color="#16A34A" />
+                    <Icon name="file-document-outline" size={18} color="#10B981" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.highlightTitle}>GST Invoicing & Reports</Text>
@@ -251,19 +249,13 @@ export default function LoginScreen() {
 
                 <View style={styles.highlightRow}>
                   <View style={styles.highlightIconWrap}>
-                    <Icon name="account-group-outline" size={16} color="#16A34A" />
+                    <Icon name="account-group-outline" size={18} color="#10B981" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.highlightTitle}>Staff & Customer Management</Text>
                     <Text style={styles.highlightText}>Manage staff access, customers, due payments and loyalty points.</Text>
                   </View>
                 </View>
-              </View>
-
-              {/* Trust badge */}
-              <View style={styles.bannerTrustBadge}>
-                <Icon name="shield-check" size={16} color="#16A34A" />
-                <Text style={styles.bannerTrustText}>Trusted by 15,000+ businesses across India</Text>
               </View>
             </View>
           </View>
@@ -328,34 +320,24 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   bannerBrandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18, gap: 8 },
-  bannerBrandName: { fontSize: 18, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
-  bannerSlogan: { fontSize: 26, lineHeight: 32, marginBottom: 6, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
-  bannerSubTitle: { fontSize: 12.5, color: '#64748B', lineHeight: 18, marginBottom: 20, fontFamily: 'Plus Jakarta Sans' },
-  highlightsList: { gap: 12 },
-  highlightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  bannerBrandName: { fontSize: 20, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
+  bannerSlogan: { fontSize: 34, lineHeight: 40, marginBottom: 8, fontWeight: '800', color: '#0F172A', letterSpacing: -0.5, fontFamily: 'Plus Jakarta Sans' },
+  bannerSubTitle: { fontSize: 14, color: '#475569', lineHeight: 20, marginBottom: 24, fontFamily: 'Plus Jakarta Sans' },
+  highlightsList: { gap: 16 },
+  highlightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   highlightIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: '#E8F5E9',
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 1
   },
-  highlightTitle: { fontSize: 13, fontWeight: '700', color: '#0F172A', marginBottom: 2, fontFamily: 'Plus Jakarta Sans' },
-  highlightText: { fontSize: 11.5, color: '#475569', lineHeight: 16, fontFamily: 'Plus Jakarta Sans' },
-  bannerTrustBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    backgroundColor: '#E8F5E9',
-    alignSelf: 'flex-start',
-    marginTop: 20
-  },
-  bannerTrustText: { fontSize: 11, fontWeight: '700', color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
+  highlightTitle: { fontSize: 14, fontWeight: '700', color: '#1E293B', marginBottom: 2, fontFamily: 'Plus Jakarta Sans' },
+  highlightText: { fontSize: 12, color: '#64748B', lineHeight: 17, fontFamily: 'Plus Jakarta Sans' },
 
   // Right Panel
   rightPanel: {
@@ -367,9 +349,9 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: 16,
-    paddingHorizontal: 28,
-    paddingVertical: 20,
+    borderRadius: 20,
+    paddingHorizontal: 32,
+    paddingVertical: 28,
     backgroundColor: '#FFFFFF'
   },
   mobileScrollContent: {
@@ -389,6 +371,7 @@ const styles = StyleSheet.create({
   brandHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
     marginBottom: 16,
     ...Platform.select({
@@ -396,55 +379,48 @@ const styles = StyleSheet.create({
       default: { display: 'none' }
     })
   },
-  logoIconBg: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    backgroundColor: '#16A34A',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  brandTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
-  welcomeTitle: { fontSize: 22, fontWeight: '800', color: '#0F172A', marginBottom: 2, fontFamily: 'Plus Jakarta Sans' },
-  welcomeSubtitle: { fontSize: 12.5, color: '#64748B', marginBottom: 18, fontFamily: 'Plus Jakarta Sans' },
+  brandTitle: { fontSize: 20, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans' },
+  welcomeTitle: { fontSize: 22, fontWeight: '800', color: '#0F172A', textAlign: 'center', marginBottom: 4, fontFamily: 'Plus Jakarta Sans' },
+  welcomeSubtitle: { fontSize: 13, color: '#64748B', textAlign: 'center', marginBottom: 20, fontFamily: 'Plus Jakarta Sans' },
 
   // Input Fields
   fieldsContainer: { width: '100%' },
-  inputLabel: { fontSize: 11.5, fontWeight: '700', color: '#374151', marginBottom: 4, fontFamily: 'Plus Jakarta Sans' },
-  input: { marginBottom: 12, backgroundColor: '#FFFFFF', height: 42, fontSize: 13 },
+  inputLabel: { fontSize: 12.5, fontWeight: '600', color: '#334155', marginBottom: 6, fontFamily: 'Plus Jakarta Sans' },
+  input: { marginBottom: 14, backgroundColor: '#FFFFFF', fontSize: 13.5 },
 
   rememberForgotRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14
+    marginBottom: 18,
+    marginTop: -4
   },
   rememberMeClick: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: -8
   },
-  rememberMeText: { fontSize: 11.5, color: '#475569', fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
-  forgotPassLink: { fontSize: 11.5, fontWeight: '700', color: '#2563EB', fontFamily: 'Plus Jakarta Sans' },
-  errorText: { color: '#EF4444', marginBottom: 10, fontSize: 11.5, fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
+  rememberMeText: { fontSize: 13, color: '#475569', fontFamily: 'Plus Jakarta Sans' },
+  forgotPassLink: { fontSize: 13, fontWeight: '600', color: '#3B82F6', fontFamily: 'Plus Jakarta Sans' },
+  errorText: { color: '#EF4444', marginBottom: 10, fontSize: 12, fontWeight: '500', fontFamily: 'Plus Jakarta Sans' },
 
-  primaryButton: { borderRadius: 6, marginVertical: 6 },
-  buttonPadding: { paddingVertical: 4 },
-  buttonLabel: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', fontFamily: 'Plus Jakarta Sans' },
+  primaryButton: { borderRadius: 8, marginVertical: 6, backgroundColor: '#1E293B' },
+  buttonPadding: { paddingVertical: 6 },
+  buttonLabel: { fontSize: 14, fontWeight: '700', color: '#FFFFFF', fontFamily: 'Plus Jakarta Sans' },
 
   // Divider
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 12 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 14 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
-  dividerText: { marginHorizontal: 10, fontSize: 9.5, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Plus Jakarta Sans' },
+  dividerText: { marginHorizontal: 10, fontSize: 11, fontWeight: '500', color: '#94A3B8', textTransform: 'lowercase', fontFamily: 'Plus Jakarta Sans' },
 
   // Google button
-  googleButton: { borderRadius: 6, borderColor: '#E2E8F0', height: 38, justifyContent: 'center' },
-  googleBtnLabel: { fontSize: 11.5, fontWeight: '600', color: '#374151', fontFamily: 'Plus Jakarta Sans' },
+  googleButton: { borderRadius: 8, borderColor: '#E2E8F0', height: 44, justifyContent: 'center' },
+  googleBtnLabel: { fontSize: 13, fontWeight: '600', color: '#1E293B', fontFamily: 'Plus Jakarta Sans' },
 
   // Footer Register Link
-  registerFooter: { flexDirection: 'row', justifyContent: 'center', marginTop: 14, borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 },
-  registerDescText: { fontSize: 12, color: '#475569', fontFamily: 'Plus Jakarta Sans' },
-  registerLinkText: { fontWeight: '700', fontSize: 12, color: '#16A34A', fontFamily: 'Plus Jakarta Sans' },
+  registerFooter: { flexDirection: 'row', justifyContent: 'center', marginTop: 18 },
+  registerDescText: { fontSize: 13, color: '#475569', fontFamily: 'Plus Jakarta Sans' },
+  registerLinkText: { fontWeight: '700', fontSize: 13, color: '#10B981', fontFamily: 'Plus Jakarta Sans' },
 
   // Loading Overlay
   loadingOverlay: {

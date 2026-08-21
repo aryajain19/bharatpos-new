@@ -119,11 +119,6 @@ export default function AdminLoginScreen() {
                     desc="Manage staff access, customers, due payments and loyalty points." 
                   />
                 </View>
-
-                <View style={styles.trustBadge}>
-                  <Icon name="shield-check" size={20} color="#10B981" style={{ marginRight: 8 }} />
-                  <Text style={styles.trustText}>Trusted by 15,000+ businesses across India</Text>
-                </View>
               </View>
             </View>
           </View>
