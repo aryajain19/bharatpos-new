@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text, Surface, Checkbox } from 'react-native-paper';
 import { auth, db, isFirebaseConfigured } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -124,10 +124,6 @@ export default function AdminLoginScreen() {
                   <Icon name="shield-check" size={20} color="#10B981" style={{ marginRight: 8 }} />
                   <Text style={styles.trustText}>Trusted by 15,000+ businesses across India</Text>
                 </View>
-              </View>
-
-              <View style={styles.illustrationWrapper}>
-                <Image source={require('../../../assets/login_illustration.png')} style={styles.illustration} resizeMode="contain" />
               </View>
             </View>
           </View>
