@@ -42,27 +42,38 @@ export default function AdminLoginScreen() {
   async function handleLogin() {
     setLoading(true);
     
-    if (!isFirebaseConfigured || email === '0000000000') {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password;
+
+    // Direct Admin Super-Authentication for platform owner
+    if (
+      !isFirebaseConfigured ||
+      cleanEmail === '0000000000' ||
+      (cleanEmail === 'aryajain1906@gmail.com' && (cleanPassword === '@Aryajain19' || cleanPassword === 'Aryajain19' || cleanPassword === '@aryajain19'))
+    ) {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('adminBypass', 'true');
+        window.localStorage.setItem('adminEmail', cleanEmail);
+      }
       setTimeout(() => {
-        if (typeof window !== 'undefined') window.localStorage.setItem('adminBypass', 'true');
         setLoading(false);
         router.replace('/' as any);
-      }, 400);
+      }, 300);
       return;
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
       if (typeof window !== 'undefined') window.localStorage.removeItem('adminBypass');
       
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userSnap = await getDoc(userDocRef);
       
-      if (email === 'aryajain1906@gmail.com') {
+      if (cleanEmail === 'aryajain1906@gmail.com') {
         const adminData = userSnap.exists() ? userSnap.data() : {};
         if (adminData.role !== 'admin') {
           adminData.role = 'admin';
-          adminData.email = email;
+          adminData.email = cleanEmail;
           adminData.owner_name = 'Arya';
           adminData.created_at = adminData.created_at || new Date().toISOString();
           await setDoc(userDocRef, adminData);
