@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Animated, ActivityIndicator } from 'react-native';
 import { Text, Divider, useTheme, IconButton, Avatar, Surface, PaperProvider, MD3LightTheme as DefaultTheme, Badge } from 'react-native-paper';
 import { Slot, router, usePathname, useLocalSearchParams, useSegments } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -413,6 +413,7 @@ function AdminLayout() {
 function AuthGuard() {
   const { user, loading } = useAuth();
   const segments = useSegments();
+  const inAuthGroup = segments[0] === '(auth)';
   
   // Track bypass state
   const [isDemoBypass, setIsDemoBypass] = useState(false);
@@ -426,23 +427,32 @@ function AuthGuard() {
   
   useEffect(() => {
     if (loading) return;
-    const inAuthGroup = segments[0] === '(auth)';
-
     if ((user || isDemoBypass) && inAuthGroup) {
       router.replace('/' as any);
     }
-  }, [user, loading, segments, isDemoBypass]);
+  }, [user, loading, segments, isDemoBypass, inAuthGroup]);
+
+  // If already on auth routes (/login, /signup, etc.), render immediately without blocking!
+  if (inAuthGroup) {
+    return <Slot />;
+  }
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0D0E1A', justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#fff', fontSize: 16 }}>Loading Command Center...</Text>
+      <View style={{ flex: 1, backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ alignItems: 'center', paddingVertical: 28, paddingHorizontal: 36, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#64748B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 4 }}>
+          <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: '#ECFDF5', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+            <Icon name="cash-register" size={24} color="#10B981" />
+          </View>
+          <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans', marginBottom: 2 }}>SmartPOS</Text>
+          <Text style={{ fontSize: 12, color: '#64748B', fontFamily: 'Plus Jakarta Sans', marginBottom: 14 }}>Super Admin Control</Text>
+          <ActivityIndicator size="small" color="#10B981" />
+        </View>
       </View>
     );
   }
 
-  const inAuthGroup = segments[0] === '(auth)';
-  if (inAuthGroup || (!user && !isDemoBypass)) {
+  if (!user && !isDemoBypass) {
     return <Slot />;
   }
 

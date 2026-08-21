@@ -121,9 +121,15 @@ export default function IndexPage() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0D0E1A', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#818CF8" />
-        <Text style={{ color: '#fff', marginTop: 12 }}>Loading Command Center...</Text>
+      <View style={{ flex: 1, backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ alignItems: 'center', paddingVertical: 28, paddingHorizontal: 36, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#64748B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 4 }}>
+          <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: '#ECFDF5', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+            <Icon name="cash-register" size={24} color="#10B981" />
+          </View>
+          <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A', fontFamily: 'Plus Jakarta Sans', marginBottom: 2 }}>SmartPOS</Text>
+          <Text style={{ fontSize: 12, color: '#64748B', fontFamily: 'Plus Jakarta Sans', marginBottom: 14 }}>Super Admin Control</Text>
+          <ActivityIndicator size="small" color="#10B981" />
+        </View>
       </View>
     );
   }
