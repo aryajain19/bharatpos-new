@@ -285,13 +285,6 @@ export default function AdminLoginScreen() {
             >
               Sign in with Google
             </Button>
-
-            <View style={styles.createAccountRow}>
-              <Text style={styles.noAccountText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/(auth)/signup' as any)}>
-                <Text style={styles.createAccountLink}>Create Account</Text>
-              </TouchableOpacity>
-            </View>
           </Surface>
         </View>
 

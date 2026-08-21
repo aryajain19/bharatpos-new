@@ -239,14 +239,6 @@ export default function LoginScreen() {
           Sign in with Google
         </Button>
       </View>
-
-      {/* Register Promo Footer */}
-      <View style={styles.registerFooter}>
-        <Text style={styles.registerDescText}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => router.push('/signup' as any)}>
-          <Text style={styles.registerLinkText}>Create Account</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 
