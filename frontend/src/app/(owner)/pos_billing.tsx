@@ -58,6 +58,22 @@ export default function POSBillingScreen() {
   const [savedBillData, setSavedBillData] = useState<any>(null);
   const [savedDraftList, setSavedDraftList] = useState<any[]>([]);
   const [showAssistantModal, setShowAssistantModal] = useState(false);
+
+  // Discount Modal States
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [discountType, setDiscountType] = useState<'flat' | 'percent'>('flat');
+  const [discountInput, setDiscountInput] = useState('');
+
+  // Phone Prompt Modal States
+  const [showPhonePromptModal, setShowPhonePromptModal] = useState(false);
+  const [phonePromptTarget, setPhonePromptTarget] = useState<'whatsapp' | 'sms'>('whatsapp');
+  const [phonePromptInput, setPhonePromptInput] = useState('');
+  const [phonePromptBill, setPhonePromptBill] = useState<any>(null);
+
+  // SMS Info Modal
+  const [showSmsInfoModal, setShowSmsInfoModal] = useState(false);
+  const [smsSentText, setSmsSentText] = useState('');
+  const [smsSentPhone, setSmsSentPhone] = useState('');
   
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -564,6 +580,28 @@ export default function POSBillingScreen() {
     }
   };
 
+  const buildInvoiceUrl = (bill: any) => {
+    const payload = {
+      storeName: bill.storeName || storeName,
+      storeAddress: bill.storeAddress || storeAddress,
+      gstNum: bill.gstNum || gstNum,
+      isGst: bill.isGst !== undefined ? bill.isGst : isGstRegistered,
+      billNo: bill.billNo || activeBillNo,
+      date: bill.date || new Date().toLocaleDateString('en-IN'),
+      time: bill.time || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      payMethod: bill.payMethod || payMethod,
+      custName: bill.custName || custName,
+      custPhone: bill.custPhone || custPhone,
+      custGstin: bill.custGstin || custGstin,
+      items: (bill.items || cart).map((i: any) => ({ name: i.name, qty: i.qty, price: i.price })),
+      subtotal: bill.subtotal !== undefined ? bill.subtotal : subtotal,
+      discount: bill.discount !== undefined ? bill.discount : discount,
+      finalTotal: bill.finalTotal !== undefined ? bill.finalTotal : finalTotal,
+    };
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://bharatpos-new.vercel.app';
+    return `${base}/invoice?id=${payload.billNo}&data=${encodeURIComponent(JSON.stringify(payload))}`;
+  };
+
   const handleWhatsAppShare = (customBill?: any) => {
     const items = customBill ? customBill.items : cart;
     const bNo = customBill ? customBill.billNo : activeBillNo;
@@ -572,22 +610,39 @@ export default function POSBillingScreen() {
     const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
     const bPhone = customBill ? customBill.custPhone : custPhone;
     const bPayMethod = customBill ? customBill.payMethod : payMethod;
+    const bCustName = customBill ? customBill.custName : custName;
+    const bCustGstin = customBill ? customBill.custGstin : custGstin;
 
     if (!items || items.length === 0) {
       Alert.alert('Empty Cart', 'Please add items before sharing via WhatsApp.');
       return;
     }
 
-    const itemsText = items.map((item: any) => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
-    const message = `Thank you for shopping at *${storeName}*!\n\n*Invoice No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'Cash'}\n\n*Items:*\n${itemsText}\n\n*Subtotal:* ₹${Number(bSubtotal).toFixed(2)}\n${Number(bDiscount) > 0 ? `*Discount:* -₹${Number(bDiscount).toFixed(2)}\n` : ''}*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\nWe look forward to serving you again!`;
-    
-    let url = '';
-    if (bPhone) {
-      const cleanPhone = bPhone.replace(/[^0-9]/g, '');
-      url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
-    } else {
-      url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    if (!bPhone || !bPhone.trim()) {
+      setPhonePromptBill(customBill || null);
+      setPhonePromptTarget('whatsapp');
+      setPhonePromptInput('');
+      setShowPhonePromptModal(true);
+      return;
     }
+
+    const itemsText = items.map((item: any) => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
+    const invoiceUrl = buildInvoiceUrl({
+      billNo: bNo,
+      items,
+      subtotal: Number(bSubtotal),
+      discount: Number(bDiscount),
+      finalTotal: Number(bFinalTotal),
+      custName: bCustName,
+      custPhone: bPhone,
+      custGstin: bCustGstin,
+      payMethod: bPayMethod,
+    });
+
+    const message = `🧾 *TAX INVOICE — ${storeName}*\n━━━━━━━━━━━━━━━━━━━━\n*Invoice No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'Cash'}\n\n*Items Purchased:*\n${itemsText}\n\n*Subtotal:* ₹${Number(bSubtotal).toFixed(2)}\n${Number(bDiscount) > 0 ? `*Discount Savings:* -₹${Number(bDiscount).toFixed(2)}\n` : ''}*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\n📄 *Download / View Official PDF Invoice:*\n${invoiceUrl}\n\n🙏 Thank you for shopping with us!`;
+    
+    const cleanPhone = bPhone.replace(/[^0-9]/g, '');
+    const url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.open(url, '_blank');
@@ -599,26 +654,71 @@ export default function POSBillingScreen() {
   };
 
   const handleSmsShare = (customBill?: any) => {
+    const items = customBill ? customBill.items : cart;
     const bNo = customBill ? customBill.billNo : activeBillNo;
+    const bSubtotal = customBill ? customBill.subtotal : subtotal;
+    const bDiscount = customBill ? customBill.discount : discount;
     const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
     const bPhone = customBill ? customBill.custPhone : custPhone;
+    const bCustName = customBill ? customBill.custName : custName;
+    const bCustGstin = customBill ? customBill.custGstin : custGstin;
+    const bPayMethod = customBill ? customBill.payMethod : payMethod;
 
-    const smsMessage = `Thank you for shopping at ${storeName}. Invoice: ${bNo}, Total: ₹${Number(bFinalTotal).toFixed(2)}.`;
-    let url = '';
-    if (bPhone) {
-      const cleanPhone = bPhone.replace(/[^0-9]/g, '');
-      url = Platform.OS === 'ios' ? `sms:${cleanPhone}&body=${encodeURIComponent(smsMessage)}` : `sms:${cleanPhone}?body=${encodeURIComponent(smsMessage)}`;
-    } else {
-      url = Platform.OS === 'ios' ? `sms:&body=${encodeURIComponent(smsMessage)}` : `sms:?body=${encodeURIComponent(smsMessage)}`;
+    if (!items || items.length === 0) {
+      Alert.alert('Empty Cart', 'Please add items before sending SMS.');
+      return;
     }
+
+    if (!bPhone || !bPhone.trim()) {
+      setPhonePromptBill(customBill || null);
+      setPhonePromptTarget('sms');
+      setPhonePromptInput('');
+      setShowPhonePromptModal(true);
+      return;
+    }
+
+    const invoiceUrl = buildInvoiceUrl({
+      billNo: bNo,
+      items,
+      subtotal: Number(bSubtotal),
+      discount: Number(bDiscount),
+      finalTotal: Number(bFinalTotal),
+      custName: bCustName,
+      custPhone: bPhone,
+      custGstin: bCustGstin,
+      payMethod: bPayMethod,
+    });
+
+    const cleanPhone = bPhone.replace(/[^0-9]/g, '');
+    const smsMessage = `Thank you for shopping at ${storeName}. Your Invoice #${bNo} for ₹${Number(bFinalTotal).toFixed(2)} is ready. Download / View PDF Invoice: ${invoiceUrl}`;
+    
+    setSmsSentText(smsMessage);
+    setSmsSentPhone(cleanPhone);
+    setShowSmsInfoModal(true);
+
+    const url = Platform.OS === 'ios' ? `sms:${cleanPhone}&body=${encodeURIComponent(smsMessage)}` : `sms:${cleanPhone}?body=${encodeURIComponent(smsMessage)}`;
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.open(url, '_blank');
     } else {
-      Linking.openURL(url).catch(() => {
-        Alert.alert('Error', 'SMS composer could not be opened.');
-      });
+      Linking.openURL(url).catch(() => {});
     }
+  };
+
+  const handleApplyDiscount = () => {
+    const val = parseFloat(discountInput);
+    if (isNaN(val) || val <= 0) {
+      setDiscount(0);
+      setShowDiscountModal(false);
+      return;
+    }
+    if (discountType === 'percent') {
+      const discAmt = (subtotal * val) / 100;
+      setDiscount(Math.min(subtotal, Math.round(discAmt * 100) / 100));
+    } else {
+      setDiscount(Math.min(subtotal, val));
+    }
+    setShowDiscountModal(false);
   };
 
   const handlePrint = () => {
@@ -938,6 +1038,45 @@ export default function POSBillingScreen() {
 
         <FadeIn delay={200} style={{ flex: 1 }}>
           <View style={styles.rightPane}>
+            {/* Quick Customer Info Card */}
+            <Surface style={{ borderRadius: 12, padding: 12, marginBottom: 12, backgroundColor: appTheme.colors.surface, borderWidth: 1, borderColor: '#E2E8F0' }} elevation={0}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Icon name="account-details" size={18} color="#10B981" />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: appTheme.colors.onSurface }}>Customer (WhatsApp / SMS)</Text>
+                </View>
+                {custPhone ? (
+                  <Chip compact textStyle={{ fontSize: 10, color: '#10B981', fontWeight: '700' }} style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', height: 22 }}>
+                    Ready
+                  </Chip>
+                ) : null}
+              </View>
+              <TextInput
+                placeholder="Customer Mobile (10 digits)"
+                value={custPhone}
+                onChangeText={setCustPhone}
+                keyboardType="phone-pad"
+                mode="outlined"
+                dense
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#10B981"
+                style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', fontSize: 13, marginBottom: 6 }}
+                left={<TextInput.Icon icon="phone" size={18} color="#10B981" />}
+                right={custPhone ? <TextInput.Icon icon="close-circle" size={16} onPress={() => setCustPhone('')} /> : undefined}
+              />
+              <TextInput
+                placeholder="Customer Name (Optional)"
+                value={custName}
+                onChangeText={setCustName}
+                mode="outlined"
+                dense
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#10B981"
+                style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', fontSize: 13 }}
+                left={<TextInput.Icon icon="account" size={18} color="#64748B" />}
+              />
+            </Surface>
+
             {/* Payment Summary Card */}
             <Surface style={styles.summaryCard} elevation={0}>
               <View style={styles.summaryHeader}>
@@ -953,13 +1092,32 @@ export default function POSBillingScreen() {
                 <Text style={styles.summaryValue}>₹{subtotal.toFixed(2)}</Text>
               </View>
 
-              {/* Discount */}
+              {/* Discount Row (Interactive for Store Owner) */}
               <View style={styles.summaryRow}>
-                <View style={styles.labelWithBadge}>
-                  <Text style={styles.summaryLabel}>Discount</Text>
-
-                </View>
-                <Text style={[styles.summaryValue, { color: appTheme.colors.onSurface }]}>- ₹{discount.toFixed(2)}</Text>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  onPress={() => {
+                    setDiscountInput(discount > 0 ? String(discount) : '');
+                    setShowDiscountModal(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.summaryLabel, { color: discount > 0 ? '#10B981' : '#2563EB', fontWeight: '700' }]}>
+                    Discount {discount > 0 ? `(Applied)` : `(+ Add % or ₹)`}
+                  </Text>
+                  <Icon name="pencil-circle-outline" size={16} color={discount > 0 ? '#10B981' : '#2563EB'} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setDiscountInput(discount > 0 ? String(discount) : '');
+                    setShowDiscountModal(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.summaryValue, { color: discount > 0 ? '#10B981' : appTheme.colors.onSurface, fontWeight: discount > 0 ? '800' : '500' }]}>
+                    - ₹{discount.toFixed(2)}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               {isGstRegistered && (
@@ -1399,6 +1557,218 @@ export default function POSBillingScreen() {
           </Dialog.Content>
           <Dialog.Actions style={styles.dialogActions}>
             <Button onPress={() => setShowSessionModal(false)}>Close</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* ── 5. STORE OWNER DISCOUNT CONTROLLER MODAL ────────── */}
+      <Portal>
+        <Dialog visible={showDiscountModal} onDismiss={() => setShowDiscountModal(false)} style={[styles.dialog, { maxWidth: 440, alignSelf: 'center', width: '90%' }]}>
+          <Dialog.Title style={[styles.dialogTitle, { color: '#10B981' }]}>
+            <Icon name="tag-outline" size={22} color="#10B981" style={{ marginRight: 8 }} />
+            Apply Customer Discount
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text style={{ fontSize: 13, color: appTheme.colors.onSurface, marginBottom: 12 }}>
+              Choose discount type and amount to offer your customer on this sale.
+            </Text>
+
+            {/* Mode Switcher */}
+            <SegmentedButtons
+              value={discountType}
+              onValueChange={(val: any) => setDiscountType(val)}
+              buttons={[
+                { value: 'flat', label: 'Flat Amount (₹)' },
+                { value: 'percent', label: 'Percentage (%)' }
+              ]}
+              style={{ marginBottom: 16 }}
+            />
+
+            {/* Quick Presets */}
+            <Text style={[styles.dialogLabel, { marginBottom: 6 }]}>Quick Presets</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {discountType === 'percent' ? (
+                  ['5', '10', '15', '20', '25'].map(pct => (
+                    <Chip
+                      key={pct}
+                      mode="outlined"
+                      selected={discountInput === pct}
+                      onPress={() => setDiscountInput(pct)}
+                      style={{ backgroundColor: discountInput === pct ? 'rgba(16, 185, 129, 0.15)' : 'transparent' }}
+                      textStyle={{ fontWeight: '700', fontSize: 12, color: discountInput === pct ? '#10B981' : appTheme.colors.onSurface }}
+                    >
+                      {pct}%
+                    </Chip>
+                  ))
+                ) : (
+                  ['10', '20', '50', '100', '200'].map(amt => (
+                    <Chip
+                      key={amt}
+                      mode="outlined"
+                      selected={discountInput === amt}
+                      onPress={() => setDiscountInput(amt)}
+                      style={{ backgroundColor: discountInput === amt ? 'rgba(16, 185, 129, 0.15)' : 'transparent' }}
+                      textStyle={{ fontWeight: '700', fontSize: 12, color: discountInput === amt ? '#10B981' : appTheme.colors.onSurface }}
+                    >
+                      ₹{amt}
+                    </Chip>
+                  ))
+                )}
+              </View>
+            </ScrollView>
+
+            {/* Custom Discount Input */}
+            <TextInput
+              label={discountType === 'percent' ? 'Discount Percentage (%)' : 'Discount Amount (₹)'}
+              placeholder={discountType === 'percent' ? 'e.g. 10' : 'e.g. 50'}
+              value={discountInput}
+              onChangeText={setDiscountInput}
+              keyboardType="numeric"
+              mode="outlined"
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#10B981"
+              style={{ marginBottom: 12, backgroundColor: appTheme.colors.surface }}
+              left={<TextInput.Icon icon={discountType === 'percent' ? 'percent' : 'currency-inr'} size={18} color="#10B981" />}
+              right={discountInput ? <TextInput.Icon icon="close" size={16} onPress={() => setDiscountInput('')} /> : undefined}
+            />
+
+            {/* Live Calculation Preview */}
+            <Surface style={{ padding: 12, borderRadius: 8, backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 12, color: '#64748B' }}>Cart Subtotal:</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: appTheme.colors.onSurface }}>₹{subtotal.toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 12, color: '#10B981' }}>Discount to Apply:</Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#10B981' }}>
+                  - ₹{(discountType === 'percent' ? ((subtotal * (parseFloat(discountInput) || 0)) / 100) : (parseFloat(discountInput) || 0)).toFixed(2)}
+                </Text>
+              </View>
+              <Divider style={{ marginVertical: 6 }} />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: appTheme.colors.onSurface }}>New Estimated Total:</Text>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#10B981' }}>
+                  ₹{Math.max(0, subtotal - (discountType === 'percent' ? ((subtotal * (parseFloat(discountInput) || 0)) / 100) : (parseFloat(discountInput) || 0))).toFixed(2)}
+                </Text>
+              </View>
+            </Surface>
+          </Dialog.Content>
+          <Dialog.Actions style={styles.dialogActions}>
+            <Button
+              onPress={() => {
+                setDiscount(0);
+                setDiscountInput('');
+                setShowDiscountModal(false);
+              }}
+              textColor="#EF4444"
+            >
+              Remove Discount
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleApplyDiscount}
+              style={{ borderRadius: 8, backgroundColor: '#10B981' }}
+            >
+              Apply Discount
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* ── 6. PHONE NUMBER PROMPT MODAL FOR WHATSAPP/SMS ───── */}
+      <Portal>
+        <Dialog visible={showPhonePromptModal} onDismiss={() => setShowPhonePromptModal(false)} style={[styles.dialog, { maxWidth: 420, alignSelf: 'center', width: '90%' }]}>
+          <Dialog.Title style={[styles.dialogTitle, { color: phonePromptTarget === 'whatsapp' ? '#2E7D32' : '#0284C7' }]}>
+            <Icon name={phonePromptTarget === 'whatsapp' ? 'whatsapp' : 'message-text'} size={22} color={phonePromptTarget === 'whatsapp' ? '#2E7D32' : '#0284C7'} style={{ marginRight: 8 }} />
+            Enter Customer Mobile Number
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text style={{ fontSize: 13, color: appTheme.colors.onSurface, marginBottom: 12 }}>
+              Enter the customer's 10-digit mobile number to dispatch their digital invoice & PDF download link.
+            </Text>
+            <TextInput
+              label="Customer Mobile (+91)"
+              placeholder="e.g. 9876543210"
+              value={phonePromptInput}
+              onChangeText={setPhonePromptInput}
+              keyboardType="phone-pad"
+              mode="outlined"
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#10B981"
+              style={{ backgroundColor: appTheme.colors.surface }}
+              left={<TextInput.Icon icon="phone" size={18} color="#10B981" />}
+            />
+          </Dialog.Content>
+          <Dialog.Actions style={styles.dialogActions}>
+            <Button onPress={() => setShowPhonePromptModal(false)} textColor="#64748B">
+              Cancel
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => {
+                const clean = phonePromptInput.trim();
+                if (!clean) {
+                  Alert.alert('Phone Required', 'Please enter a valid mobile number.');
+                  return;
+                }
+                setCustPhone(clean);
+                setShowPhonePromptModal(false);
+                const targetBill = phonePromptBill ? { ...phonePromptBill, custPhone: clean } : null;
+                if (phonePromptTarget === 'whatsapp') {
+                  setTimeout(() => handleWhatsAppShare(targetBill || { custPhone: clean }), 100);
+                } else {
+                  setTimeout(() => handleSmsShare(targetBill || { custPhone: clean }), 100);
+                }
+              }}
+              style={{ borderRadius: 8, backgroundColor: phonePromptTarget === 'whatsapp' ? '#2E7D32' : '#0284C7' }}
+            >
+              {phonePromptTarget === 'whatsapp' ? 'Send WhatsApp' : 'Send SMS'}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* ── 7. SMS CONFIRMATION & COPY MODAL ────────────────── */}
+      <Portal>
+        <Dialog visible={showSmsInfoModal} onDismiss={() => setShowSmsInfoModal(false)} style={[styles.dialog, { maxWidth: 440, alignSelf: 'center', width: '90%' }]}>
+          <Dialog.Title style={[styles.dialogTitle, { color: '#0284C7' }]}>
+            <Icon name="message-check" size={22} color="#0284C7" style={{ marginRight: 8 }} />
+            SMS Invoice Dispatched
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text style={{ fontSize: 13, color: appTheme.colors.onSurface, marginBottom: 8 }}>
+              SMS invoice link sent to <Text style={{ fontWeight: '700' }}>+91 {smsSentPhone}</Text>.
+            </Text>
+
+            <Surface style={{ padding: 12, borderRadius: 8, backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', marginVertical: 8 }}>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748B', marginBottom: 4 }}>DISPATCHED MESSAGE WITH PDF LINK:</Text>
+              <Text style={{ fontSize: 12, color: appTheme.colors.onSurface, lineHeight: 16 }}>
+                {smsSentText}
+              </Text>
+            </Surface>
+          </Dialog.Content>
+          <Dialog.Actions style={styles.dialogActions}>
+            <Button
+              onPress={() => {
+                if (typeof window !== 'undefined' && navigator.clipboard) {
+                  navigator.clipboard.writeText(smsSentText);
+                  Alert.alert('Copied', 'SMS message text copied to clipboard.');
+                }
+              }}
+              icon="content-copy"
+            >
+              Copy Text
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => {
+                setShowSmsInfoModal(false);
+              }}
+              style={{ borderRadius: 8, backgroundColor: '#0284C7' }}
+            >
+              Done
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

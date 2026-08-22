@@ -233,6 +233,7 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(owner)" />
             <Stack.Screen name="(vendor)" />
+            <Stack.Screen name="invoice" />
           </Stack>
         </ThemeProvider>
       </CartProvider>
