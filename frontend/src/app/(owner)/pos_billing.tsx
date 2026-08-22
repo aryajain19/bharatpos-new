@@ -739,12 +739,12 @@ export default function POSBillingScreen() {
     saveInvoiceToCloud(invoicePayload);
 
     const invoiceUrl = buildCleanInvoiceUrl(bNo);
-    const smsMessage = `Dear Customer, thank you for shopping at ${storeName}!\nBill No: ${bNo}\nAmount: ₹${Number(bFinalTotal).toFixed(2)}\nPayment Mode: ${bPayMethod || 'UPI'}\nView/Download Bill: ${invoiceUrl}`;
+    const smsMessage = `Dear Customer, thank you for shopping at ${storeName}! Bill No: ${bNo}, Amount: Rs.${Number(bFinalTotal).toFixed(2)}, Payment: ${bPayMethod || 'UPI'}. View Bill: ${invoiceUrl}`;
 
-    // 1. Direct Background SMS Gateway API Call
+    // Direct Background SMS Gateway API Call via Fast2SMS
     if (Platform.OS === 'web' && typeof fetch !== 'undefined') {
       try {
-        fetch('/api/send-sms', {
+        const smsRes = await fetch('/api/send-sms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -755,12 +755,17 @@ export default function POSBillingScreen() {
             storeName,
             invoiceUrl
           })
-        }).catch(() => {});
-      } catch (_) {}
+        });
+        const smsData = await smsRes.json();
+        if (smsData.success) {
+          Alert.alert('✅ SMS Delivered', `Invoice #${bNo} sent to +91 ${cleanPhone} successfully.`);
+        } else {
+          Alert.alert('⚠️ SMS Failed', smsData.error || 'Could not deliver SMS. Please check the phone number and try again.');
+        }
+      } catch (err) {
+        Alert.alert('⚠️ SMS Error', 'Network error while sending SMS. Please try again.');
+      }
     }
-
-    // Direct Non-disruptive feedback
-    Alert.alert('✅ SMS Dispatched', `Digital invoice #${bNo} has been sent directly to +91 ${cleanPhone} via Cloud SMS API.`);
   };
 
   const handleApplyDiscount = () => {
