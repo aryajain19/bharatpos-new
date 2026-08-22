@@ -124,17 +124,22 @@ export default function POSBillingScreen() {
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (data.length > 0) {
-          const formatted = data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            price: p.selling_price || p.price,
-            barcode: p.barcode || '',
-            category: p.category || '',
-            gst_pct: p.gst_pct || 0,
-            hsn: p.hsn || '',
-            stock_qty: p.stock_qty !== undefined ? p.stock_qty : (p.stock || 0),
-            image_url: p.image_url
-          }));
+          const formatted = data.map((p: any) => {
+            const pPrice = Number(p.price !== undefined ? p.price : (p.selling_price !== undefined ? p.selling_price : (p.mrp !== undefined ? p.mrp : 0))) || 0;
+            const pMrp = Number(p.mrp !== undefined ? p.mrp : pPrice) || pPrice;
+            return {
+              id: p.id,
+              name: p.name || 'Product',
+              price: pPrice,
+              mrp: pMrp,
+              barcode: p.barcode || '',
+              category: p.category || '',
+              gst_pct: Number(p.gst_pct) || 0,
+              hsn: p.hsn || '',
+              stock_qty: p.stock_qty !== undefined ? Number(p.stock_qty) : (Number(p.stock) || 0),
+              image_url: p.image_url
+            };
+          });
           setProducts(formatted);
         }
       } catch (error) {
@@ -146,18 +151,21 @@ export default function POSBillingScreen() {
   const filteredProducts = useMemo(() => {
     if (!search.trim()) return [];
     return products.filter(p => 
-      p.name.toLowerCase().includes(search.toLowerCase()) || 
-      p.barcode.includes(search)
+      (p.name || '').toLowerCase().includes(search.toLowerCase()) || 
+      (p.barcode || '').includes(search)
     );
   }, [search, products]);
 
   const handleAddProduct = (product: any) => {
+    const safePrice = Number(product.price !== undefined ? product.price : (product.selling_price !== undefined ? product.selling_price : (product.mrp !== undefined ? product.mrp : 0))) || 0;
+    const safeMrp = Number(product.mrp !== undefined ? product.mrp : safePrice) || safePrice;
     addToCart({
       id: product.id, 
       name: product.name,
-      price: product.price, 
+      price: safePrice, 
+      mrp: safeMrp,
       qty: 1,
-      gst_pct: isGstRegistered ? product.gst_pct : 0, 
+      gst_pct: isGstRegistered ? (Number(product.gst_pct) || 0) : 0, 
       hsn: product.hsn || '',
       image_url: product.image_url,
     });
@@ -228,8 +236,10 @@ export default function POSBillingScreen() {
     let cgst = 0; let sgst = 0; let totalGst = 0;
     if (!isGstRegistered) return { cgst, sgst, totalGst };
     cart.forEach(item => {
-      const itemTotal = item.price * item.qty;
-      const gstPct = item.gst_pct !== undefined ? item.gst_pct : 5;
+      const itemPrice = Number(item.price !== undefined ? item.price : (item.selling_price !== undefined ? item.selling_price : 0)) || 0;
+      const itemQty = Number(item.qty) || 1;
+      const itemTotal = itemPrice * itemQty;
+      const gstPct = item.gst_pct !== undefined ? (Number(item.gst_pct) || 0) : 5;
       const gstAmount = itemTotal * (gstPct / 100);
       totalGst += gstAmount;
       cgst += gstAmount / 2;
@@ -274,12 +284,15 @@ export default function POSBillingScreen() {
       if (!snapshot.empty) {
         const docSnap = snapshot.docs[0];
         const data = docSnap.data();
+        const pPrice = Number(data.price !== undefined ? data.price : (data.selling_price !== undefined ? data.selling_price : (data.mrp !== undefined ? data.mrp : 0))) || 0;
+        const pMrp = Number(data.mrp !== undefined ? data.mrp : pPrice) || pPrice;
         addToCart({
           id: docSnap.id, 
-          name: data.name,
-          price: data.selling_price || data.price, 
+          name: data.name || 'Product',
+          price: pPrice, 
+          mrp: pMrp,
           qty: 1,
-          gst_pct: isGstRegistered ? data.gst_pct : 0, 
+          gst_pct: isGstRegistered ? (Number(data.gst_pct) || 0) : 0, 
           hsn: data.hsn || '',
           image_url: data.image_url,
         });
@@ -650,8 +663,7 @@ export default function POSBillingScreen() {
     saveInvoiceToCloud(invoicePayload);
 
     const invoiceUrl = buildCleanInvoiceUrl(bNo);
-    const itemsText = items.map((item: any) => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
-    const message = `🧾 *TAX INVOICE — ${storeName}*\n━━━━━━━━━━━━━━━━━━━━\n*Bill No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'UPI'}\n\n*Items:*\n${itemsText}\n\n*Subtotal:* ₹${Number(bSubtotal).toFixed(2)}\n${Number(bDiscount) > 0 ? `*Discount Savings:* -₹${Number(bDiscount).toFixed(2)}\n` : ''}*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\n📄 *Official Invoice Link:*\n${invoiceUrl}\n\n🙏 Thank you for shopping with us!`;
+    const message = `Thank you for shopping at *${storeName}*!\n\n*Invoice No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'UPI'}\n*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\n📄 *View & Download Official Tax Invoice / PDF Bill:*\n${invoiceUrl}\n\nWe look forward to serving you again!`;
 
     // 1. Dispatch via WhatsApp Cloud API
     if (Platform.OS === 'web' && typeof fetch !== 'undefined') {
@@ -1011,9 +1023,9 @@ export default function POSBillingScreen() {
             {/* Column Headers */}
             {cart.length > 0 && (
               <View style={styles.columnHeaders}>
-                <Text style={[styles.colHeader, { flex: 2.5 }]}>PRODUCT</Text>
-                <Text style={[styles.colHeader, { flex: 0.8, textAlign: 'center' }]}>PRICE</Text>
-                <Text style={[styles.colHeader, { flex: 1, textAlign: 'center' }]}>QTY</Text>
+                <Text style={[styles.colHeader, { flex: 2.4 }]}>PRODUCT</Text>
+                <Text style={[styles.colHeader, { flex: 1.1, textAlign: 'center' }]}>PRICE / MRP</Text>
+                <Text style={[styles.colHeader, { flex: 1.1, textAlign: 'center' }]}>QTY</Text>
                 {isGstRegistered && <Text style={[styles.colHeader, { flex: 0.6, textAlign: 'center' }]}>GST</Text>}
                 <Text style={[styles.colHeader, { flex: 1, textAlign: 'right' }]}>TOTAL</Text>
                 <View style={{ width: 36 }} />
@@ -1023,21 +1035,33 @@ export default function POSBillingScreen() {
             {/* Cart Items */}
             <ScrollView style={styles.cartList} showsVerticalScrollIndicator={false}>
               {cart.map((item, idx) => {
-                const itemGst = isGstRegistered ? ((item.price * item.qty) * ((item.gst_pct || 0) / 100)) : 0;
-                const itemTotal = (item.price * item.qty) + itemGst;
+                const safePrice = Number(item.price !== undefined ? item.price : (item.selling_price !== undefined ? item.selling_price : (item.mrp !== undefined ? item.mrp : 0))) || 0;
+                const safeMrp = Number(item.mrp !== undefined ? item.mrp : safePrice) || safePrice;
+                const safeQty = Number(item.qty) || 1;
+                const safeGstPct = Number(item.gst_pct) || 0;
+                const itemGst = isGstRegistered ? ((safePrice * safeQty) * (safeGstPct / 100)) : 0;
+                const itemTotal = (safePrice * safeQty) + itemGst;
+
                 return (
                   <View key={item.id} style={[styles.cartItem, idx % 2 === 0 && { backgroundColor: appTheme.colors.surface }]}>
                     {/* Product */}
-                    <View style={{ flex: 2.5 }}>
+                    <View style={{ flex: 2.4 }}>
                       <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                      <Text style={styles.itemSku}>SKU: {item.id.toUpperCase()}</Text>
+                      <Text style={styles.itemSku}>SKU: {String(item.id || '').toUpperCase()}</Text>
                     </View>
 
-                    {/* Price */}
-                    <Text style={[styles.itemPrice, { flex: 0.8, textAlign: 'center' }]}>₹{item.price}</Text>
+                    {/* Price / MRP */}
+                    <View style={{ flex: 1.1, alignItems: 'center' }}>
+                      <Text style={styles.itemPrice}>₹{safePrice.toFixed(2)}</Text>
+                      {safeMrp > safePrice ? (
+                        <Text style={{ fontSize: 10, color: '#94A3B8', textDecorationLine: 'line-through' }}>
+                          ₹{safeMrp.toFixed(2)}
+                        </Text>
+                      ) : null}
+                    </View>
 
                     {/* Qty Controls */}
-                    <View style={[styles.qtyController, { flex: 1, justifyContent: 'center' }]}>
+                    <View style={[styles.qtyController, { flex: 1.1, justifyContent: 'center' }]}>
                       <TouchableOpacity
                         onPress={() => updateQty(item.id, -1)}
                         style={styles.qtyBtn}
@@ -1046,22 +1070,22 @@ export default function POSBillingScreen() {
                         <Icon name="minus" size={14} color="#10B981" />
                       </TouchableOpacity>
                       <View style={styles.qtyDisplay}>
-                        <Text style={styles.qtyText}>{item.qty}</Text>
+                        <Text style={styles.qtyText}>{safeQty}</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => updateQty(item.id, 1)}
                         style={[styles.qtyBtn, styles.qtyBtnPlus]}
                         activeOpacity={0.6}
                       >
-                        <Icon name="plus" size={14} color="#fff" />
+                        <Icon name="plus" size={14} color="#FFFFFF" />
                       </TouchableOpacity>
                     </View>
 
                     {/* GST */}
-                    {isGstRegistered && <Text style={[styles.itemGst, { flex: 0.6, textAlign: 'center' }]}>{item.gst_pct || 0}%</Text>}
+                    {isGstRegistered && <Text style={[styles.itemGst, { flex: 0.6, textAlign: 'center' }]}>{safeGstPct}%</Text>}
 
                     {/* Total */}
-                    <Text style={[styles.itemTotal, { flex: 1, textAlign: 'right' }]}>₹{itemTotal.toFixed(0)}</Text>
+                    <Text style={[styles.itemTotal, { flex: 1, textAlign: 'right' }]}>₹{itemTotal.toFixed(2)}</Text>
 
                     {/* Delete */}
                     <TouchableOpacity onPress={() => removeFromCart(item.id)} style={styles.deleteBtn} activeOpacity={0.6}>
@@ -2038,10 +2062,10 @@ const styles = StyleSheet.create({
 
   // Qty Controls
   qtyController: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  qtyBtn: { width: 24, height: 24, borderRadius: DS.radius.xs, borderWidth: 1, borderColor: DS.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: DS.colors.cardBg },
-  qtyBtnPlus: { },
-  qtyDisplay: { minWidth: 20, alignItems: 'center' },
-  qtyText: { fontSize: 12, fontWeight: '700', color: DS.colors.text },
+  qtyBtn: { width: 26, height: 26, borderRadius: 6, borderWidth: 1.5, borderColor: '#10B981', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  qtyBtnPlus: { backgroundColor: '#10B981', borderColor: '#10B981' },
+  qtyDisplay: { minWidth: 22, alignItems: 'center' },
+  qtyText: { fontSize: 13, fontWeight: '800', color: DS.colors.text },
 
   emptyCartContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
   emptyCartTitle: { fontSize: 16, fontWeight: '700', marginTop: 12, color: DS.colors.text },

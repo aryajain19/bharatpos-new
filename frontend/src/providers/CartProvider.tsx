@@ -4,6 +4,8 @@ export type CartItem = {
   id: string;
   name: string;
   price: number;
+  mrp?: number;
+  selling_price?: number;
   qty: number;
   gst_pct: number;
   hsn?: string;
@@ -12,7 +14,7 @@ export type CartItem = {
 
 type CartContextType = {
   cart: CartItem[];
-  addToCart: (item: CartItem) => void;
+  addToCart: (item: any) => void;
   removeFromCart: (id: string) => void;
   updateQty: (id: string, delta: number) => void;
   clearCart: () => void;
@@ -26,13 +28,31 @@ const CartContext = createContext<CartContextType | null>(null);
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const addToCart = (item: CartItem) => {
+  const addToCart = (item: any) => {
+    const rawPrice = item.price !== undefined ? item.price : (item.selling_price !== undefined ? item.selling_price : (item.mrp !== undefined ? item.mrp : 0));
+    const safePrice = Number(rawPrice) || 0;
+    const safeMrp = Number(item.mrp !== undefined ? item.mrp : safePrice) || safePrice;
+    const safeGst = Number(item.gst_pct) || 0;
+    const safeQty = Number(item.qty) || 1;
+
     setCart((prev) => {
       const existing = prev.find((p) => p.id === item.id);
       if (existing) {
-        return prev.map((p) => p.id === item.id ? { ...p, qty: p.qty + item.qty } : p);
+        return prev.map((p) => p.id === item.id ? {
+          ...p,
+          qty: (Number(p.qty) || 0) + safeQty,
+          price: Number(p.price) || safePrice,
+          mrp: Number(p.mrp) || safeMrp,
+          gst_pct: Number(p.gst_pct) || safeGst
+        } : p);
       }
-      return [...prev, item];
+      return [...prev, {
+        ...item,
+        price: safePrice,
+        mrp: safeMrp,
+        gst_pct: safeGst,
+        qty: safeQty
+      }];
     });
   };
 
@@ -43,7 +63,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const updateQty = (id: string, delta: number) => {
     setCart((prev) => prev.map((p) => {
       if (p.id === id) {
-        const newQty = Math.max(1, p.qty + delta);
+        const currentQty = Number(p.qty) || 1;
+        const newQty = Math.max(1, currentQty + delta);
         return { ...p, qty: newQty };
       }
       return p;
@@ -52,8 +73,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const clearCart = () => setCart([]);
 
-  const getSubtotal = () => cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const getGST = () => cart.reduce((sum, item) => sum + ((item.price * item.qty * item.gst_pct) / 100), 0);
+  const getSubtotal = () => cart.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.qty) || 1)), 0);
+  const getGST = () => cart.reduce((sum, item) => sum + (((Number(item.price) || 0) * (Number(item.qty) || 1) * (Number(item.gst_pct) || 0)) / 100), 0);
   const getTotal = () => getSubtotal() + getGST();
 
   return (
