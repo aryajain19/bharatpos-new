@@ -560,15 +560,30 @@ export default function POSBillingScreen() {
         </html>
       `;
 
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(htmlString);
-          printWindow.document.close();
-          printWindow.focus();
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        let printFrame = document.getElementById('receipt-print-iframe') as HTMLIFrameElement;
+        if (!printFrame) {
+          printFrame = document.createElement('iframe');
+          printFrame.id = 'receipt-print-iframe';
+          printFrame.style.position = 'fixed';
+          printFrame.style.right = '0';
+          printFrame.style.bottom = '0';
+          printFrame.style.width = '0';
+          printFrame.style.height = '0';
+          printFrame.style.border = '0';
+          document.body.appendChild(printFrame);
+        }
+        const doc = printFrame.contentDocument || (printFrame.contentWindow ? printFrame.contentWindow.document : null);
+        if (doc) {
+          doc.open();
+          doc.write(htmlString);
+          doc.close();
           setTimeout(() => {
-            printWindow.print();
-          }, 300);
+            if (printFrame.contentWindow) {
+              printFrame.contentWindow.focus();
+              printFrame.contentWindow.print();
+            }
+          }, 250);
           return;
         }
       }
@@ -653,7 +668,7 @@ export default function POSBillingScreen() {
     }
   };
 
-  const handleSmsShare = (customBill?: any) => {
+  const handleSmsShare = async (customBill?: any) => {
     const items = customBill ? customBill.items : cart;
     const bNo = customBill ? customBill.billNo : activeBillNo;
     const bSubtotal = customBill ? customBill.subtotal : subtotal;
@@ -692,6 +707,24 @@ export default function POSBillingScreen() {
     const cleanPhone = bPhone.replace(/[^0-9]/g, '');
     const smsMessage = `Thank you for shopping at ${storeName}. Your Invoice #${bNo} for ₹${Number(bFinalTotal).toFixed(2)} is ready. Download / View PDF Invoice: ${invoiceUrl}`;
     
+    // 1. Call Backend SMS Gateway API Route
+    if (Platform.OS === 'web' && typeof fetch !== 'undefined') {
+      try {
+        fetch('/api/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: cleanPhone,
+            message: smsMessage,
+            billNo: bNo,
+            amount: Number(bFinalTotal),
+            storeName,
+            invoiceUrl
+          })
+        }).catch(err => console.warn('SMS API background trigger:', err));
+      } catch (_) {}
+    }
+
     setSmsSentText(smsMessage);
     setSmsSentPhone(cleanPhone);
     setShowSmsInfoModal(true);
@@ -1037,7 +1070,7 @@ export default function POSBillingScreen() {
         </FadeIn>
 
         <FadeIn delay={200} style={{ flex: 1 }}>
-          <View style={styles.rightPane}>
+          <ScrollView style={styles.rightPane} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
             {/* Quick Customer Info Card */}
             <Surface style={{ borderRadius: 12, padding: 12, marginBottom: 12, backgroundColor: appTheme.colors.surface, borderWidth: 1, borderColor: '#E2E8F0' }} elevation={0}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1242,7 +1275,7 @@ export default function POSBillingScreen() {
                 </View>
               </View>
             </Surface>
-          </View>
+          </ScrollView>
         </FadeIn>
       </View>
 
