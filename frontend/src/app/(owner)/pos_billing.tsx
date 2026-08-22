@@ -758,13 +758,36 @@ export default function POSBillingScreen() {
         });
         const smsData = await smsRes.json();
         if (smsData.success) {
-          Alert.alert('✅ SMS Delivered', `Invoice #${bNo} sent to +91 ${cleanPhone} successfully.`);
+          Alert.alert('✅ SMS Delivered', `Invoice #${bNo} sent to +91 ${cleanPhone} successfully via Fast2SMS.`);
         } else {
-          Alert.alert('⚠️ SMS Failed', smsData.error || 'Could not deliver SMS. Please check the phone number and try again.');
+          // If carrier needs wallet recharge or returned error, provide instant fallback
+          const errorMsg = smsData.error || 'Fast2SMS carrier delivery pending.';
+          Alert.alert(
+            'SMS Notification',
+            `${errorMsg}\n\nOpening device SMS to send invoice directly to +91 ${cleanPhone}...`,
+            [
+              {
+                text: 'Send via Device SMS',
+                onPress: () => {
+                  const smsUri = `sms:+91${cleanPhone}?body=${encodeURIComponent(smsMessage)}`;
+                  if (typeof window !== 'undefined') {
+                    window.open(smsUri, '_blank');
+                  } else {
+                    Linking.openURL(smsUri).catch(() => {});
+                  }
+                }
+              },
+              { text: 'OK', style: 'cancel' }
+            ]
+          );
         }
       } catch (err) {
         Alert.alert('⚠️ SMS Error', 'Network error while sending SMS. Please try again.');
       }
+    } else {
+      // Mobile native fallback
+      const smsUri = `sms:+91${cleanPhone}?body=${encodeURIComponent(smsMessage)}`;
+      Linking.openURL(smsUri).catch(() => {});
     }
   };
 
