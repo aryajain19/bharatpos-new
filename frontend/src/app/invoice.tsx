@@ -1,15 +1,43 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Platform, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, ScrollView, Platform, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { Text, Surface, Divider, Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams } from 'expo-router';
+import { db } from '../lib/firebase';
+import { doc, getDoc } from '../lib/firestore_adapter';
 
 export default function PublicInvoiceScreen() {
   const params = useLocalSearchParams();
   const { width } = useWindowDimensions();
   const isDesktop = width > 700;
+  const [cloudInvoice, setCloudInvoice] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const billId = (params.id as string) || (params.billNo as string) || '';
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchInvoice() {
+      if (billId) {
+        try {
+          const snap = await getDoc(doc(db, 'invoices', billId));
+          if (snap && snap.exists() && isMounted) {
+            setCloudInvoice(snap.data());
+          }
+        } catch (e) {
+          console.warn('Error fetching cloud invoice:', e);
+        }
+      }
+      if (isMounted) setLoading(false);
+    }
+    fetchInvoice();
+    return () => { isMounted = false; };
+  }, [billId]);
 
   const invoiceData = useMemo(() => {
+    if (cloudInvoice) {
+      return cloudInvoice;
+    }
     if (params.data && typeof params.data === 'string') {
       try {
         return JSON.parse(decodeURIComponent(params.data));
@@ -24,10 +52,10 @@ export default function PublicInvoiceScreen() {
       storeAddress: (params.storeAddress as string) || '',
       gstNum: (params.gstNum as string) || '',
       isGst: params.isGst === 'true' || Boolean(params.isGst),
-      billNo: (params.id as string) || (params.billNo as string) || 'INV-' + Date.now().toString().slice(-6),
+      billNo: billId || 'INV-' + Date.now().toString().slice(-6),
       date: (params.date as string) || new Date().toLocaleDateString('en-IN'),
       time: (params.time as string) || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      payMethod: (params.payMethod as string) || 'Cash / Digital',
+      payMethod: (params.payMethod as string) || 'UPI',
       custName: (params.custName as string) || 'Valued Customer',
       custPhone: (params.custPhone as string) || '',
       custGstin: (params.custGstin as string) || '',
@@ -38,7 +66,7 @@ export default function PublicInvoiceScreen() {
       discount: Number(params.discount) || 0,
       finalTotal: Number(params.total) || Number(params.finalTotal) || 0,
     };
-  }, [params]);
+  }, [cloudInvoice, params, billId]);
 
   const handlePrint = () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {

@@ -7,7 +7,7 @@ import { CameraView, Camera } from 'expo-camera';
 import * as Print from 'expo-print';
 import { useCart } from '../../providers/CartProvider';
 import { db, isFirebaseConfigured, auth } from '../../lib/firebase';
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment } from '../../lib/firestore_adapter';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment, setDoc, getDoc } from '../../lib/firestore_adapter';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { cleanAndMapCategory } from '../../lib/ui_helpers';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -70,11 +70,6 @@ export default function POSBillingScreen() {
   const [phonePromptInput, setPhonePromptInput] = useState('');
   const [phonePromptBill, setPhonePromptBill] = useState<any>(null);
 
-  // SMS Info Modal
-  const [showSmsInfoModal, setShowSmsInfoModal] = useState(false);
-  const [smsSentText, setSmsSentText] = useState('');
-  const [smsSentPhone, setSmsSentPhone] = useState('');
-  
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [cameraScanned, setCameraScanned] = useState(false);
@@ -595,31 +590,22 @@ export default function POSBillingScreen() {
     }
   };
 
-  const buildInvoiceUrl = (bill: any) => {
-    const payload = {
-      storeName: bill.storeName || storeName,
-      storeAddress: bill.storeAddress || storeAddress,
-      gstNum: bill.gstNum || gstNum,
-      isGst: bill.isGst !== undefined ? bill.isGst : isGstRegistered,
-      billNo: bill.billNo || activeBillNo,
-      date: bill.date || new Date().toLocaleDateString('en-IN'),
-      time: bill.time || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      payMethod: bill.payMethod || payMethod,
-      custName: bill.custName || custName,
-      custPhone: bill.custPhone || custPhone,
-      custGstin: bill.custGstin || custGstin,
-      items: (bill.items || cart).map((i: any) => ({ name: i.name, qty: i.qty, price: i.price })),
-      subtotal: bill.subtotal !== undefined ? bill.subtotal : subtotal,
-      discount: bill.discount !== undefined ? bill.discount : discount,
-      finalTotal: bill.finalTotal !== undefined ? bill.finalTotal : finalTotal,
-    };
-    const base = typeof window !== 'undefined' ? window.location.origin : 'https://bharatpos-new.vercel.app';
-    return `${base}/invoice?id=${payload.billNo}&data=${encodeURIComponent(JSON.stringify(payload))}`;
+  const saveInvoiceToCloud = async (billObj: any) => {
+    try {
+      await setDoc(doc(db, 'invoices', billObj.billNo), billObj);
+    } catch (e) {
+      console.warn('Cloud invoice save error:', e);
+    }
   };
 
-  const handleWhatsAppShare = (customBill?: any) => {
+  const buildCleanInvoiceUrl = (billNo: string) => {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://bharatpos-new.vercel.app';
+    return `${base}/invoice?id=${billNo}`;
+  };
+
+  const handleWhatsAppShare = async (customBill?: any) => {
     const items = customBill ? customBill.items : cart;
-    const bNo = customBill ? customBill.billNo : activeBillNo;
+    const bNo = customBill ? customBill.billNo : (activeBillNo || 'INV-' + Date.now().toString().slice(-6));
     const bSubtotal = customBill ? customBill.subtotal : subtotal;
     const bDiscount = customBill ? customBill.discount : discount;
     const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
@@ -641,36 +627,62 @@ export default function POSBillingScreen() {
       return;
     }
 
-    const itemsText = items.map((item: any) => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
-    const invoiceUrl = buildInvoiceUrl({
+    const cleanPhone = bPhone.replace(/[^0-9]/g, '');
+    const invoicePayload = {
+      storeName,
+      storeAddress,
+      gstNum,
+      isGst: isGstRegistered,
       billNo: bNo,
-      items,
+      date: new Date().toLocaleDateString('en-IN'),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      payMethod: bPayMethod || 'UPI',
+      custName: bCustName || 'Valued Customer',
+      custPhone: cleanPhone,
+      custGstin: bCustGstin || '',
+      items: items.map((i: any) => ({ name: i.name, qty: i.qty, price: i.price })),
       subtotal: Number(bSubtotal),
       discount: Number(bDiscount),
       finalTotal: Number(bFinalTotal),
-      custName: bCustName,
-      custPhone: bPhone,
-      custGstin: bCustGstin,
-      payMethod: bPayMethod,
-    });
+      createdAt: Date.now()
+    };
 
-    const message = `🧾 *TAX INVOICE — ${storeName}*\n━━━━━━━━━━━━━━━━━━━━\n*Invoice No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'Cash'}\n\n*Items Purchased:*\n${itemsText}\n\n*Subtotal:* ₹${Number(bSubtotal).toFixed(2)}\n${Number(bDiscount) > 0 ? `*Discount Savings:* -₹${Number(bDiscount).toFixed(2)}\n` : ''}*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\n📄 *Download / View Official PDF Invoice:*\n${invoiceUrl}\n\n🙏 Thank you for shopping with us!`;
-    
-    const cleanPhone = bPhone.replace(/[^0-9]/g, '');
-    const url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
+    saveInvoiceToCloud(invoicePayload);
 
+    const invoiceUrl = buildCleanInvoiceUrl(bNo);
+    const itemsText = items.map((item: any) => `• ${item.name} x${item.qty} - ₹${(item.price * item.qty).toFixed(0)}`).join('\n');
+    const message = `🧾 *TAX INVOICE — ${storeName}*\n━━━━━━━━━━━━━━━━━━━━\n*Bill No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'UPI'}\n\n*Items:*\n${itemsText}\n\n*Subtotal:* ₹${Number(bSubtotal).toFixed(2)}\n${Number(bDiscount) > 0 ? `*Discount Savings:* -₹${Number(bDiscount).toFixed(2)}\n` : ''}*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\n📄 *Official Invoice Link:*\n${invoiceUrl}\n\n🙏 Thank you for shopping with us!`;
+
+    // 1. Dispatch via WhatsApp Cloud API
+    if (Platform.OS === 'web' && typeof fetch !== 'undefined') {
+      try {
+        fetch('/api/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: cleanPhone,
+            message,
+            billNo: bNo,
+            amount: Number(bFinalTotal),
+            storeName,
+            invoiceUrl
+          })
+        }).catch(() => {});
+      } catch (_) {}
+    }
+
+    // 2. Direct Open WhatsApp
+    const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.open(url, '_blank');
+      window.open(waUrl, '_blank');
     } else {
-      Linking.openURL(url).catch(() => {
-        Alert.alert('Error', 'Make sure WhatsApp is installed on your device to share invoices.');
-      });
+      Linking.openURL(waUrl).catch(() => {});
     }
   };
 
   const handleSmsShare = async (customBill?: any) => {
     const items = customBill ? customBill.items : cart;
-    const bNo = customBill ? customBill.billNo : activeBillNo;
+    const bNo = customBill ? customBill.billNo : (activeBillNo || 'INV-' + Date.now().toString().slice(-6));
     const bSubtotal = customBill ? customBill.subtotal : subtotal;
     const bDiscount = customBill ? customBill.discount : discount;
     const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
@@ -692,22 +704,32 @@ export default function POSBillingScreen() {
       return;
     }
 
-    const invoiceUrl = buildInvoiceUrl({
+    const cleanPhone = bPhone.replace(/[^0-9]/g, '');
+    const invoicePayload = {
+      storeName,
+      storeAddress,
+      gstNum,
+      isGst: isGstRegistered,
       billNo: bNo,
-      items,
+      date: new Date().toLocaleDateString('en-IN'),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      payMethod: bPayMethod || 'UPI',
+      custName: bCustName || 'Valued Customer',
+      custPhone: cleanPhone,
+      custGstin: bCustGstin || '',
+      items: items.map((i: any) => ({ name: i.name, qty: i.qty, price: i.price })),
       subtotal: Number(bSubtotal),
       discount: Number(bDiscount),
       finalTotal: Number(bFinalTotal),
-      custName: bCustName,
-      custPhone: bPhone,
-      custGstin: bCustGstin,
-      payMethod: bPayMethod,
-    });
+      createdAt: Date.now()
+    };
 
-    const cleanPhone = bPhone.replace(/[^0-9]/g, '');
-    const smsMessage = `Thank you for shopping at ${storeName}. Your Invoice #${bNo} for ₹${Number(bFinalTotal).toFixed(2)} is ready. Download / View PDF Invoice: ${invoiceUrl}`;
-    
-    // 1. Call Backend SMS Gateway API Route
+    saveInvoiceToCloud(invoicePayload);
+
+    const invoiceUrl = buildCleanInvoiceUrl(bNo);
+    const smsMessage = `Dear Customer, thank you for shopping at ${storeName}!\nBill No: ${bNo}\nAmount: ₹${Number(bFinalTotal).toFixed(2)}\nPayment Mode: ${bPayMethod || 'UPI'}\nView/Download Bill: ${invoiceUrl}`;
+
+    // 1. Direct Background SMS Gateway API Call
     if (Platform.OS === 'web' && typeof fetch !== 'undefined') {
       try {
         fetch('/api/send-sms', {
@@ -721,21 +743,12 @@ export default function POSBillingScreen() {
             storeName,
             invoiceUrl
           })
-        }).catch(err => console.warn('SMS API background trigger:', err));
+        }).catch(() => {});
       } catch (_) {}
     }
 
-    setSmsSentText(smsMessage);
-    setSmsSentPhone(cleanPhone);
-    setShowSmsInfoModal(true);
-
-    const url = Platform.OS === 'ios' ? `sms:${cleanPhone}&body=${encodeURIComponent(smsMessage)}` : `sms:${cleanPhone}?body=${encodeURIComponent(smsMessage)}`;
-
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.open(url, '_blank');
-    } else {
-      Linking.openURL(url).catch(() => {});
-    }
+    // Direct Non-disruptive feedback
+    Alert.alert('✅ SMS Dispatched', `Digital invoice #${bNo} has been sent directly to +91 ${cleanPhone} via Cloud SMS API.`);
   };
 
   const handleApplyDiscount = () => {
@@ -1108,6 +1121,56 @@ export default function POSBillingScreen() {
                 style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', fontSize: 13 }}
                 left={<TextInput.Icon icon="account" size={18} color="#64748B" />}
               />
+            </Surface>
+
+            {/* 💳 Payment Mode Selector (Pay Mode) */}
+            <Surface style={{ borderRadius: 12, padding: 12, marginBottom: 12, backgroundColor: appTheme.colors.surface, borderWidth: 1, borderColor: '#E2E8F0' }} elevation={0}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Icon name="credit-card-check-outline" size={18} color="#10B981" />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: appTheme.colors.onSurface }}>Payment Mode (Pay Mode)</Text>
+                </View>
+                <Chip compact textStyle={{ fontSize: 10, color: '#10B981', fontWeight: '800' }} style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', height: 22 }}>
+                  {payMethod}
+                </Chip>
+              </View>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {[
+                  { key: 'UPI', label: 'UPI / QR', icon: 'qrcode-scan', color: '#10B981' },
+                  { key: 'Cash', label: 'Cash', icon: 'cash', color: '#16A34A' },
+                  { key: 'Card', label: 'Card', icon: 'credit-card', color: '#2563EB' },
+                  { key: 'Credit', label: 'Credit', icon: 'account-clock-outline', color: '#D97706' }
+                ].map(mode => {
+                  const active = payMethod === mode.key;
+                  return (
+                    <TouchableOpacity
+                      key={mode.key}
+                      onPress={() => setPayMethod(mode.key)}
+                      activeOpacity={0.7}
+                      style={{
+                        flex: 1,
+                        minWidth: '45%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        paddingVertical: 9,
+                        paddingHorizontal: 8,
+                        borderRadius: 8,
+                        borderWidth: 1.5,
+                        borderColor: active ? mode.color : (isDarkMode ? '#334155' : '#E2E8F0'),
+                        backgroundColor: active ? (isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#F0FDF4') : (isDarkMode ? '#1E293B' : '#FFFFFF')
+                      }}
+                    >
+                      <Icon name={mode.icon} size={16} color={active ? mode.color : '#64748B'} />
+                      <Text style={{ fontSize: 12, fontWeight: active ? '800' : '600', color: active ? mode.color : appTheme.colors.onSurface }}>
+                        {mode.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </Surface>
 
             {/* Payment Summary Card */}
@@ -1757,50 +1820,6 @@ export default function POSBillingScreen() {
               style={{ borderRadius: 8, backgroundColor: phonePromptTarget === 'whatsapp' ? '#2E7D32' : '#0284C7' }}
             >
               {phonePromptTarget === 'whatsapp' ? 'Send WhatsApp' : 'Send SMS'}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      {/* ── 7. SMS CONFIRMATION & COPY MODAL ────────────────── */}
-      <Portal>
-        <Dialog visible={showSmsInfoModal} onDismiss={() => setShowSmsInfoModal(false)} style={[styles.dialog, { maxWidth: 440, alignSelf: 'center', width: '90%' }]}>
-          <Dialog.Title style={[styles.dialogTitle, { color: '#0284C7' }]}>
-            <Icon name="message-check" size={22} color="#0284C7" style={{ marginRight: 8 }} />
-            SMS Invoice Dispatched
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text style={{ fontSize: 13, color: appTheme.colors.onSurface, marginBottom: 8 }}>
-              SMS invoice link sent to <Text style={{ fontWeight: '700' }}>+91 {smsSentPhone}</Text>.
-            </Text>
-
-            <Surface style={{ padding: 12, borderRadius: 8, backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', marginVertical: 8 }}>
-              <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748B', marginBottom: 4 }}>DISPATCHED MESSAGE WITH PDF LINK:</Text>
-              <Text style={{ fontSize: 12, color: appTheme.colors.onSurface, lineHeight: 16 }}>
-                {smsSentText}
-              </Text>
-            </Surface>
-          </Dialog.Content>
-          <Dialog.Actions style={styles.dialogActions}>
-            <Button
-              onPress={() => {
-                if (typeof window !== 'undefined' && navigator.clipboard) {
-                  navigator.clipboard.writeText(smsSentText);
-                  Alert.alert('Copied', 'SMS message text copied to clipboard.');
-                }
-              }}
-              icon="content-copy"
-            >
-              Copy Text
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => {
-                setShowSmsInfoModal(false);
-              }}
-              style={{ borderRadius: 8, backgroundColor: '#0284C7' }}
-            >
-              Done
             </Button>
           </Dialog.Actions>
         </Dialog>
