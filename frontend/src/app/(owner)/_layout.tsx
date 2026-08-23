@@ -533,15 +533,15 @@ const styles = StyleSheet.create({
   // Logo
   logoContainer: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 22,
+    paddingHorizontal: 16, paddingVertical: 16,
   },
   logoIconContainer: {
-    width: 42, height: 42, borderRadius: 12,
-    backgroundColor: '#16A34A', alignItems: 'center', justifyContent: 'center',
+    width: 38, height: 38, borderRadius: 10,
+    backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center',
   },
-  logoTextContainer: { marginLeft: 14 },
-  logoText: { color: '#1E293B', fontWeight: '800', fontSize: 18, letterSpacing: -0.3 },
-  logoSubtext: { color: '#64748B', fontSize: 11, marginTop: 1 },
+  logoTextContainer: { flex: 1, marginLeft: 12, justifyContent: 'center' },
+  logoText: { color: '#0F172A', fontWeight: '700', fontSize: 15, letterSpacing: -0.2 },
+  logoSubtext: { color: '#64748B', fontSize: 11, fontWeight: '500', marginTop: 2 },
 
   // Menu
   sidebarMenu: { flex: 1, marginTop: 8 },
