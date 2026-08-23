@@ -209,7 +209,7 @@ export default function BalanceSheetScreen() {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
-        <ActivityIndicator size="large" color="#16A34A" />
+        <ActivityIndicator size="large" color="#10B981" />
         <Text style={{ marginTop: 12, color: '#6B7280', fontWeight: '600' }}>Loading Balance Sheet...</Text>
       </View>
     );
@@ -222,7 +222,7 @@ export default function BalanceSheetScreen() {
           <Icon name="alert-circle-outline" size={48} color="#DC2626" style={{ marginBottom: 10 }} />
           <Text variant="titleMedium" style={{ marginTop: 8, fontWeight: 'bold', color: '#111827', textAlign: 'center' }}>Unable to Load Balance Sheet</Text>
           <Text style={{ marginTop: 8, color: 'gray', textAlign: 'center', fontSize: 13, lineHeight: 18, marginBottom: 24 }}>{error}</Text>
-          <Button mode="contained" onPress={fetchFinancialData} buttonColor="#16A34A" style={{ borderRadius: 10, width: '100%' }}>
+          <Button mode="contained" onPress={fetchFinancialData} buttonColor="#10B981" style={{ borderRadius: 10, width: '100%' }}>
             Retry Sync
           </Button>
         </Card>
@@ -255,7 +255,7 @@ export default function BalanceSheetScreen() {
           </View>
            <Button 
             mode="contained" 
-            buttonColor="#16A34A"
+            buttonColor="#10B981"
             onPress={() => {
               if (Platform.OS === 'web' && typeof window !== 'undefined') {
                 window.print();
@@ -278,7 +278,7 @@ export default function BalanceSheetScreen() {
 
       <Card style={styles.sheetCard} elevation={0}>
         <View style={styles.sheetHeader}>
-          <Text style={styles.sheetTitle}>COMPANY NAME</Text>
+          <Text style={styles.sheetTitle}>BharatPOS Store</Text>
           <Text style={styles.sheetSubtitle}>Balance Sheet</Text>
           <Text style={styles.sheetDate}>As of {asOfDate}</Text>
         </View>
@@ -326,14 +326,14 @@ const styles = StyleSheet.create({
   balanceStatus: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 9999, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
   sheetCard: { backgroundColor: '#FFFFFF', padding: 32, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', minHeight: 600, marginBottom: 40 },
   sheetHeader: { alignItems: 'center', marginBottom: 32 },
-  sheetTitle: { fontSize: 18, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, color: '#1E293B' },
+  sheetTitle: { fontSize: 18, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: '#0F172A' },
   sheetSubtitle: { fontSize: 16, marginTop: 4, color: '#1E293B' },
   sheetDate: { fontSize: 13, marginTop: 4, color: '#64748B' },
   columnsRow: { flexDirection: 'row', gap: 40 },
   column: { flex: 1 },
   columnRight: { borderLeftWidth: 1, borderLeftColor: '#E2E8F0', paddingLeft: 40 },
   columnHeader: { fontSize: 14, fontWeight: 'bold', letterSpacing: 0.5, marginBottom: 8, color: '#1E293B' },
-  thickDivider: { height: 2, backgroundColor: '#1E293B', marginBottom: 16 },
+  thickDivider: { height: 1.5, backgroundColor: '#E2E8F0', marginBottom: 16 },
   groupTitle: { fontSize: 13, fontWeight: '600', marginBottom: 8, color: '#1E293B' },
   accountLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   accountLabel: { fontSize: 13, color: '#334155' },
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   subtotalLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
   subtotalLabel: { fontSize: 13, fontWeight: '600', color: '#1E293B' },
   subtotalAmount: { fontSize: 13, fontWeight: '600', color: '#1E293B' },
-  grandTotalContainer: { borderTopWidth: 1, borderTopColor: '#1E293B', borderBottomWidth: 3, borderBottomColor: '#1E293B', paddingTop: 8, paddingBottom: 8, marginTop: 16 },
+  grandTotalContainer: { borderTopWidth: 1, borderTopColor: '#E2E8F0', borderBottomWidth: 2, borderBottomColor: '#10B981', paddingTop: 8, paddingBottom: 8, marginTop: 16 },
   grandTotalLine: { flexDirection: 'row', justifyContent: 'space-between' },
   grandTotalLabel: { fontSize: 14, fontWeight: 'bold', color: '#1E293B' },
   grandTotalAmount: { fontSize: 14, fontWeight: 'bold', color: '#1E293B' },

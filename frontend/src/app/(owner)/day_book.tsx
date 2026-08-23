@@ -11,11 +11,11 @@ import { collection, getDocs, query, where, orderBy } from '../../lib/firestore_
 
 // ─── Voucher Type Config ──────────────────────────────────────────────
 const VOUCHER_COLORS: Record<string, { bg: string; text: string }> = {
-  Sales:    { bg: '#E8F5E9', text: '#2E7D32' },
-  Purchase: { bg: '#FFEBEE', text: '#C62828' },
-  Receipt:  { bg: '#E3F2FD', text: '#1565C0' },
-  Payment:  { bg: '#FFF3E0', text: '#E65100' },
-  Journal:  { bg: '#F3E5F5', text: '#6A1B9A' },
+  Sales: { bg: '#ECFDF5', text: '#10B981' },
+  Purchase: { bg: '#FEF2F2', text: '#EF4444' },
+  Receipt: { bg: '#EFF6FF', text: '#3B82F6' },
+  Payment: { bg: '#FFFBEB', text: '#D97706' },
+  Journal: { bg: '#F5F3FF', text: '#8B5CF6' },
 };
 
 // ─── Transaction Schema ───────────────────────────────────────────────
@@ -47,7 +47,7 @@ function VoucherBadge({ type }: { type: string }) {
 // ─── Summary Card ─────────────────────────────────────────────────────
 function SummaryCard({ icon, label, amount, color, iconBg }: { icon: string; label: string; amount: number; color: string; iconBg: string }) {
   return (
-    <Card style={[styles.summaryCard, { borderLeftWidth: 4, borderLeftColor: color }]} elevation={1}>
+    <Card style={[styles.summaryCard, { borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12 }]} elevation={1}>
       <Card.Content style={styles.summaryContent}>
         <View style={[styles.summaryIcon, { backgroundColor: iconBg }]}>
           <Icon name={icon} size={24} color={color} />

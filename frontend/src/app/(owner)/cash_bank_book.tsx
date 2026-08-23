@@ -182,7 +182,7 @@ export default function CashBankBookScreen() {
           <Card.Content style={styles.balanceCardContent}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={styles.balanceIcon}>
-                <Icon name={isCash ? 'cash-multiple' : 'bank-outline'} size={22} color="#5E35B1" />
+                <Icon name={isCash ? 'cash-multiple' : 'bank-outline'} size={22} color="#8B5CF6" />
               </View>
               <View>
                 <Text style={styles.balanceLabel}>Opening Balance</Text>
@@ -198,7 +198,7 @@ export default function CashBankBookScreen() {
           <Card.Content style={styles.balanceCardContent}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={[styles.balanceIcon, { backgroundColor: appTheme.colors.surface }]}>
-                <Icon name="check-circle-outline" size={22} color="#2E7D32" />
+                <Icon name="check-circle-outline" size={22} color="#10B981" />
               </View>
               <View>
                 <Text style={styles.balanceLabel}>Closing Balance</Text>
@@ -239,22 +239,22 @@ export default function CashBankBookScreen() {
 
       {/* Summary Cards Row */}
       <View style={[styles.summaryRow, { flexDirection: isDesktop ? 'row' : 'column' }]}>
-        <Surface style={[styles.summaryCard, { borderLeftColor: '#2E7D32' }]} elevation={1}>
-          <Icon name="arrow-down-circle" size={28} color="#2E7D32" />
+        <Surface style={[styles.summaryCard, { borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12 }]} elevation={1}>
+          <Icon name="arrow-down-circle" size={28} color="#10B981" />
           <View>
             <Text style={styles.summaryLabel}>Total Receipts</Text>
             <Text style={[styles.summaryValue, { color: appTheme.colors.onSurface }]}>{fmt(computed.totalReceipts)}</Text>
           </View>
         </Surface>
-        <Surface style={[styles.summaryCard, { borderLeftColor: '#C62828' }]} elevation={1}>
-          <Icon name="arrow-up-circle" size={28} color="#C62828" />
+        <Surface style={[styles.summaryCard, { borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12 }]} elevation={1}>
+          <Icon name="arrow-up-circle" size={28} color="#EF4444" />
           <View>
             <Text style={styles.summaryLabel}>Total Payments</Text>
             <Text style={[styles.summaryValue, { color: appTheme.colors.onSurface }]}>{fmt(computed.totalPayments)}</Text>
           </View>
         </Surface>
-        <Surface style={[styles.summaryCard, { borderLeftColor: '#5E35B1' }]} elevation={1}>
-          <Icon name="scale-balance" size={28} color="#5E35B1" />
+        <Surface style={[styles.summaryCard, { borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12 }]} elevation={1}>
+          <Icon name="scale-balance" size={28} color="#8B5CF6" />
           <View>
             <Text style={styles.summaryLabel}>Net Movement</Text>
             <Text style={[styles.summaryValue, { color: appTheme.colors.onSurface }]}>
@@ -269,7 +269,7 @@ export default function CashBankBookScreen() {
         <Card.Content>
           <View style={styles.tableHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Icon name={isCash ? 'book-open-variant' : 'bank-transfer'} size={20} color="#5E35B1" />
+              <Icon name={isCash ? 'book-open-variant' : 'bank-transfer'} size={20} color="#8B5CF6" />
               <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
                 {isCash ? 'Cash Book Ledger' : 'Bank Book Ledger'}
               </Text>
