@@ -40,7 +40,7 @@ const TYPE_TEXT_COLORS: Record<VoucherType, string> = {
   Sales: '#2E7D32',
   Purchase: '#1565C0',
   Payment: '#E65100',
-  Receipt: '#6A1B9A',
+  Receipt: '#10B981',
   Contra: '#37474F',
   Journal: '#AD1457',
 };
@@ -222,7 +222,7 @@ export default function JournalEntryScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Icon name="book-edit-outline" size={28} color="#5E35B1" />
+          <Icon name="book-edit-outline" size={28} color="#10B981" />
           <Text variant="headlineSmall" style={styles.title}>Journal Entry — Voucher Entry</Text>
         </View>
         <Text style={styles.subtitle}>Create manual accounting entries like Sales, Purchases, Payments & more</Text>
@@ -264,7 +264,7 @@ export default function JournalEntryScreen() {
             <View style={[styles.headerField, { flex: 1 }]}>
               <Text style={styles.fieldLabel}>Voucher Number</Text>
               <Surface style={styles.readonlyField} elevation={0}>
-                <Icon name="pound" size={16} color="#5E35B1" />
+                <Icon name="pound" size={16} color="#10B981" />
                 <Text style={styles.readonlyText}>{voucherNumber}</Text>
               </Surface>
             </View>
@@ -451,7 +451,7 @@ export default function JournalEntryScreen() {
       <Card style={[styles.card, { marginTop: 24, marginBottom: 40 }]} elevation={1}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <Icon name="history" size={22} color="#5E35B1" />
+            <Icon name="history" size={22} color="#10B981" />
             <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>Recent Vouchers</Text>
           </View>
 

@@ -17,7 +17,7 @@ import POSAssistantModal from '../../components/POSAssistantModal';
 // ── Category colors ────────────────────────────────────────────────────
 const categoryColors: Record<string, string> = {
   Beverages: '#10B981', Staples: '#2E7D32', Oils: '#E65100', Dairy: '#1565C0',
-  Snacks: '#D81B60', Detergent: '#00838F', 'Personal Care': '#AD1457', Cleaning: '#00695C',
+  Snacks: '#10B981', Detergent: '#00838F', 'Personal Care': '#AD1457', Cleaning: '#00695C',
 };
 
 // ── FadeIn Wrapper ─────────────────────────────────────────────────────
@@ -1200,7 +1200,7 @@ export default function POSBillingScreen() {
                 {[
                   { key: 'UPI', label: 'UPI / QR', icon: 'qrcode-scan', color: '#10B981' },
                   { key: 'Cash', label: 'Cash', icon: 'cash', color: '#16A34A' },
-                  { key: 'Card', label: 'Card', icon: 'credit-card', color: '#2563EB' },
+                  { key: 'Card', label: 'Card', icon: 'credit-card', color: '#10B981' },
                   { key: 'Credit', label: 'Credit', icon: 'account-clock-outline', color: '#D97706' }
                 ].map(mode => {
                   const active = payMethod === mode.key;
@@ -1259,10 +1259,10 @@ export default function POSBillingScreen() {
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.summaryLabel, { color: discount > 0 ? '#10B981' : '#2563EB', fontWeight: '700' }]}>
+                  <Text style={[styles.summaryLabel, { color: discount > 0 ? '#10B981' : '#10B981', fontWeight: '700' }]}>
                     Discount {discount > 0 ? `(Applied)` : `(+ Add % or ₹)`}
                   </Text>
-                  <Icon name="pencil-circle-outline" size={16} color={discount > 0 ? '#10B981' : '#2563EB'} />
+                  <Icon name="pencil-circle-outline" size={16} color={discount > 0 ? '#10B981' : '#10B981'} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -1554,7 +1554,7 @@ export default function POSBillingScreen() {
                 onPress={() => handlePrintPdf()}
               >
                 <View style={[styles.shareIcon, { backgroundColor: '#FCE4EC' }]}>
-                  <Icon name="printer-pos" size={24} color="#D81B60" />
+                  <Icon name="printer-pos" size={24} color="#10B981" />
                 </View>
                 <Text style={styles.shareText}>Print / PDF</Text>
               </TouchableOpacity>
@@ -1612,7 +1612,7 @@ export default function POSBillingScreen() {
                 onPress={() => handlePrintPdf(savedBillData)}
               >
                 <View style={[styles.shareIcon, { backgroundColor: '#FCE4EC' }]}>
-                  <Icon name="printer-pos" size={24} color="#D81B60" />
+                  <Icon name="printer-pos" size={24} color="#10B981" />
                 </View>
                 <Text style={styles.shareText}>Print / PDF</Text>
               </TouchableOpacity>
@@ -1640,7 +1640,7 @@ export default function POSBillingScreen() {
       <Portal>
         <Dialog visible={showSessionModal} onDismiss={() => setShowSessionModal(false)} style={[styles.dialog, { maxWidth: 560, alignSelf: 'center', width: '92%' }]}>
           <Dialog.Title style={[styles.dialogTitle, { color: appTheme.colors.onSurface }]}>
-            <Icon name="history" size={24} color="#5E35B1" style={{ marginRight: 8 }} />
+            <Icon name="history" size={24} color="#10B981" style={{ marginRight: 8 }} />
             Saved Drafts & Held Bills ({savedDraftList.length})
           </Dialog.Title>
           <Dialog.Content style={{ maxHeight: 420 }}>

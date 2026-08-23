@@ -438,7 +438,7 @@ export default function AdminDashboard() {
           <Card.Content>
             <View style={styles.modeCardHeader}>
               <View style={[styles.modeIconCircle, { backgroundColor: appTheme.colors.surface }]}>
-                <Icon name="cellphone" size={20} color="#D81B60" />
+                <Icon name="cellphone" size={20} color="#10B981" />
               </View>
               <View>
                 <Text style={styles.modeCardTitle}>Mobile Shop Console</Text>
@@ -454,7 +454,7 @@ export default function AdminDashboard() {
                 <Text style={styles.modeActionText}>Billing Terminal</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modeActionBtn} onPress={() => router.push('/(owner)/products_management' as any)}>
-                <Icon name="package-variant-plus" size={16} color="#E65100" />
+                <Icon name="package-variant-plus" size={16} color="#10B981" />
                 <Text style={styles.modeActionText}>Add Products</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modeActionBtn} onPress={() => router.push('/(owner)/barcode_generator' as any)}>
@@ -462,11 +462,11 @@ export default function AdminDashboard() {
                 <Text style={styles.modeActionText}>Create Barcode</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modeActionBtn} onPress={() => router.push('/(owner)/inventory' as any)}>
-                <Icon name="clipboard-list" size={16} color="#D81B60" />
+                <Icon name="clipboard-list" size={16} color="#10B981" />
                 <Text style={styles.modeActionText}>Stock Management</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modeActionBtn} onPress={() => router.push('/(owner)/upgrade' as any)}>
-                <Icon name="star-outline" size={16} color="#6366F1" />
+                <Icon name="star-outline" size={16} color="#10B981" />
                 <Text style={styles.modeActionText}>Subscriptions</Text>
               </TouchableOpacity>
             </View>
@@ -490,7 +490,7 @@ export default function AdminDashboard() {
               Your laptop serves as the main checkout counter while salesperson phones perform fast barcode scans and quick register checkout.
             </Text>
             <View style={styles.syncRow}>
-              <Icon name="cellphone-link-variant" size={20} color="#0369A1" />
+              <Icon name="cellphone-link-variant" size={20} color="#10B981" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.syncText}>
                   Staff Phone Sync Code: <Text style={{ fontWeight: '800', textDecorationLine: 'underline' }}>{shopSyncCode || 'Loading...'}</Text>
@@ -592,11 +592,11 @@ export default function AdminDashboard() {
             </View>
             <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
               <TouchableOpacity
-                style={[styles.greetingBadge, { backgroundColor: isDarkMode ? '#0D9488' : '#E6FFFA' }]}
+                style={[styles.greetingBadge, { backgroundColor: isDarkMode ? '#10B981' : '#ECFDF5' }]}
                 onPress={() => setShowAssistantModal(true)}
               >
-                <Icon name="robot-happy" size={16} color={isDarkMode ? '#FFFFFF' : '#0D9488'} />
-                <Text style={[styles.greetingBadgeText, { color: isDarkMode ? '#FFFFFF' : '#0D9488', fontWeight: '700' }]}>
+                <Icon name="robot-happy" size={16} color={isDarkMode ? '#FFFFFF' : '#10B981'} />
+                <Text style={[styles.greetingBadgeText, { color: isDarkMode ? '#FFFFFF' : '#10B981', fontWeight: '700' }]}>
                   AI Copilot 🎙️
                 </Text>
               </TouchableOpacity>
@@ -613,13 +613,13 @@ export default function AdminDashboard() {
           <TouchableOpacity
             style={[
               styles.aiCopilotBanner,
-              { backgroundColor: isDarkMode ? '#0F172A' : '#F0FDFA', borderColor: isDarkMode ? '#1E293B' : '#CCFBF1' }
+              { backgroundColor: isDarkMode ? '#0F172A' : '#ECFDF5', borderColor: isDarkMode ? '#1E293B' : '#A7F3D0' }
             ]}
             onPress={() => setShowAssistantModal(true)}
             activeOpacity={0.85}
           >
             <View style={styles.aiCopilotLeft}>
-              <View style={[styles.aiCopilotIconBox, { backgroundColor: '#0D9488' }]}>
+              <View style={[styles.aiCopilotIconBox, { backgroundColor: '#10B981' }]}>
                 <Icon name="robot-happy" size={20} color="#FFFFFF" />
               </View>
               <View style={{ flex: 1 }}>
@@ -631,7 +631,7 @@ export default function AdminDashboard() {
                     <Text style={styles.aiNewPillText}>AI COPILOT</Text>
                   </View>
                 </View>
-                <Text style={[styles.aiCopilotSub, { color: isDarkMode ? '#94A3B8' : '#0F766E' }]}>
+                <Text style={[styles.aiCopilotSub, { color: isDarkMode ? '#94A3B8' : '#047857' }]}>
                   Speak or type: "Add 2 Milk and 1 Bread", "Check stock for Sugar", "Today's sales"
                 </Text>
               </View>
@@ -961,7 +961,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#0D9488',
+    backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 10,
@@ -973,10 +973,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#0D9488',
+    backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0D9488',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,

@@ -324,7 +324,7 @@ export default function GSTManagementScreen() {
         <Card style={styles.card} elevation={1}>
           <Card.Content>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Icon name="cog-outline" size={20} color="#5E35B1" />
+              <Icon name="cog-outline" size={20} color="#10B981" />
               <Text variant="titleMedium" style={styles.sectionTitle}>GST Configuration</Text>
             </View>
             <Text style={styles.helperText}>Update your business GST details below. This will reflect on all generated invoices.</Text>
@@ -395,7 +395,7 @@ export default function GSTManagementScreen() {
       {/* Period selector */}
       <Card style={[styles.card, { marginBottom: 20 }]} elevation={1}>
         <Card.Content style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <Icon name="calendar-range" size={20} color="#5E35B1" />
+          <Icon name="calendar-range" size={20} color="#10B981" />
           <Text style={{ fontWeight: '600', color: appTheme.colors.onSurface }}>Return Period:</Text>
           <TextInput
             value={returnPeriod}
@@ -574,7 +574,7 @@ export default function GSTManagementScreen() {
       {/* Period selector */}
       <Card style={[styles.card, { marginBottom: 20 }]} elevation={1}>
         <Card.Content style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <Icon name="calendar-range" size={20} color="#5E35B1" />
+          <Icon name="calendar-range" size={20} color="#10B981" />
           <Text style={{ fontWeight: '600', color: appTheme.colors.onSurface }}>Return Period:</Text>
           <TextInput
             value={returnPeriod}
@@ -719,7 +719,7 @@ export default function GSTManagementScreen() {
       <Card style={[styles.card, { marginBottom: 20, backgroundColor: appTheme.colors.surface }]} elevation={1}>
         <Card.Content>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <Icon name="information-outline" size={18} color="#5E35B1" />
+            <Icon name="information-outline" size={18} color="#10B981" />
             <Text style={{ fontWeight: '600', color: appTheme.colors.onSurface }}>Payment Summary for {returnPeriod}</Text>
           </View>
           <View style={[styles.paymentGrid, { flexDirection: isDesktop ? 'row' : 'column' }]}>
@@ -931,7 +931,7 @@ export default function GSTManagementScreen() {
             onPress={() => setActiveTab(tab.key)}
             activeOpacity={0.7}
           >
-            <Icon name={tab.icon} size={18} color={activeTab === tab.key ? '#FFF' : '#5E35B1'} />
+            <Icon name={tab.icon} size={18} color={activeTab === tab.key ? '#FFF' : '#10B981'} />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>{tab.label}</Text>
           </TouchableOpacity>
         ))}
@@ -1064,14 +1064,14 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: DS.radius.md,
     borderWidth: 1.5,
-    borderColor: '#5E35B1',
+    borderColor: '#10B981',
     backgroundColor: 'transparent',
   },
   tabBtnActive: {
-    backgroundColor: '#5E35B1',
-    borderColor: '#5E35B1',
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
   },
-  tabText: { fontSize: 14, fontWeight: '600', color: '#5E35B1' },
+  tabText: { fontSize: 14, fontWeight: '600', color: '#10B981' },
   tabTextActive: { color: '#FFF' },
 
   // Layout

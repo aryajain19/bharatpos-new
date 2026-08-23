@@ -57,7 +57,7 @@ const ACCOUNT_GROUPS: AccountGroup[] = [
     key: 'income',
     name: 'Income',
     icon: 'trending-up',
-    color: '#2196F3',
+    color: '#10B981',
     ledgers: [
       { id: 'i1', name: 'Sales Revenue',     balance: 0, type: 'Cr' },
       { id: 'i2', name: 'Interest Income',   balance: 0,   type: 'Cr' },
@@ -84,7 +84,7 @@ const ACCOUNT_GROUPS: AccountGroup[] = [
     key: 'equity',
     name: 'Equity',
     icon: 'scale-balance',
-    color: '#9C27B0',
+    color: '#10B981',
     ledgers: [
       { id: 'q1', name: "Owner's Capital",    balance: 0, type: 'Cr' },
       { id: 'q2', name: 'Retained Earnings',  balance: 0, type: 'Cr' },
@@ -321,10 +321,10 @@ export default function LedgersScreen() {
 
       {/* Stats Row */}
       <View style={[styles.statsRow, !isWide && { flexDirection: 'column' }]}>
-        <Card style={[styles.statCard, { borderLeftColor: '#5E35B1' }]} elevation={1}>
+        <Card style={[styles.statCard, { borderLeftColor: '#10B981' }]} elevation={1}>
           <Card.Content style={styles.statContent}>
             <View style={[styles.statIcon, { backgroundColor: appTheme.colors.surface }]}>
-              <Icon name="book-open-page-variant" size={22} color="#5E35B1" />
+              <Icon name="book-open-page-variant" size={22} color="#10B981" />
             </View>
             <View>
               <Text style={styles.statLabel}>Total Ledgers</Text>
@@ -369,10 +369,10 @@ export default function LedgersScreen() {
 
       {/* Add Ledger Inline Form */}
       {showAddForm && (
-        <Card style={[styles.card, { marginBottom: 20, borderLeftWidth: 4, borderLeftColor: '#5E35B1' }]} elevation={2}>
+        <Card style={[styles.card, { marginBottom: 20, borderLeftWidth: 4, borderLeftColor: '#10B981' }]} elevation={2}>
           <Card.Content>
             <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 16, color: appTheme.colors.onSurface }}>
-              <Icon name="plus-circle" size={20} color="#5E35B1" /> {' '}Create New Ledger
+              <Icon name="plus-circle" size={20} color="#10B981" /> {' '}Create New Ledger
             </Text>
             <View style={[styles.formRow, !isWide && { flexDirection: 'column' }]}>
               <TextInput

@@ -202,8 +202,8 @@ export default function POSAssistantModal({
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: isDarkMode ? '#334155' : '#E2E8F0' }]}>
             <View style={styles.headerLeft}>
-              <View style={[styles.botAvatar, { backgroundColor: isDarkMode ? '#0F766E' : '#E6FFFA' }]}>
-                <Icon name="robot-happy" size={22} color={isDarkMode ? '#5EEAD4' : '#0D9488'} />
+              <View style={[styles.botAvatar, { backgroundColor: isDarkMode ? '#047857' : '#E6FFFA' }]}>
+                <Icon name="robot-happy" size={22} color={isDarkMode ? '#5EEAD4' : '#10B981'} />
               </View>
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -223,7 +223,7 @@ export default function POSAssistantModal({
             <View style={styles.headerRight}>
               <IconButton
                 icon={autoSpeak ? 'volume-high' : 'volume-off'}
-                iconColor={autoSpeak ? '#0D9488' : '#94A3B8'}
+                iconColor={autoSpeak ? '#10B981' : '#94A3B8'}
                 size={20}
                 onPress={() => setAutoSpeak(!autoSpeak)}
               />
@@ -269,15 +269,15 @@ export default function POSAssistantModal({
                   ]}
                 >
                   {!isUser && (
-                    <View style={[styles.msgAvatar, { backgroundColor: isDarkMode ? '#0F766E' : '#CCFBF1' }]}>
-                      <Icon name="robot" size={14} color={isDarkMode ? '#5EEAD4' : '#0F766E'} />
+                    <View style={[styles.msgAvatar, { backgroundColor: isDarkMode ? '#047857' : '#A7F3D0' }]}>
+                      <Icon name="robot" size={14} color={isDarkMode ? '#5EEAD4' : '#047857'} />
                     </View>
                   )}
                   <View
                     style={[
                       styles.bubble,
                       isUser
-                        ? { backgroundColor: '#0D9488' }
+                        ? { backgroundColor: '#10B981' }
                         : { backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC', borderColor: isDarkMode ? '#334155' : '#E2E8F0', borderWidth: 1 },
                     ]}
                   >
@@ -301,7 +301,7 @@ export default function POSAssistantModal({
                           }
                         }}
                       >
-                        <Icon name="arrow-right-circle" size={18} color="#0D9488" />
+                        <Icon name="arrow-right-circle" size={18} color="#10B981" />
                         <Text style={styles.actionCardText}>Tap to open screen</Text>
                       </TouchableOpacity>
                     )}
@@ -341,12 +341,12 @@ export default function POSAssistantModal({
                 <Animated.View
                   style={[
                     styles.listeningWave,
-                    { transform: [{ scale: pulseAnim }], backgroundColor: '#0D9488' },
+                    { transform: [{ scale: pulseAnim }], backgroundColor: '#10B981' },
                   ]}
                 >
                   <Icon name="microphone" size={24} color="#FFFFFF" />
                 </Animated.View>
-                <Text style={[styles.listeningText, { color: isDarkMode ? '#5EEAD4' : '#0D9488' }]}>
+                <Text style={[styles.listeningText, { color: isDarkMode ? '#5EEAD4' : '#10B981' }]}>
                   {listeningTranscript || 'Listening... Speak now'}
                 </Text>
               </View>
@@ -383,7 +383,7 @@ export default function POSAssistantModal({
                 <Icon
                   name={isListening ? 'stop' : 'microphone'}
                   size={20}
-                  color={isListening ? '#FFFFFF' : isDarkMode ? '#5EEAD4' : '#0D9488'}
+                  color={isListening ? '#FFFFFF' : isDarkMode ? '#5EEAD4' : '#10B981'}
                 />
               </TouchableOpacity>
             )}
@@ -391,7 +391,7 @@ export default function POSAssistantModal({
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                { backgroundColor: inputVal.trim() ? '#0D9488' : isDarkMode ? '#334155' : '#CBD5E1' },
+                { backgroundColor: inputVal.trim() ? '#10B981' : isDarkMode ? '#334155' : '#CBD5E1' },
               ]}
               disabled={!inputVal.trim()}
               onPress={() => handleSendMessage()}
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
   actionCardText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0D9488',
+    color: '#10B981',
   },
   itemsSummaryBox: {
     marginTop: 8,
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0D9488',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
