@@ -316,6 +316,53 @@ export default function POSBillingScreen() {
     setShowCheckout(true);
   };
 
+  const deductStockForCart = async (itemsToDeduct: any[]) => {
+    if (!itemsToDeduct || itemsToDeduct.length === 0) return;
+
+    // 1. Immediately update in-memory products list in state so UI updates in real time
+    setProducts((prevProducts: any[]) => {
+      return prevProducts.map(p => {
+        const matched = itemsToDeduct.find((i: any) => i.id === p.id);
+        if (matched) {
+          const currentQty = Number(p.stock_qty !== undefined ? p.stock_qty : (p.stock_quantity ?? p.stock ?? 0));
+          const newQty = Math.max(0, currentQty - Number(matched.qty || 1));
+          return { ...p, stock_qty: newQty, stock_quantity: newQty };
+        }
+        return p;
+      });
+    });
+
+    // 2. Persist stock deduction in Firebase Realtime Database
+    if (isFirebaseConfigured) {
+      await Promise.all(itemsToDeduct.map(async (item: any) => {
+        try {
+          if (!item.id) return;
+          const productRef = doc(db, 'products', item.id);
+          const prodSnap = await getDoc(productRef);
+          if (prodSnap.exists && prodSnap.exists()) {
+            const currentData = prodSnap.data();
+            const currentQty = Number(currentData?.stock_qty ?? currentData?.stock_quantity ?? currentData?.stock ?? 0);
+            const newQty = Math.max(0, currentQty - Number(item.qty || 1));
+            await updateDoc(productRef, {
+              stock_qty: newQty,
+              stock_quantity: newQty,
+              stock: newQty,
+              updated_at: new Date().toISOString()
+            });
+            console.log(`[STOCK DEDUCTED] ${item.name} (${item.id}): ${currentQty} -> ${newQty}`);
+          } else {
+            await updateDoc(productRef, {
+              stock_qty: increment(-Number(item.qty || 1)),
+              stock_quantity: increment(-Number(item.qty || 1)),
+            });
+          }
+        } catch (error) {
+          console.error("Failed to deduct stock for product", item.id, error);
+        }
+      }));
+    }
+  };
+
   const handleCompleteSale = async (sendInvoice: boolean) => {
     const dateObj = new Date();
     const dateStr = dateObj.toISOString().split('T')[0];
@@ -366,17 +413,8 @@ export default function POSBillingScreen() {
           taxableValue: subtotal - discount,
         });
 
-        // Deduct stock in Firestore
-        await Promise.all(cart.map(async (item) => {
-          try {
-            const productRef = doc(db, 'products', item.id);
-            await updateDoc(productRef, {
-              stock_qty: increment(-item.qty)
-            });
-          } catch (error) {
-            console.error("Failed to update stock for item", item.id, error);
-          }
-        }));
+        // Deduct stock in Firestore & local state
+        await deductStockForCart(cart);
 
         // Webhook Trigger
         const savedWebhookUrl = Platform.OS === 'web' && typeof window !== 'undefined' ? window.localStorage.getItem('webhookUrl') : '';
@@ -670,6 +708,7 @@ export default function POSBillingScreen() {
     };
 
     saveInvoiceToCloud(invoicePayload);
+    await deductStockForCart(items);
 
     const invoiceUrl = buildCleanInvoiceUrl(bNo);
     const message = `Thank you for shopping at *${storeName}*!\n\n*Invoice No:* ${bNo}\n*Date:* ${new Date().toLocaleDateString('en-IN')}\n*Payment Mode:* ${bPayMethod || 'UPI'}\n*Grand Total:* *₹${Number(bFinalTotal).toFixed(2)}*\n\n📄 *View & Download Official Tax Invoice / PDF Bill:*\n${invoiceUrl}\n\nWe look forward to serving you again!`;
