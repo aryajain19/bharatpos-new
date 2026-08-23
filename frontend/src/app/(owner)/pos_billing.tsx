@@ -467,15 +467,15 @@ export default function POSBillingScreen() {
   }, [tenantId]);
 
   const handlePrintPdf = async (customBill?: any) => {
-    const items = customBill ? customBill.items : cart;
-    const bNo = customBill ? customBill.billNo : activeBillNo;
-    const bSubtotal = customBill ? customBill.subtotal : subtotal;
-    const bDiscount = customBill ? customBill.discount : discount;
-    const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
-    const bCustName = customBill ? customBill.custName : custName;
-    const bCustPhone = customBill ? customBill.custPhone : custPhone;
-    const bCustGstin = customBill ? customBill.custGstin : custGstin;
-    const bPayMethod = customBill ? customBill.payMethod : payMethod;
+    const items = (customBill && customBill.items && customBill.items.length > 0) ? customBill.items : cart;
+    const bNo = (customBill && customBill.billNo) ? customBill.billNo : (activeBillNo || 'INV-' + Date.now().toString().slice(-6));
+    const bSubtotal = (customBill && customBill.subtotal !== undefined) ? customBill.subtotal : subtotal;
+    const bDiscount = (customBill && customBill.discount !== undefined) ? customBill.discount : discount;
+    const bFinalTotal = (customBill && customBill.finalTotal !== undefined) ? customBill.finalTotal : finalTotal;
+    const bCustName = (customBill && customBill.custName) ? customBill.custName : custName;
+    const bCustPhone = (customBill && customBill.custPhone) ? customBill.custPhone : custPhone;
+    const bCustGstin = (customBill && customBill.custGstin) ? customBill.custGstin : custGstin;
+    const bPayMethod = (customBill && customBill.payMethod) ? customBill.payMethod : payMethod;
 
     if (!items || items.length === 0) {
       Alert.alert('Empty Cart', 'Please add products to the cart before printing.');
@@ -617,15 +617,15 @@ export default function POSBillingScreen() {
   };
 
   const handleWhatsAppShare = async (customBill?: any) => {
-    const items = customBill ? customBill.items : cart;
-    const bNo = customBill ? customBill.billNo : (activeBillNo || 'INV-' + Date.now().toString().slice(-6));
-    const bSubtotal = customBill ? customBill.subtotal : subtotal;
-    const bDiscount = customBill ? customBill.discount : discount;
-    const bFinalTotal = customBill ? customBill.finalTotal : finalTotal;
-    const bPhone = customBill ? customBill.custPhone : custPhone;
-    const bPayMethod = customBill ? customBill.payMethod : payMethod;
-    const bCustName = customBill ? customBill.custName : custName;
-    const bCustGstin = customBill ? customBill.custGstin : custGstin;
+    const items = (customBill && customBill.items && customBill.items.length > 0) ? customBill.items : cart;
+    const bNo = (customBill && customBill.billNo) ? customBill.billNo : (activeBillNo || 'INV-' + Date.now().toString().slice(-6));
+    const bSubtotal = (customBill && customBill.subtotal !== undefined) ? customBill.subtotal : subtotal;
+    const bDiscount = (customBill && customBill.discount !== undefined) ? customBill.discount : discount;
+    const bFinalTotal = (customBill && customBill.finalTotal !== undefined) ? customBill.finalTotal : finalTotal;
+    const bPhone = (customBill && customBill.custPhone) ? customBill.custPhone : (custPhone || phonePromptInput);
+    const bPayMethod = (customBill && customBill.payMethod) ? customBill.payMethod : payMethod;
+    const bCustName = (customBill && customBill.custName) ? customBill.custName : custName;
+    const bCustGstin = (customBill && customBill.custGstin) ? customBill.custGstin : custGstin;
 
     if (!items || items.length === 0) {
       Alert.alert('Empty Cart', 'Please add items before sharing via WhatsApp.');
@@ -633,7 +633,16 @@ export default function POSBillingScreen() {
     }
 
     if (!bPhone || !bPhone.trim()) {
-      setPhonePromptBill(customBill || null);
+      setPhonePromptBill(customBill || {
+        items: cart,
+        subtotal,
+        discount,
+        finalTotal,
+        payMethod,
+        custName,
+        custGstin,
+        billNo: bNo
+      });
       setPhonePromptTarget('whatsapp');
       setPhonePromptInput('');
       setShowPhonePromptModal(true);
@@ -1843,8 +1852,10 @@ export default function POSBillingScreen() {
                 }
                 setCustPhone(clean);
                 setShowPhonePromptModal(false);
-                const targetBill = phonePromptBill ? { ...phonePromptBill, custPhone: clean } : null;
-                setTimeout(() => handleWhatsAppShare(targetBill || { custPhone: clean }), 100);
+                const targetBill = phonePromptBill
+                  ? { ...phonePromptBill, custPhone: clean }
+                  : { items: cart, subtotal, discount, finalTotal, payMethod, custName, custGstin, custPhone: clean, billNo: activeBillNo || 'INV-' + Date.now().toString().slice(-6) };
+                setTimeout(() => handleWhatsAppShare(targetBill), 100);
               }}
               style={{ borderRadius: 8, backgroundColor: '#2E7D32' }}
             >
