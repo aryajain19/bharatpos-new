@@ -1345,7 +1345,7 @@ export default function POSBillingScreen() {
                 <Text style={styles.payBtnText}>Pay ₹{finalTotal.toFixed(2)}</Text>
               </TouchableOpacity>
 
-              {/* Quick Bill Actions: Print, Save, WhatsApp, SMS */}
+              {/* Quick Bill Actions: Print, Save, WhatsApp */}
               <View style={{ marginTop: 12, gap: 8 }}>
                 <View style={styles.secondaryActions}>
                   <TouchableOpacity
@@ -1368,26 +1368,27 @@ export default function POSBillingScreen() {
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.secondaryActions}>
-                  <TouchableOpacity
-                    style={[styles.secondaryBtn, { backgroundColor: isDarkMode ? 'rgba(46, 125, 50, 0.2)' : '#E8F5E9' }, cart.length === 0 && { opacity: 0.4 }]}
-                    onPress={() => handleWhatsAppShare()}
-                    disabled={cart.length === 0}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name="whatsapp" size={16} color="#2E7D32" />
-                    <Text style={[styles.secondaryBtnText, { color: '#2E7D32' }]}>WhatsApp</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.secondaryBtn, { backgroundColor: isDarkMode ? 'rgba(2, 132, 199, 0.2)' : '#E0F2FE' }, cart.length === 0 && { opacity: 0.4 }]}
-                    onPress={() => handleSmsShare()}
-                    disabled={cart.length === 0}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name="message-text-outline" size={16} color="#0284C7" />
-                    <Text style={[styles.secondaryBtnText, { color: '#0284C7' }]}>Send SMS</Text>
-                  </TouchableOpacity>
-                </View>
+                {/* WhatsApp Bill Sharing */}
+                <TouchableOpacity
+                  style={[
+                    styles.secondaryBtn,
+                    {
+                      backgroundColor: isDarkMode ? 'rgba(46, 125, 50, 0.2)' : '#E8F5E9',
+                      borderWidth: 1.5,
+                      borderColor: '#2E7D32',
+                      paddingVertical: 12
+                    },
+                    cart.length === 0 && { opacity: 0.4 }
+                  ]}
+                  onPress={() => handleWhatsAppShare()}
+                  disabled={cart.length === 0}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="whatsapp" size={18} color="#2E7D32" />
+                  <Text style={[styles.secondaryBtnText, { color: '#2E7D32', fontWeight: '800', fontSize: 13 }]}>
+                    Share Bill on WhatsApp
+                  </Text>
+                </TouchableOpacity>
               </View>
             </Surface>
           </ScrollView>
@@ -1512,8 +1513,8 @@ export default function POSBillingScreen() {
                 <Text style={styles.receiptFooterText}>Thank you for shopping!</Text>
                 {custPhone ? (
                   <View style={styles.smsAlertBox}>
-                    <Icon name="message-text-outline" size={14} color="#1565C0" />
-                    <Text style={styles.smsAlertText}>SMS receipt link sent to +91 {custPhone}</Text>
+                    <Icon name="whatsapp" size={14} color="#2E7D32" />
+                    <Text style={[styles.smsAlertText, { color: '#2E7D32' }]}>WhatsApp invoice ready for +91 {custPhone}</Text>
                   </View>
                 ) : null}
               </View>
@@ -1521,10 +1522,10 @@ export default function POSBillingScreen() {
 
             {/* Dispatched Message Preview Box */}
             <View style={{ backgroundColor: appTheme.colors.surface, padding: 12, borderRadius: 10, borderLeftWidth: 4, borderLeftColor: '#10B981', marginVertical: 8 }}>
-              <Text style={{ fontSize: 10, fontWeight: 'bold', color: appTheme.colors.onSurface, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Dispatched Message Preview</Text>
+              <Text style={{ fontSize: 10, fontWeight: 'bold', color: appTheme.colors.onSurface, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Digital Invoice Ready</Text>
               <Text style={{ fontSize: 12, color: appTheme.colors.onSurface, lineHeight: 17, fontStyle: 'italic' }}>
                 "Thank you for shopping at {storeName}.{"\n"}
-                Invoice Amount: ₹{finalTotal.toFixed(0)}
+                Bill No: {activeBillNo} · Grand Total: ₹{finalTotal.toFixed(2)}"
               </Text>
             </View>
 
@@ -1532,30 +1533,21 @@ export default function POSBillingScreen() {
             <View style={styles.sharingGrid}>
               <TouchableOpacity
                 style={styles.shareOption}
-                onPress={handleWhatsAppShare}
+                onPress={() => handleWhatsAppShare()}
               >
-                <View style={[styles.shareIcon, { backgroundColor: appTheme.colors.surface }]}>
-                  <Icon name="whatsapp" size={24} color="#4CAF50" />
+                <View style={[styles.shareIcon, { backgroundColor: '#E8F5E9' }]}>
+                  <Icon name="whatsapp" size={24} color="#2E7D32" />
                 </View>
                 <Text style={styles.shareText}>WhatsApp</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.shareOption}
-                onPress={handleSmsShare}
+                onPress={() => handlePrintPdf()}
               >
-                <View style={[styles.shareIcon, { backgroundColor: appTheme.colors.surface }]}>
-                  <Icon name="message-text" size={24} color="#10B981" />
+                <View style={[styles.shareIcon, { backgroundColor: '#FCE4EC' }]}>
+                  <Icon name="printer-pos" size={24} color="#D81B60" />
                 </View>
-                <Text style={styles.shareText}>Send SMS</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.shareOption}
-                onPress={handlePrintPdf}
-              >
-                <View style={[styles.shareIcon, { backgroundColor: appTheme.colors.surface }]}>
-                  <Icon name="file-pdf-box" size={24} color="#D81B60" />
-                </View>
-                <Text style={styles.shareText}>PDF Invoice</Text>
+                <Text style={styles.shareText}>Print / PDF</Text>
               </TouchableOpacity>
             </View>
           </Dialog.Content>
@@ -1604,16 +1596,6 @@ export default function POSBillingScreen() {
                   <Icon name="whatsapp" size={24} color="#2E7D32" />
                 </View>
                 <Text style={styles.shareText}>WhatsApp</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.shareOption}
-                onPress={() => handleSmsShare(savedBillData)}
-              >
-                <View style={[styles.shareIcon, { backgroundColor: '#E0F2FE' }]}>
-                  <Icon name="message-text" size={24} color="#0284C7" />
-                </View>
-                <Text style={styles.shareText}>Direct SMS</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1694,7 +1676,6 @@ export default function POSBillingScreen() {
                       <View style={{ flexDirection: 'row', gap: 4 }}>
                         <IconButton icon="printer" size={18} iconColor="#10B981" onPress={() => handlePrintPdf(draft)} />
                         <IconButton icon="whatsapp" size={18} iconColor="#2E7D32" onPress={() => handleWhatsAppShare(draft)} />
-                        <IconButton icon="message-text" size={18} iconColor="#0284C7" onPress={() => handleSmsShare(draft)} />
                         <IconButton icon="delete-outline" size={18} iconColor="#EF4444" onPress={() => handleDeleteDraft(draft.id)} />
                       </View>
                     </View>
@@ -1827,13 +1808,13 @@ export default function POSBillingScreen() {
       {/* ── 6. PHONE NUMBER PROMPT MODAL FOR WHATSAPP/SMS ───── */}
       <Portal>
         <Dialog visible={showPhonePromptModal} onDismiss={() => setShowPhonePromptModal(false)} style={[styles.dialog, { maxWidth: 420, alignSelf: 'center', width: '90%' }]}>
-          <Dialog.Title style={[styles.dialogTitle, { color: phonePromptTarget === 'whatsapp' ? '#2E7D32' : '#0284C7' }]}>
-            <Icon name={phonePromptTarget === 'whatsapp' ? 'whatsapp' : 'message-text'} size={22} color={phonePromptTarget === 'whatsapp' ? '#2E7D32' : '#0284C7'} style={{ marginRight: 8 }} />
-            Enter Customer Mobile Number
+          <Dialog.Title style={[styles.dialogTitle, { color: '#2E7D32' }]}>
+            <Icon name="whatsapp" size={22} color="#2E7D32" style={{ marginRight: 8 }} />
+            Send Bill on WhatsApp
           </Dialog.Title>
           <Dialog.Content>
             <Text style={{ fontSize: 13, color: appTheme.colors.onSurface, marginBottom: 12 }}>
-              Enter the customer's 10-digit mobile number to dispatch their digital invoice & PDF download link.
+              Enter the customer's 10-digit mobile number to send their digital tax invoice & PDF download link on WhatsApp.
             </Text>
             <TextInput
               label="Customer Mobile (+91)"
@@ -1857,21 +1838,17 @@ export default function POSBillingScreen() {
               onPress={() => {
                 const clean = phonePromptInput.trim();
                 if (!clean) {
-                  Alert.alert('Phone Required', 'Please enter a valid mobile number.');
+                  Alert.alert('Phone Required', 'Please enter a valid 10-digit mobile number.');
                   return;
                 }
                 setCustPhone(clean);
                 setShowPhonePromptModal(false);
                 const targetBill = phonePromptBill ? { ...phonePromptBill, custPhone: clean } : null;
-                if (phonePromptTarget === 'whatsapp') {
-                  setTimeout(() => handleWhatsAppShare(targetBill || { custPhone: clean }), 100);
-                } else {
-                  setTimeout(() => handleSmsShare(targetBill || { custPhone: clean }), 100);
-                }
+                setTimeout(() => handleWhatsAppShare(targetBill || { custPhone: clean }), 100);
               }}
-              style={{ borderRadius: 8, backgroundColor: phonePromptTarget === 'whatsapp' ? '#2E7D32' : '#0284C7' }}
+              style={{ borderRadius: 8, backgroundColor: '#2E7D32' }}
             >
-              {phonePromptTarget === 'whatsapp' ? 'Send WhatsApp' : 'Send SMS'}
+              Send on WhatsApp
             </Button>
           </Dialog.Actions>
         </Dialog>
