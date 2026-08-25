@@ -34,6 +34,97 @@ export default function ProductsManagementScreen() {
   const [fileLoadingMsg, setFileLoadingMsg] = useState('');
   const [showDriveModal, setShowDriveModal] = useState(false);
 
+  // Add Product Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addCategory, setAddCategory] = useState('');
+  const [addBarcode, setAddBarcode] = useState('');
+  const [addMrp, setAddMrp] = useState('');
+  const [addSellingPrice, setAddSellingPrice] = useState('');
+  const [addCostPrice, setAddCostPrice] = useState('');
+  const [addStockQty, setAddStockQty] = useState('10');
+  const [addGstPct, setAddGstPct] = useState('18');
+  const [savingAdd, setSavingAdd] = useState(false);
+
+  // Generate EAN-13 barcode helper
+  const handleGenerateBarcode = () => {
+    let hash = 0;
+    const seedStr = tenantId || 'store';
+    for (let i = 0; i < seedStr.length; i++) {
+      hash = (hash + seedStr.charCodeAt(i)) % 10000;
+    }
+    const storePrefix = hash.toString().padStart(4, '0');
+    const randomDigits = Math.floor(10000 + Math.random() * 90000).toString();
+    const base = '890' + storePrefix + randomDigits;
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+      sum += parseInt(base.charAt(i)) * (i % 2 === 0 ? 1 : 3);
+    }
+    const checkDigit = (10 - (sum % 10)) % 10;
+    const finalBarcode = base + checkDigit;
+    setAddBarcode(finalBarcode);
+  };
+
+  const handleSaveAddProduct = async () => {
+    if (!addName.trim() || !addSellingPrice.trim()) {
+      Alert.alert('Validation Error', 'Product Name and Selling Price are required.');
+      return;
+    }
+
+    setSavingAdd(true);
+    try {
+      let finalBarcode = addBarcode.trim();
+      if (!finalBarcode) {
+        let hash = 0;
+        const seedStr = tenantId || 'store';
+        for (let i = 0; i < seedStr.length; i++) {
+          hash = (hash + seedStr.charCodeAt(i)) % 10000;
+        }
+        const storePrefix = hash.toString().padStart(4, '0');
+        const randomDigits = Math.floor(10000 + Math.random() * 90000).toString();
+        const base = '890' + storePrefix + randomDigits;
+        let sum = 0;
+        for (let i = 0; i < 12; i++) {
+          sum += parseInt(base.charAt(i)) * (i % 2 === 0 ? 1 : 3);
+        }
+        const checkDigit = (10 - (sum % 10)) % 10;
+        finalBarcode = base + checkDigit;
+      }
+
+      await addDoc(collection(db, 'products'), {
+        tenant_id: tenantId,
+        name: addName.trim(),
+        category: addCategory.trim() || 'General',
+        barcode: finalBarcode,
+        mrp: parseFloat(addMrp) || parseFloat(addSellingPrice) || 0,
+        selling_price: parseFloat(addSellingPrice) || 0,
+        price: parseFloat(addSellingPrice) || 0,
+        cost_price: parseFloat(addCostPrice) || (parseFloat(addSellingPrice) * 0.8) || 0,
+        stock_qty: parseInt(addStockQty) || 0,
+        stock_quantity: parseInt(addStockQty) || 0,
+        stock: parseInt(addStockQty) || 0,
+        gst_pct: parseFloat(addGstPct) || 0,
+        created_at: new Date().toISOString()
+      });
+
+      Alert.alert('Success', `Product "${addName}" added successfully!`);
+      setShowAddModal(false);
+      setAddName('');
+      setAddCategory('');
+      setAddBarcode('');
+      setAddMrp('');
+      setAddSellingPrice('');
+      setAddCostPrice('');
+      setAddStockQty('10');
+      setAddGstPct('18');
+      fetchProducts();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to add product.');
+    } finally {
+      setSavingAdd(false);
+    }
+  };
+
   // Editing state
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [editName, setEditName] = useState('');
@@ -61,54 +152,77 @@ export default function ProductsManagementScreen() {
     }
   ];
 
-  // Real-time parsing helper
+  // Binary content checker
+  const isBinaryText = (txt: string) => {
+    if (!txt) return false;
+    if (txt.startsWith('%PDF-') || txt.includes('\uFFFD')) return true;
+    const sample = txt.slice(0, 500);
+    const nonAscii = sample.replace(/[\x20-\x7E\r\n\t]/g, '').length;
+    return nonAscii > (sample.length * 0.15);
+  };
+
+  // Real-time parsing helper with strict binary filtering & clean table parsing
   const parsedItems = React.useMemo(() => {
-    if (!rawInvoiceText.trim()) return [];
+    if (!rawInvoiceText.trim() || isBinaryText(rawInvoiceText)) return [];
     const lines = rawInvoiceText.split('\n');
     const items: any[] = [];
     
     lines.forEach(line => {
       const trimmed = line.trim();
-      if (!trimmed) return;
+      if (!trimmed || trimmed.length < 4) return;
       
-      // Try CSV format: Name, Qty, MRP, Cost, Barcode
+      // Skip binary garbage lines
+      if (trimmed.includes('\uFFFD') || (trimmed.replace(/[\x20-\x7E]/g, '').length > 5)) return;
+
+      // Skip common table headers
+      const lower = trimmed.toLowerCase();
+      if (lower.includes('product name') || lower.includes('item description') || lower.includes('invoice bill') || lower.includes('total gst') || lower.startsWith('---') || lower.startsWith('===')) {
+        return;
+      }
+      
+      // 1. Try CSV format: Name, Qty, MRP, Cost, Barcode
       const csvParts = trimmed.split(',').map(s => s.trim());
-      if (csvParts.length >= 3 && !isNaN(parseFloat(csvParts[1]))) {
+      if (csvParts.length >= 3) {
         const name = csvParts[0];
         const qty = parseInt(csvParts[1]) || 0;
         const mrp = parseFloat(csvParts[2]) || 0;
         const cost = csvParts[3] ? parseFloat(csvParts[3]) : mrp * 0.8;
         const barcode = csvParts[4] || '';
-        if (name && qty > 0 && mrp > 0) {
-          items.push({ name, qty, mrp, cost, barcode });
-          return;
+        if (name && name.length >= 3 && !isNaN(qty) && qty > 0 && !isNaN(mrp) && mrp > 0) {
+          // Validate name contains valid alphabet characters
+          if (/[a-zA-Z]/.test(name)) {
+            items.push({ name, qty, mrp, cost, barcode });
+            return;
+          }
         }
       }
       
-      // Try Key-Value/Regex parse formats
+      // 2. Try Key-Value / Pipeline delimited format: Name | Qty: 10 | MRP: 50 | Barcode: ...
       const barcodeMatch = trimmed.match(/\b(890\d{10}|\d{8,14})\b/);
       const barcode = barcodeMatch ? barcodeMatch[0] : '';
       
-      const qtyMatch = trimmed.match(/(?:qty|quantity|units|items|pcs|x)\s*[:\-\s]*\s*(\d+)/i) || trimmed.match(/,\s*(\d+)\s*,/);
-      const qty = qtyMatch ? parseInt(qtyMatch[1]) : 10;
+      const qtyMatch = trimmed.match(/(?:qty|quantity|units|items|pcs|x)\s*[:\-\s]*\s*(\d+)/i);
+      const mrpMatch = trimmed.match(/(?:mrp|selling|price|m\.r\.p\.|rate)\s*[:\-\s]*\s*(?:₹|Rs\.?\s*)?(\d+(?:\.\d+)?)/i);
+      const costMatch = trimmed.match(/(?:cost|purchase|wholesale)\s*[:\-\s]*\s*(?:₹|Rs\.?\s*)?(\d+(?:\.\d+)?)/i);
       
-      const mrpMatch = trimmed.match(/(?:mrp|selling|price|m\.r\.p\.)\s*[:\-\s]*\s*(\d+(?:\.\d+)?)/i);
-      const mrp = mrpMatch ? parseFloat(mrpMatch[1]) : 50;
-      
-      const costMatch = trimmed.match(/(?:cost|purchase|rate|wholesale)\s*[:\-\s]*\s*(\d+(?:\.\d+)?)/i);
-      const cost = costMatch ? parseFloat(costMatch[1]) : mrp * 0.8;
-      
-      let name = trimmed
-        .replace(barcode, '')
-        .replace(/(?:qty|quantity|units|items|pcs|x)\s*[:\-\s]*\s*\d+/i, '')
-        .replace(/(?:mrp|selling|price|m\.r\.p\.)\s*[:\-\s]*\s*\d+(?:\.\d+)?/i, '')
-        .replace(/(?:cost|purchase|rate|wholesale)\s*[:\-\s]*\s*\d+(?:\.\d+)?/i, '')
-        .replace(/[|\-,;]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      if (qtyMatch || mrpMatch) {
+        const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+        const mrp = mrpMatch ? parseFloat(mrpMatch[1]) : 0;
+        const cost = costMatch ? parseFloat(costMatch[1]) : (mrp > 0 ? mrp * 0.8 : 0);
         
-      if (name.length > 2) {
-        items.push({ name, qty, mrp, cost, barcode });
+        let name = trimmed
+          .replace(barcode, '')
+          .replace(/(?:qty|quantity|units|items|pcs|x)\s*[:\-\s]*\s*\d+/gi, '')
+          .replace(/(?:mrp|selling|price|m\.r\.p\.|rate)\s*[:\-\s]*\s*(?:₹|Rs\.?\s*)?\d+(?:\.\d+)?/gi, '')
+          .replace(/(?:cost|purchase|wholesale)\s*[:\-\s]*\s*(?:₹|Rs\.?\s*)?\d+(?:\.\d+)?/gi, '')
+          .replace(/^[0-9]+[.)\-\s]+/, '')
+          .replace(/[|\-,;]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+          
+        if (name.length >= 3 && /[a-zA-Z]/.test(name) && mrp > 0) {
+          items.push({ name, qty, mrp, cost, barcode });
+        }
       }
     });
     return items;
@@ -254,6 +368,15 @@ export default function ProductsManagementScreen() {
           const reader = new FileReader();
           reader.onload = (evt: any) => {
             const text = evt.target.result;
+            if (isBinaryText(text)) {
+              setIsFileLoading(false);
+              Alert.alert(
+                'Invalid File Format',
+                'This file contains binary or unreadable data. Please upload a standard text PDF, CSV spreadsheet, or Excel file.'
+              );
+              setRawInvoiceText('');
+              return;
+            }
             setRawInvoiceText(text);
             setIsFileLoading(false);
             Alert.alert('File Upload Success', `Loaded "${file.name}" successfully!`);
@@ -421,7 +544,7 @@ export default function ProductsManagementScreen() {
           </Button>
           <Button 
             mode="contained" 
-            onPress={() => router.push('/(vendor)/add_product')} 
+            onPress={() => { handleGenerateBarcode(); setShowAddModal(true); }} 
             style={styles.addBtn}
             contentStyle={{ paddingHorizontal: 8 }}
           >
@@ -507,7 +630,7 @@ export default function ProductsManagementScreen() {
                     buttonColor="#16A34A" 
                     textColor="white"
                     style={{ borderRadius: 8 }}
-                    onPress={() => router.push('/(vendor)/add_product')}
+                    onPress={() => { handleGenerateBarcode(); setShowAddModal(true); }}
                   >
                     Add Product
                   </Button>
@@ -713,6 +836,166 @@ export default function ProductsManagementScreen() {
             <View style={[styles.modalFooter, { backgroundColor: '#F8FAFC' }]}>
               <Button mode="outlined" onPress={() => setShowDriveModal(false)} style={{ borderRadius: 8 }}>
                 Cancel
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      
+      {/* Add Product Direct Modal */}
+      <Modal
+        visible={showAddModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { maxWidth: 520 }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Icon name="package-variant-plus" size={22} color="#10B981" />
+                <Text style={styles.modalTitle}>Add New Product</Text>
+              </View>
+              <IconButton icon="close" size={20} onPress={() => setShowAddModal(false)} />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 20 }}>
+              <TextInput
+                label="Product Name *"
+                value={addName}
+                onChangeText={setAddName}
+                mode="outlined"
+                placeholder="e.g. Britannia Marie Gold 250g"
+                activeOutlineColor="#10B981"
+                outlineColor="#D1D5DB"
+                outlineStyle={{ borderRadius: 10 }}
+                style={{ height: 44, marginBottom: 12, backgroundColor: '#FFFFFF' }}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                <TextInput
+                  label="Category"
+                  value={addCategory}
+                  onChangeText={setAddCategory}
+                  mode="outlined"
+                  placeholder="e.g. Snacks, Dairy, Grocery"
+                  activeOutlineColor="#10B981"
+                  outlineColor="#D1D5DB"
+                  outlineStyle={{ borderRadius: 10 }}
+                  style={{ flex: 1, height: 44, backgroundColor: '#FFFFFF' }}
+                />
+                <TextInput
+                  label="Stock Qty"
+                  value={addStockQty}
+                  onChangeText={setAddStockQty}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  activeOutlineColor="#10B981"
+                  outlineColor="#D1D5DB"
+                  outlineStyle={{ borderRadius: 10 }}
+                  style={{ width: 110, height: 44, backgroundColor: '#FFFFFF' }}
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                <TextInput
+                  label="Selling Price (₹) *"
+                  value={addSellingPrice}
+                  onChangeText={setAddSellingPrice}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  placeholder="0.00"
+                  activeOutlineColor="#10B981"
+                  outlineColor="#D1D5DB"
+                  outlineStyle={{ borderRadius: 10 }}
+                  style={{ flex: 1, height: 44, backgroundColor: '#FFFFFF' }}
+                />
+                <TextInput
+                  label="MRP (₹)"
+                  value={addMrp}
+                  onChangeText={setAddMrp}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  placeholder="0.00"
+                  activeOutlineColor="#10B981"
+                  outlineColor="#D1D5DB"
+                  outlineStyle={{ borderRadius: 10 }}
+                  style={{ flex: 1, height: 44, backgroundColor: '#FFFFFF' }}
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                <TextInput
+                  label="Cost / Wholesale Price (₹)"
+                  value={addCostPrice}
+                  onChangeText={setAddCostPrice}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  placeholder="0.00"
+                  activeOutlineColor="#10B981"
+                  outlineColor="#D1D5DB"
+                  outlineStyle={{ borderRadius: 10 }}
+                  style={{ flex: 1, height: 44, backgroundColor: '#FFFFFF' }}
+                />
+                <TextInput
+                  label="GST %"
+                  value={addGstPct}
+                  onChangeText={setAddGstPct}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  placeholder="18"
+                  activeOutlineColor="#10B981"
+                  outlineColor="#D1D5DB"
+                  outlineStyle={{ borderRadius: 10 }}
+                  style={{ width: 110, height: 44, backgroundColor: '#FFFFFF' }}
+                />
+              </View>
+
+              <View style={{ marginBottom: 16 }}>
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                  <TextInput
+                    label="Barcode (EAN-13)"
+                    value={addBarcode}
+                    onChangeText={setAddBarcode}
+                    mode="outlined"
+                    placeholder="Scan or auto-generate"
+                    activeOutlineColor="#10B981"
+                    outlineColor="#D1D5DB"
+                    outlineStyle={{ borderRadius: 10 }}
+                    style={{ flex: 1, height: 44, backgroundColor: '#FFFFFF' }}
+                  />
+                  <Button
+                    mode="outlined"
+                    icon="barcode"
+                    onPress={handleGenerateBarcode}
+                    style={{ height: 44, justifyContent: 'center', borderColor: '#10B981', borderRadius: 10, marginTop: 6 }}
+                    textColor="#10B981"
+                  >
+                    Auto-Gen
+                  </Button>
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <Button
+                mode="outlined"
+                onPress={() => setShowAddModal(false)}
+                style={[styles.modalBtn, { marginRight: 8 }]}
+              >
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
+                buttonColor="#10B981"
+                textColor="#FFFFFF"
+                onPress={handleSaveAddProduct}
+                loading={savingAdd}
+                disabled={savingAdd}
+                style={styles.modalBtn}
+              >
+                Save Product
               </Button>
             </View>
           </View>

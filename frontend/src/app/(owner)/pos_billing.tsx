@@ -141,6 +141,11 @@ export default function POSBillingScreen() {
             };
           });
           setProducts(formatted);
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            try {
+              window.localStorage.setItem('cachedProductsList', JSON.stringify(formatted));
+            } catch (_) {}
+          }
         }
       } catch (error) {
         console.error("Error fetching inventory:", error);
@@ -274,6 +279,18 @@ export default function POSBillingScreen() {
       const cleanBarcode = barcode.trim().replace(/[\r\n]/g, '');
       if (!cleanBarcode) return;
 
+      // 1. Instant in-memory check (0ms response)
+      const inMemoryMatch = products.find(p => 
+        (p.barcode && p.barcode.trim() === cleanBarcode) || 
+        (p.name && p.name.toLowerCase() === cleanBarcode.toLowerCase())
+      );
+      if (inMemoryMatch) {
+        handleAddProduct(inMemoryMatch);
+        setSearch('');
+        setShowSuggestions(false);
+        return;
+      }
+
       if (!tenantId) return;
       const q = query(
         collection(db, 'products'), 
@@ -376,45 +393,45 @@ export default function POSBillingScreen() {
         return;
       }
       try {
-        await addDoc(collection(db, 'sales'), {
-          tenant_id: tenantId,
-          vendor_id: auth.currentUser?.uid || 'owner',
-          bill_no: activeBillNo,
-          created_at: dateObj.toISOString(),
-          customer_name: custName || 'Walk-in Customer',
-          customer_phone: custPhone || '',
-          customer_gstin: custGstin || '',
-          payment_method: payMethod,
-          subtotal: subtotal,
-          discount: discount,
-          gst_collected: gstBreakdown.totalGst,
-          total_amount: finalTotal,
-          items: cart.map(item => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            qty: item.qty,
-            gst_pct: item.gst_pct || 0,
-            hsn: (item as any).hsn || ''
-          }))
-        });
-
-        await addDoc(collection(db, 'transactions'), {
-          tenant_id: tenantId,
-          dateTime: `${dateStr} ${timeStr}`,
-          created_at: dateObj.toISOString(),
-          voucherType: 'Sales',
-          voucherNo: activeBillNo,
-          partyName: custName || 'Walk-in Customer',
-          debit: finalTotal,
-          credit: 0,
-          paymentMethod: payMethod,
-          gstAmount: gstBreakdown.totalGst,
-          taxableValue: subtotal - discount,
-        });
-
-        // Deduct stock in Firestore & local state
-        await deductStockForCart(cart);
+        // Run sales logging, ledger transaction & stock deduction in parallel for maximum speed
+        await Promise.all([
+          addDoc(collection(db, 'sales'), {
+            tenant_id: tenantId,
+            vendor_id: auth.currentUser?.uid || 'owner',
+            bill_no: activeBillNo,
+            created_at: dateObj.toISOString(),
+            customer_name: custName || 'Walk-in Customer',
+            customer_phone: custPhone || '',
+            customer_gstin: custGstin || '',
+            payment_method: payMethod,
+            subtotal: subtotal,
+            discount: discount,
+            gst_collected: gstBreakdown.totalGst,
+            total_amount: finalTotal,
+            items: cart.map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              qty: item.qty,
+              gst_pct: item.gst_pct || 0,
+              hsn: (item as any).hsn || ''
+            }))
+          }),
+          addDoc(collection(db, 'transactions'), {
+            tenant_id: tenantId,
+            dateTime: `${dateStr} ${timeStr}`,
+            created_at: dateObj.toISOString(),
+            voucherType: 'Sales',
+            voucherNo: activeBillNo,
+            partyName: custName || 'Walk-in Customer',
+            debit: finalTotal,
+            credit: 0,
+            paymentMethod: payMethod,
+            gstAmount: gstBreakdown.totalGst,
+            taxableValue: subtotal - discount,
+          }),
+          deductStockForCart(cart)
+        ]);
 
         // Webhook Trigger
         const savedWebhookUrl = Platform.OS === 'web' && typeof window !== 'undefined' ? window.localStorage.getItem('webhookUrl') : '';
